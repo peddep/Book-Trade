@@ -1,10 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { destroySession } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
-  const token = req.cookies.get('session')?.value;
-  if (token) destroySession(token);
-
+export async function POST() {
   const res = NextResponse.json({ ok: true });
   res.cookies.set('session', '', { maxAge: 0, path: '/' });
   return res;

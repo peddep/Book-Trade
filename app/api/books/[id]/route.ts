@@ -8,11 +8,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { id } = await params;
   const db = getDb();
-  const book = db.prepare('SELECT * FROM books WHERE id = ?').get(id) as any;
+  const found = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [id] });
+  const book = found.rows[0] as any;
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (book.owner_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (Number(book.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  db.prepare('DELETE FROM books WHERE id = ?').run(id);
+  await db.execute({ sql: 'DELETE FROM books WHERE id = ?', args: [id] });
   return NextResponse.json({ ok: true });
 }
 
@@ -22,11 +23,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params;
   const db = getDb();
-  const book = db.prepare('SELECT * FROM books WHERE id = ?').get(id) as any;
+  const found = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [id] });
+  const book = found.rows[0] as any;
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (book.owner_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (Number(book.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { available } = await req.json();
-  db.prepare('UPDATE books SET available = ? WHERE id = ?').run(available ? 1 : 0, id);
+  await db.execute({ sql: 'UPDATE books SET available = ? WHERE id = ?', args: [available ? 1 : 0, id] });
   return NextResponse.json({ ok: true });
 }

@@ -18,31 +18,31 @@ export async function GET(req: NextRequest) {
     JOIN users u ON b.owner_id = u.id
     WHERE 1=1
   `;
-  const params: unknown[] = [];
+  const args: unknown[] = [];
 
   if (myBooks && user) {
     sql += ' AND b.owner_id = ?';
-    params.push(user.id);
+    args.push(user.id);
   } else {
     sql += ' AND b.available = 1';
     if (user) {
       sql += ' AND b.owner_id != ?';
-      params.push(user.id);
+      args.push(user.id);
     }
   }
 
   if (query) {
     sql += ' AND (b.title LIKE ? OR b.author LIKE ?)';
-    params.push(`%${query}%`, `%${query}%`);
+    args.push(`%${query}%`, `%${query}%`);
   }
   if (subject) {
     sql += ' AND b.subject = ?';
-    params.push(subject);
+    args.push(subject);
   }
 
   sql += ' ORDER BY b.created_at DESC';
-  const books = db.prepare(sql).all(...params);
-  return NextResponse.json({ books });
+  const result = await db.execute({ sql, args: args as any[] });
+  return NextResponse.json({ books: result.rows });
 }
 
 export async function POST(req: NextRequest) {
@@ -54,10 +54,11 @@ export async function POST(req: NextRequest) {
 
   const color = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)];
   const db = getDb();
-  const result = db.prepare(
-    'INSERT INTO books (owner_id, title, author, subject, grade_level, condition, description, cover_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(user.id, title, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color);
+  const result = await db.execute({
+    sql: 'INSERT INTO books (owner_id, title, author, subject, grade_level, condition, description, cover_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [user.id, title, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color],
+  });
 
-  const book = db.prepare('SELECT * FROM books WHERE id = ?').get(result.lastInsertRowid);
-  return NextResponse.json({ book }, { status: 201 });
+  const book = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [Number(result.lastInsertRowid)] });
+  return NextResponse.json({ book: book.rows[0] }, { status: 201 });
 }

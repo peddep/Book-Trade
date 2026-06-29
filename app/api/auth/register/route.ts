@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getDb } from '@/lib/db';
-import { createSession } from '@/lib/auth';
+import { signSession } from '@/lib/auth';
 
 const AVATAR_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
@@ -13,22 +13,23 @@ export async function POST(req: NextRequest) {
   }
 
   const db = getDb();
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing) {
+  const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
+  if (existing.rows.length > 0) {
     return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
   }
 
   const hash = await bcrypt.hash(password, 10);
   const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
-  const result = db.prepare(
-    'INSERT INTO users (name, email, password_hash, grade, avatar_color) VALUES (?, ?, ?, ?, ?)'
-  ).run(name, email, hash, grade ?? null, color);
+  const result = await db.execute({
+    sql: 'INSERT INTO users (name, email, password_hash, grade, avatar_color) VALUES (?, ?, ?, ?, ?)',
+    args: [name, email, hash, grade ?? null, color],
+  });
 
   const user = { id: Number(result.lastInsertRowid), name, email, grade: grade ?? null, avatar_color: color };
-  const token = createSession(user);
+  const token = signSession(user);
 
   const res = NextResponse.json({ user });
-  res.cookies.set('session', token, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7 });
+  res.cookies.set('session', token, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
   return res;
 }
