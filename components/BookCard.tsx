@@ -1,5 +1,7 @@
 'use client';
 
+import { useI18n } from '@/lib/i18n';
+
 interface Book {
   id: number;
   title: string;
@@ -31,6 +33,7 @@ const CONDITION_COLORS: Record<string, string> = {
 };
 
 export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, isOwner }: Props) {
+  const { t } = useI18n();
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
@@ -47,7 +50,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, i
         <div className="text-center relative z-10">
           <div className="text-4xl mb-2">📖</div>
           {!book.available && (
-            <span className="text-xs font-bold bg-black/50 text-white px-2 py-1 rounded-full">TRADED</span>
+            <span className="text-xs font-bold bg-black/50 text-white px-2 py-1 rounded-full">{t('card.traded')}</span>
           )}
         </div>
       </div>
@@ -62,19 +65,19 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, i
         <div className="flex flex-wrap gap-1.5">
           {book.subject && (
             <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#2d2d4a', color: '#a78bfa' }}>
-              {book.subject}
+              {t(`subj.${book.subject}`)}
             </span>
           )}
           {book.grade_level && (
             <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#2d2d4a', color: '#94a3b8' }}>
-              Gr. {book.grade_level}
+              {t('card.gr')} {book.grade_level}
             </span>
           )}
           <span
             className="text-xs px-2 py-0.5 rounded-full font-semibold"
             style={{ background: CONDITION_COLORS[book.condition] + '22', color: CONDITION_COLORS[book.condition] }}
           >
-            {book.condition}
+            {t(`cond.${book.condition}`)}
           </span>
         </div>
 
@@ -106,14 +109,14 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, i
                   border: `1px solid ${book.available ? '#10b981' : '#2d2d4a'}`
                 }}
               >
-                {book.available ? 'Available' : 'Unavailable'}
+                {book.available ? t('card.available') : t('card.unavailable')}
               </button>
               <button
                 onClick={onDelete}
                 className="px-3 py-1.5 text-xs rounded-lg font-semibold"
                 style={{ background: '#3a1e1e', color: '#ef4444', border: '1px solid #ef4444' }}
               >
-                Remove
+                {t('card.remove')}
               </button>
             </>
           ) : (
@@ -123,7 +126,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, i
                 className="flex-1 py-2 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
                 style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               >
-                Offer Trade
+                {t('card.offerTrade')}
               </button>
             )
           )}

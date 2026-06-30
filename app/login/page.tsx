@@ -4,8 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import { useI18n } from '@/lib/i18n';
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,9 +29,10 @@ export default function LoginPage() {
         router.push('/books');
         return;
       }
-      setError(data.error ?? `Login failed (server error ${res.status}).`);
+      const msg = data.error === 'Invalid credentials' ? t('login.invalid') : t('login.failed', { status: res.status });
+      setError(msg);
     } catch {
-      setError('Could not reach the server. Please try again.');
+      setError(t('common.unreachable'));
     } finally {
       setLoading(false);
     }
@@ -42,12 +45,12 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">📚</div>
-            <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
-            <p className="text-slate-400 text-sm mt-1">Sign in to your BookTrade account</p>
+            <h1 className="text-2xl font-bold text-white">{t('login.welcome')}</h1>
+            <p className="text-slate-400 text-sm mt-1">{t('login.subtitle')}</p>
           </div>
           <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">Email</label>
+              <label className="text-sm text-slate-300 mb-1.5 block">{t('auth.email')}</label>
               <input
                 type="email"
                 value={email}
@@ -59,7 +62,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">Password</label>
+              <label className="text-sm text-slate-300 mb-1.5 block">{t('auth.password')}</label>
               <input
                 type="password"
                 value={password}
@@ -77,12 +80,12 @@ export default function LoginPage() {
               className="w-full py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? t('login.signingIn') : t('login.signIn')}
             </button>
             <p className="text-center text-sm text-slate-400">
-              No account?{' '}
+              {t('login.noAccount')}{' '}
               <Link href="/register" className="text-purple-400 hover:text-purple-300 font-semibold">
-                Join BookTrade
+                {t('login.joinLink')}
               </Link>
             </p>
           </form>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 interface Book {
   id: number;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
+  const { t } = useI18n();
   const [myBooks, setMyBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<number | null>(null);
   const [message, setMessage] = useState('');
@@ -41,7 +43,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
     if (res.ok) {
       onSuccess();
     } else {
-      setError(data.error ?? 'Something went wrong');
+      setError(data.error ?? t('modal.error'));
     }
     setLoading(false);
   }
@@ -50,22 +52,22 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
       <div className="w-full max-w-md rounded-2xl p-6 flex flex-col gap-4" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
         <div className="flex justify-between items-start">
-          <h2 className="text-lg font-bold text-white">Offer a Trade</h2>
+          <h2 className="text-lg font-bold text-white">{t('modal.title')}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-xl">✕</button>
         </div>
 
         <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#0f0f1a' }}>
           <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style={{ background: targetBook.cover_color }}>📖</div>
           <div>
-            <p className="text-xs text-slate-400">You want</p>
+            <p className="text-xs text-slate-400">{t('modal.youWant')}</p>
             <p className="font-semibold text-white text-sm">{targetBook.title}</p>
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-slate-300 mb-2">Offer one of your books:</p>
+          <p className="text-sm font-semibold text-slate-300 mb-2">{t('modal.offerOne')}</p>
           {myBooks.length === 0 ? (
-            <p className="text-sm text-slate-400">You have no available books to offer. Add some books first!</p>
+            <p className="text-sm text-slate-400">{t('modal.noBooks')}</p>
           ) : (
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
               {myBooks.map(b => (
@@ -91,11 +93,11 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-slate-300 mb-1">Message (optional)</p>
+          <p className="text-sm font-semibold text-slate-300 mb-1">{t('modal.messageOptional')}</p>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
-            placeholder="Hey, I'd love to trade! My book is in great shape..."
+            placeholder={t('modal.messagePlaceholder')}
             className="w-full text-sm p-2.5 rounded-xl resize-none"
             style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
             rows={3}
@@ -110,7 +112,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             className="flex-1 py-2 rounded-xl font-semibold text-sm"
             style={{ background: '#2d2d4a', color: '#94a3b8' }}
           >
-            Cancel
+            {t('modal.cancel')}
           </button>
           <button
             onClick={submit}
@@ -118,7 +120,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             className="flex-1 py-2 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
-            {loading ? 'Sending...' : 'Send Offer'}
+            {loading ? t('modal.sending') : t('modal.send')}
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
 import TradeModal from '@/components/TradeModal';
+import { useI18n } from '@/lib/i18n';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
 
@@ -23,6 +24,7 @@ interface Book {
 }
 
 export default function BooksPage() {
+  const { t } = useI18n();
   const [books, setBooks] = useState<Book[]>([]);
   const [query, setQuery] = useState('');
   const [subject, setSubject] = useState('');
@@ -48,7 +50,7 @@ export default function BooksPage() {
 
   function handleTradeSuccess() {
     setTradeBook(null);
-    setSuccess('Trade offer sent! Check My Trades to see the status.');
+    setSuccess(t('books.tradeSent'));
     setTimeout(() => setSuccess(''), 5000);
   }
 
@@ -57,8 +59,8 @@ export default function BooksPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Browse Books</h1>
-          <p className="text-slate-400">Discover books available from your classmates</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('books.title')}</h1>
+          <p className="text-slate-400">{t('books.subtitle')}</p>
         </div>
 
         {success && (
@@ -70,7 +72,7 @@ export default function BooksPage() {
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <input
             type="text"
-            placeholder="Search by title or author..."
+            placeholder={t('books.searchPlaceholder')}
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="flex-1 p-3 rounded-xl text-sm"
@@ -82,18 +84,18 @@ export default function BooksPage() {
             className="sm:w-48 p-3 rounded-xl text-sm"
             style={{ background: '#1a1a2e', border: '1px solid #2d2d4a', color: subject ? '#e2e8f0' : '#64748b', outline: 'none' }}
           >
-            <option value="">All Subjects</option>
-            {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+            <option value="">{t('books.allSubjects')}</option>
+            {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}
           </select>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-slate-400">Loading books...</div>
+          <div className="text-center py-20 text-slate-400">{t('books.loading')}</div>
         ) : books.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">🔍</div>
-            <p className="text-slate-400 text-lg">No books found</p>
-            <p className="text-slate-500 text-sm mt-1">Try a different search or check back later</p>
+            <p className="text-slate-400 text-lg">{t('books.noneFound')}</p>
+            <p className="text-slate-500 text-sm mt-1">{t('books.noneFoundHint')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

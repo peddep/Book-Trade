@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { useI18n } from '@/lib/i18n';
 
 interface User {
   id: number;
@@ -17,6 +18,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { lang, setLang, t } = useI18n();
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user));
@@ -37,11 +39,20 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
+            className="text-sm font-semibold px-3 py-1.5 rounded-lg"
+            style={{ background: '#2d2d4a', color: '#e2e8f0' }}
+            title="Change language"
+            aria-label="Change language"
+          >
+            {lang === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
+          </button>
           {user ? (
             <>
-              <Link href="/books" className="text-sm text-slate-300 hover:text-white hidden sm:block">Browse</Link>
-              <Link href="/trades" className="text-sm text-slate-300 hover:text-white hidden sm:block">My Trades</Link>
-              <Link href="/profile" className="text-sm text-slate-300 hover:text-white hidden sm:block">My Books</Link>
+              <Link href="/books" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.browse')}</Link>
+              <Link href="/trades" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.trades')}</Link>
+              <Link href="/profile" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.myBooks')}</Link>
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -61,13 +72,13 @@ export default function Navbar() {
                   >
                     <div className="px-4 py-2 border-b" style={{ borderColor: '#2d2d4a' }}>
                       <p className="font-semibold text-sm">{user.name}</p>
-                      {user.grade && <p className="text-xs text-slate-400">Grade {user.grade}</p>}
+                      {user.grade && <p className="text-xs text-slate-400">{t('common.grade')} {user.grade}</p>}
                     </div>
-                    <Link href="/books" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">Browse Books</Link>
-                    <Link href="/trades" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">My Trades</Link>
-                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">My Books</Link>
+                    <Link href="/books" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.browse')}</Link>
+                    <Link href="/trades" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.trades')}</Link>
+                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.myBooks')}</Link>
                     <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-700">
-                      Sign Out
+                      {t('nav.signOut')}
                     </button>
                   </div>
                 )}
@@ -79,14 +90,14 @@ export default function Navbar() {
                 href="/login"
                 className="text-sm text-slate-300 hover:text-white px-3 py-1.5"
               >
-                Sign In
+                {t('nav.signIn')}
               </Link>
               <Link
                 href="/register"
                 className="text-sm font-semibold px-4 py-1.5 rounded-lg text-white"
                 style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               >
-                Join
+                {t('nav.join')}
               </Link>
             </>
           )}

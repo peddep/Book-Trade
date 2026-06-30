@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
+import { useI18n } from '@/lib/i18n';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
@@ -29,6 +30,7 @@ interface User {
 }
 
 export default function ProfilePage() {
+  const { t } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -68,7 +70,7 @@ export default function ProfilePage() {
   }
 
   async function deleteBook(id: number) {
-    if (!confirm('Remove this book?')) return;
+    if (!confirm(t('profile.confirmRemove'))) return;
     await fetch(`/api/books/${id}`, { method: 'DELETE' });
     fetchBooks();
   }
@@ -99,114 +101,114 @@ export default function ProfilePage() {
           <div>
             <h1 className="text-2xl font-bold text-white">{user.name}</h1>
             <p className="text-slate-400 text-sm">{user.email}</p>
-            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#a78bfa' }}>Grade {user.grade}</p>}
+            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#a78bfa' }}>{t('common.grade')} {user.grade}</p>}
           </div>
           <div className="ml-auto text-right">
             <p className="text-2xl font-bold text-white">{books.length}</p>
-            <p className="text-xs text-slate-400">Books Listed</p>
+            <p className="text-xs text-slate-400">{t('profile.booksListed')}</p>
           </div>
         </div>
 
         {/* Add book */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">My Books</h2>
+          <h2 className="text-xl font-bold text-white">{t('profile.myBooks')}</h2>
           <button
             onClick={() => setShowForm(!showForm)}
             className="px-4 py-2 rounded-xl font-semibold text-sm text-white"
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
-            + Add Book
+            {t('profile.addBook')}
           </button>
         </div>
 
         {showForm && (
           <form onSubmit={addBook} className="mb-8 p-6 rounded-2xl flex flex-col gap-4" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
-            <h3 className="font-bold text-white">Add a Book to Trade</h3>
+            <h3 className="font-bold text-white">{t('profile.addBookTitle')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-300 mb-1.5 block">Title *</label>
+                <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fTitle')} *</label>
                 <input
                   required
                   value={form.title}
                   onChange={e => setForm({ ...form, title: e.target.value })}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
-                  placeholder="Book title"
+                  placeholder={t('profile.fTitlePlaceholder')}
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-300 mb-1.5 block">Author *</label>
+                <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fAuthor')} *</label>
                 <input
                   required
                   value={form.author}
                   onChange={e => setForm({ ...form, author: e.target.value })}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
-                  placeholder="Author name"
+                  placeholder={t('profile.fAuthorPlaceholder')}
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-300 mb-1.5 block">Subject</label>
+                <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fSubject')}</label>
                 <select
                   value={form.subject}
                   onChange={e => setForm({ ...form, subject: e.target.value })}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: form.subject ? '#e2e8f0' : '#64748b', outline: 'none' }}
                 >
-                  <option value="">Select subject</option>
-                  {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                  <option value="">{t('profile.fSelectSubject')}</option>
+                  {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-sm text-slate-300 mb-1.5 block">Condition</label>
+                <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fCondition')}</label>
                 <select
                   value={form.condition}
                   onChange={e => setForm({ ...form, condition: e.target.value })}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
                 >
-                  {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                  {CONDITIONS.map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-sm text-slate-300 mb-1.5 block">Grade Level</label>
+                <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fGradeLevel')}</label>
                 <input
                   value={form.grade_level}
                   onChange={e => setForm({ ...form, grade_level: e.target.value })}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
-                  placeholder="e.g. 9, 10-12, All"
+                  placeholder={t('profile.fGradePlaceholder')}
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-300 mb-1.5 block">Description</label>
+                <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fDescription')}</label>
                 <input
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
-                  placeholder="Any notes about the book"
+                  placeholder={t('profile.fDescPlaceholder')}
                 />
               </div>
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: '#2d2d4a', color: '#94a3b8' }}>
-                Cancel
+                {t('profile.cancel')}
               </button>
               <button type="submit" disabled={submitting} className="px-6 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                {submitting ? 'Adding...' : 'Add Book'}
+                {submitting ? t('profile.adding') : t('profile.addBtn')}
               </button>
             </div>
           </form>
         )}
 
         {loading ? (
-          <div className="text-center py-20 text-slate-400">Loading your books...</div>
+          <div className="text-center py-20 text-slate-400">{t('profile.loading')}</div>
         ) : books.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">📚</div>
-            <p className="text-slate-400 text-lg">No books listed yet</p>
-            <p className="text-slate-500 text-sm mt-1">Add books you want to trade!</p>
+            <p className="text-slate-400 text-lg">{t('profile.none')}</p>
+            <p className="text-slate-500 text-sm mt-1">{t('profile.noneHint')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

@@ -1,7 +1,25 @@
+'use client';
+
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import { useI18n } from '@/lib/i18n';
 
 export default function Home() {
+  const { t } = useI18n();
+
+  const steps = [
+    { icon: '📝', title: t('home.step1Title'), desc: t('home.step1Desc') },
+    { icon: '🔍', title: t('home.step2Title'), desc: t('home.step2Desc') },
+    { icon: '🤝', title: t('home.step3Title'), desc: t('home.step3Desc') },
+  ];
+
+  const conditions = [
+    { key: 'Like New', color: '#10b981' },
+    { key: 'Good', color: '#3b82f6' },
+    { key: 'Fair', color: '#f59e0b' },
+    { key: 'Poor', color: '#ef4444' },
+  ];
+
   return (
     <>
       <Navbar />
@@ -14,13 +32,13 @@ export default function Home() {
           <div className="max-w-4xl mx-auto px-4 py-24 text-center relative z-10">
             <div className="text-7xl mb-6">📚</div>
             <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
-              Trade Books With<br />
+              {t('home.title1')}<br />
               <span style={{ background: 'linear-gradient(135deg, #a78bfa, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Your Classmates
+                {t('home.title2')}
               </span>
             </h1>
             <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto">
-              Like Pokémon Home, but for textbooks and novels. List your books, discover what others have, and trade right at school.
+              {t('home.subtitle')}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Link
@@ -28,14 +46,14 @@ export default function Home() {
                 className="px-8 py-3 rounded-xl font-bold text-white text-lg"
                 style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               >
-                Start Trading →
+                {t('home.startTrading')}
               </Link>
               <Link
                 href="/books"
                 className="px-8 py-3 rounded-xl font-bold text-slate-200 text-lg"
                 style={{ background: '#2d2d4a' }}
               >
-                Browse Books
+                {t('home.browseBooks')}
               </Link>
             </div>
           </div>
@@ -43,13 +61,9 @@ export default function Home() {
 
         {/* How it works */}
         <div className="max-w-5xl mx-auto px-4 py-20">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center text-white mb-12">{t('home.howItWorks')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { icon: '📝', title: 'List Your Books', desc: 'Add books you want to trade away — textbooks, novels, anything.' },
-              { icon: '🔍', title: 'Find What You Want', desc: 'Browse your classmates\' collections. Filter by subject or grade.' },
-              { icon: '🤝', title: 'Offer a Trade', desc: 'Propose a swap. If they accept, meet up at school and exchange!' },
-            ].map((step, i) => (
+            {steps.map((step, i) => (
               <div key={i} className="text-center p-6 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
                 <div className="text-4xl mb-4">{step.icon}</div>
                 <h3 className="font-bold text-white text-lg mb-2">{step.title}</h3>
@@ -62,19 +76,14 @@ export default function Home() {
         {/* Conditions legend */}
         <div className="max-w-5xl mx-auto px-4 pb-20">
           <div className="rounded-2xl p-6" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
-            <h3 className="font-bold text-white mb-4">Book Condition Guide</h3>
+            <h3 className="font-bold text-white mb-4">{t('home.conditionGuide')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { label: 'Like New', color: '#10b981', desc: 'No marks, barely used' },
-                { label: 'Good', color: '#3b82f6', desc: 'Minor wear, clean pages' },
-                { label: 'Fair', color: '#f59e0b', desc: 'Some highlights/notes' },
-                { label: 'Poor', color: '#ef4444', desc: 'Heavy wear, still readable' },
-              ].map(c => (
-                <div key={c.label} className="flex items-start gap-2">
+              {conditions.map(c => (
+                <div key={c.key} className="flex items-start gap-2">
                   <div className="w-3 h-3 rounded-full mt-0.5 flex-shrink-0" style={{ background: c.color }} />
                   <div>
-                    <p className="text-sm font-semibold text-white">{c.label}</p>
-                    <p className="text-xs text-slate-400">{c.desc}</p>
+                    <p className="text-sm font-semibold text-white">{t(`cond.${c.key}`)}</p>
+                    <p className="text-xs text-slate-400">{t(`cond.${c.key}.desc`)}</p>
                   </div>
                 </div>
               ))}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import { useI18n } from '@/lib/i18n';
 
 interface Trade {
   id: number;
@@ -30,14 +31,15 @@ interface User {
   name: string;
 }
 
-const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  pending:   { bg: '#2d2a00', color: '#fbbf24', label: 'Pending' },
-  accepted:  { bg: '#0d2b1a', color: '#10b981', label: 'Accepted ✓' },
-  rejected:  { bg: '#2d0a0a', color: '#ef4444', label: 'Rejected' },
-  cancelled: { bg: '#1a1a2e', color: '#64748b', label: 'Cancelled' },
+const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: string }> = {
+  pending:   { bg: '#2d2a00', color: '#fbbf24', labelKey: 'trades.pending' },
+  accepted:  { bg: '#0d2b1a', color: '#10b981', labelKey: 'trades.accepted' },
+  rejected:  { bg: '#2d0a0a', color: '#ef4444', labelKey: 'trades.rejected' },
+  cancelled: { bg: '#1a1a2e', color: '#64748b', labelKey: 'trades.cancelled' },
 };
 
 export default function TradesPage() {
+  const { t } = useI18n();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,30 +87,30 @@ export default function TradesPage() {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">My Trades</h1>
-            <p className="text-slate-400 text-sm mt-1">Manage your trade offers</p>
+            <h1 className="text-3xl font-bold text-white">{t('trades.title')}</h1>
+            <p className="text-slate-400 text-sm mt-1">{t('trades.subtitle')}</p>
           </div>
           <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
             {(['all', 'incoming', 'outgoing'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className="px-3 py-1.5 rounded-lg text-sm font-semibold capitalize transition-colors"
+                className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
                 style={filter === f ? { background: '#6366f1', color: 'white' } : { color: '#94a3b8' }}
               >
-                {f}
+                {t(`trades.${f}`)}
               </button>
             ))}
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-slate-400">Loading trades...</div>
+          <div className="text-center py-20 text-slate-400">{t('trades.loading')}</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">🤝</div>
-            <p className="text-slate-400 text-lg">No trades here</p>
-            <p className="text-slate-500 text-sm mt-1">Browse books and send your first trade offer!</p>
+            <p className="text-slate-400 text-lg">{t('trades.none')}</p>
+            <p className="text-slate-500 text-sm mt-1">{t('trades.noneHint')}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -127,10 +129,10 @@ export default function TradesPage() {
                         className="text-xs font-bold px-2 py-0.5 rounded-full mr-2"
                         style={{ background: isIncoming ? '#1e1e3a' : '#1a2a1a', color: isIncoming ? '#a78bfa' : '#10b981' }}
                       >
-                        {isIncoming ? '← Incoming' : '→ Outgoing'}
+                        {isIncoming ? t('trades.incomingTag') : t('trades.outgoingTag')}
                       </span>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: style.bg, color: style.color }}>
-                        {style.label}
+                        {t(style.labelKey)}
                       </span>
                     </div>
                     <span className="text-xs text-slate-500 flex-shrink-0">
@@ -141,7 +143,7 @@ export default function TradesPage() {
                   {/* Trade visualization */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#0f0f1a' }}>
-                      <p className="text-xs text-slate-400 mb-1">{isIncoming ? `${trade.requester_name} offers` : 'You offer'}</p>
+                      <p className="text-xs text-slate-400 mb-1">{isIncoming ? t('trades.userOffers', { name: trade.requester_name }) : t('trades.youOffer')}</p>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: trade.offered_color }}>📖</div>
                         <div>
@@ -154,7 +156,7 @@ export default function TradesPage() {
                     <div className="text-2xl flex-shrink-0">⇄</div>
 
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#0f0f1a' }}>
-                      <p className="text-xs text-slate-400 mb-1">{isIncoming ? 'Wants your' : `${trade.owner_name}'s book`}</p>
+                      <p className="text-xs text-slate-400 mb-1">{isIncoming ? t('trades.wantsYour') : t('trades.usersBook', { name: trade.owner_name })}</p>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: trade.wanted_color }}>📖</div>
                         <div>
@@ -181,14 +183,14 @@ export default function TradesPage() {
                             className="flex-1 py-2 rounded-xl text-sm font-bold text-white"
                             style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
                           >
-                            Accept Trade
+                            {t('trades.accept')}
                           </button>
                           <button
                             onClick={() => updateStatus(trade.id, 'rejected')}
                             className="px-4 py-2 rounded-xl text-sm font-bold"
                             style={{ background: '#2d0a0a', color: '#ef4444' }}
                           >
-                            Decline
+                            {t('trades.decline')}
                           </button>
                         </>
                       ) : (
@@ -197,7 +199,7 @@ export default function TradesPage() {
                           className="px-4 py-2 rounded-xl text-sm font-semibold"
                           style={{ background: '#2d2d4a', color: '#94a3b8' }}
                         >
-                          Cancel Offer
+                          {t('trades.cancelOffer')}
                         </button>
                       )}
                     </div>
@@ -205,7 +207,7 @@ export default function TradesPage() {
 
                   {trade.status === 'accepted' && (
                     <div className="p-3 rounded-xl text-sm font-semibold" style={{ background: '#0d2b1a', color: '#10b981' }}>
-                      🎉 Trade accepted! Meet up at school to exchange books.
+                      {t('trades.acceptedMsg')}
                     </div>
                   )}
                 </div>
