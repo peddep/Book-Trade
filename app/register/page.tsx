@@ -20,18 +20,23 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, grade }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      router.push('/profile');
-    } else {
-      setError(data.error ?? 'Registration failed');
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, grade }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        router.push('/profile');
+        return;
+      }
+      setError(data.error ?? `Registration failed (server error ${res.status}). The database may not be connected yet.`);
+    } catch {
+      setError('Could not reach the server. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

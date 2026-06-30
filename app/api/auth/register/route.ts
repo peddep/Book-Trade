@@ -12,24 +12,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const db = getDb();
-  const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
-  if (existing.rows.length > 0) {
-    return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+  try {
+    const db = getDb();
+    const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
+    if (existing.rows.length > 0) {
+      return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+
+    const result = await db.execute({
+      sql: 'INSERT INTO users (name, email, password_hash, grade, avatar_color) VALUES (?, ?, ?, ?, ?)',
+      args: [name, email, hash, grade ?? null, color],
+    });
+
+    const user = { id: Number(result.lastInsertRowid), name, email, grade: grade ?? null, avatar_color: color };
+    const token = signSession(user);
+
+    const res = NextResponse.json({ user });
+    res.cookies.set('session', token, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+    return res;
+  } catch (err) {
+    console.error('Register failed:', err);
+    return NextResponse.json(
+      { error: 'Database error — check that the Turso env vars are set in Vercel and the tables were created.' },
+      { status: 500 }
+    );
   }
-
-  const hash = await bcrypt.hash(password, 10);
-  const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
-
-  const result = await db.execute({
-    sql: 'INSERT INTO users (name, email, password_hash, grade, avatar_color) VALUES (?, ?, ?, ?, ?)',
-    args: [name, email, hash, grade ?? null, color],
-  });
-
-  const user = { id: Number(result.lastInsertRowid), name, email, grade: grade ?? null, avatar_color: color };
-  const token = signSession(user);
-
-  const res = NextResponse.json({ user });
-  res.cookies.set('session', token, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
-  return res;
 }
