@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
 import { useI18n } from '@/lib/i18n';
+import { BOOK_CATALOG } from '@/lib/books-catalog';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
@@ -129,12 +130,24 @@ export default function ProfilePage() {
                 <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fTitle')} *</label>
                 <input
                   required
+                  list="book-title-suggestions"
+                  autoComplete="off"
                   value={form.title}
-                  onChange={e => setForm({ ...form, title: e.target.value })}
+                  onChange={e => {
+                    const title = e.target.value;
+                    // If the typed/picked title exactly matches a known book, auto-fill the author.
+                    const match = BOOK_CATALOG.find(b => b.title.toLowerCase() === title.toLowerCase());
+                    setForm(prev => ({ ...prev, title, author: match ? match.author : prev.author }));
+                  }}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
                   placeholder={t('profile.fTitlePlaceholder')}
                 />
+                <datalist id="book-title-suggestions">
+                  {BOOK_CATALOG.map(b => (
+                    <option key={b.title} value={b.title} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fAuthor')} *</label>
