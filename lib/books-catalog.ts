@@ -138,9 +138,74 @@ export const BOOK_CATALOG: CatalogBook[] = [
   { author: 'รัชกาลที่ 2', titles: ['อิเหนา'] },
   { author: 'เจ้าพระยาพระคลัง (หน)', titles: ['สามก๊ก', 'Romance of the Three Kingdoms'] },
   { author: 'ว. วินิจฉัยกุล', titles: ['รัตนโกสินทร์'] },
-  { author: 'กฤษณา อโศกสิน', titles: ['เรือมนุษย์'] },
   { author: 'บินหลา สันกาลาคีรี', titles: ['เจ้าหงิญ'] },
-  { author: 'วรรณกรรมเยาวชน', titles: ['แต่ปางก่อน'] },
+
+  // ── More Thai novels — ทมยันตี ──
+  { author: 'ทมยันตี', titles: ['ทวิภพ'] },
+  { author: 'ทมยันตี', titles: ['ในฝัน'] },
+  { author: 'ทมยันตี', titles: ['ล่า'] },
+  { author: 'ทมยันตี', titles: ['ค่าของคน'] },
+  { author: 'ทมยันตี', titles: ['พิษสวาท'] },
+  { author: 'ทมยันตี', titles: ['ดั่งดวงหฤทัย'] },
+  { author: 'ทมยันตี', titles: ['ร่มฉัตร'] },
+  { author: 'ทมยันตี', titles: ['อตีตา'] },
+  { author: 'ทมยันตี', titles: ['ใบไม้ที่ปลิดปลิว'] },
+  { author: 'ทมยันตี', titles: ['แต่ปางก่อน'] },
+  { author: 'ทมยันตี', titles: ['คำมั่นสัญญา'] },
+
+  // ── More Thai novels — กฤษณา อโศกสิน ──
+  { author: 'กฤษณา อโศกสิน', titles: ['เรือมนุษย์'] },
+  { author: 'กฤษณา อโศกสิน', titles: ['เมียหลวง'] },
+  { author: 'กฤษณา อโศกสิน', titles: ['ปูนปิดทอง'] },
+  { author: 'กฤษณา อโศกสิน', titles: ['น้ำเซาะทราย'] },
+  { author: 'กฤษณา อโศกสิน', titles: ['สวรรค์เบี่ยง'] },
+  { author: 'กฤษณา อโศกสิน', titles: ['ลายหงส์'] },
+  { author: 'กฤษณา อโศกสิน', titles: ['เกสรดอกสวาท'] },
+
+  // ── More Thai novels — other beloved authors ──
+  { author: 'ปิยะพร ศักดิ์เกษม', titles: ['ดอกไม้ในป่าหนาว'] },
+  { author: 'ปิยะพร ศักดิ์เกษม', titles: ['ตะวันทอแสง'] },
+  { author: 'ปิยะพร ศักดิ์เกษม', titles: ['ในม่านเมฆ'] },
+  { author: 'วรรณวรรธน์', titles: ['รากนครา'] },
+  { author: 'วรรณวรรธน์', titles: ['ข้าบดินทร์'] },
+  { author: 'ว.วินิจฉัยกุล', titles: ['แก้วจอมแก่น'] },
+  { author: 'ว.วินิจฉัยกุล', titles: ['แก้วจอมซน'] },
+  { author: 'แก้วเก้า', titles: ['ปริศนา'] },
+  { author: 'ว.ณ ประมวญมารค', titles: ['ปริศนา (เจ้าหญิงแห่งราชสำนัก)'] },
+  { author: 'ก.สุรางคนางค์', titles: ['บ้านทรายทอง'] },
+  { author: 'ยาขอบ', titles: ['ผู้ชนะสิบทิศ'] },
+  { author: 'ไม้ เมืองเดิม', titles: ['แผลเก่า'] },
+  { author: 'มาลัย ชูพินิจ', titles: ['ทุ่งมหาราช'] },
+  { author: 'ประภัสสร เสวิกุล', titles: ['ลอดลายมังกร'] },
+  { author: 'ประภัสสร เสวิกุล', titles: ['เวลาในขวดแก้ว'] },
+  { author: 'ประภัสสร เสวิกุล', titles: ['ขอหมอนใบนั้น...ที่เธอฝันยามหนุน'] },
+  { author: 'วีรพร นิติประภา', titles: ['ไส้เดือนตาบอดในเขาวงกต'] },
+  { author: 'อุทิศ เหมะมูล', titles: ['ลับแล, แก่งคอย'] },
+
+  // ── Thai classic literature commonly studied in school ──
+  { author: 'สุนทรภู่', titles: ['นิราศภูเขาทอง'] },
+  { author: 'เจ้าฟ้าธรรมธิเบศร', titles: ['กาพย์เห่เรือ'] },
+  { author: 'กรมพระปรมานุชิตชิโนรส', titles: ['ลิลิตตะเลงพ่าย'] },
+  { author: 'พระบาทสมเด็จพระมงกุฎเกล้าเจ้าอยู่หัว (ร.6)', titles: ['มัทนะพาธา'] },
+  { author: 'พระบาทสมเด็จพระมงกุฎเกล้าเจ้าอยู่หัว (ร.6)', titles: ['หัวใจชายหนุ่ม'] },
+  { author: 'พระบาทสมเด็จพระจุลจอมเกล้าเจ้าอยู่หัว (ร.5)', titles: ['เงาะป่า'] },
+  { author: 'พระบาทสมเด็จพระจุลจอมเกล้าเจ้าอยู่หัว (ร.5)', titles: ['ไกลบ้าน'] },
+  { author: 'ไม่ปรากฏนามผู้แต่ง', titles: ['ลิลิตพระลอ'] },
+  { author: 'เสภาโบราณ', titles: ['ขุนช้างขุนแผน'] },
+
+  // ── Popular manga students trade (Japanese + Thai names) ──
+  { author: 'Eiichiro Oda', titles: ['One Piece', 'วันพีซ'] },
+  { author: 'Masashi Kishimoto', titles: ['Naruto', 'นารูโตะ'] },
+  { author: 'Fujiko F. Fujio', titles: ['Doraemon', 'โดราเอมอน'] },
+  { author: 'Gosho Aoyama', titles: ['Detective Conan', 'ยอดนักสืบจิ๋วโคนัน'] },
+  { author: 'Akira Toriyama', titles: ['Dragon Ball', 'ดราก้อนบอล'] },
+  { author: 'Hajime Isayama', titles: ['Attack on Titan', 'ผ่าพิภพไททัน'] },
+  { author: 'Koyoharu Gotouge', titles: ['Demon Slayer', 'ดาบพิฆาตอสูร'] },
+
+  // ── Popular translated books widely read by Thai students ──
+  { author: 'Tetsuko Kuroyanagi', titles: ['Totto-chan: The Little Girl at the Window', 'โต๊ะโตะจัง เด็กหญิงข้างหน้าต่าง'] },
+  { author: 'Michael Ende', titles: ['Momo', 'โมโม่'] },
+  { author: 'Michael Ende', titles: ['The Neverending Story', 'จินตนาการไม่รู้จบ'] },
 ];
 
 // A flat list of suggestion options for the <datalist>. Each title variant is
