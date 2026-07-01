@@ -1,75 +1,164 @@
-// A catalog of common book titles used to power title autocomplete in the
-// "Add Book" form. When a student picks a title that matches exactly, the
-// author is auto-filled. Feel free to add more titles/authors here.
+// Catalog of common book titles used to power title autocomplete in the
+// "Add Book" form.
+//
+// Each book can have several equivalent `titles` (e.g. an English name and its
+// Thai name). Typing ANY of them suggests the same book, the suggestion shows
+// the other-language name beside it, and picking any variant fills the same
+// author. Add more books by appending entries below.
 export interface CatalogBook {
-  title: string;
   author: string;
+  titles: string[]; // equivalent names for the same book (Thai / English / alt)
 }
 
 export const BOOK_CATALOG: CatalogBook[] = [
-  // Popular novels / YA
-  { title: 'Harry Potter and the Philosopher\'s Stone', author: 'J.K. Rowling' },
-  { title: 'Harry Potter and the Chamber of Secrets', author: 'J.K. Rowling' },
-  { title: 'Harry Potter and the Prisoner of Azkaban', author: 'J.K. Rowling' },
-  { title: 'Harry Potter and the Goblet of Fire', author: 'J.K. Rowling' },
-  { title: 'The Hobbit', author: 'J.R.R. Tolkien' },
-  { title: 'The Lord of the Rings', author: 'J.R.R. Tolkien' },
-  { title: 'The Hunger Games', author: 'Suzanne Collins' },
-  { title: 'Catching Fire', author: 'Suzanne Collins' },
-  { title: 'Mockingjay', author: 'Suzanne Collins' },
-  { title: 'Percy Jackson: The Lightning Thief', author: 'Rick Riordan' },
-  { title: 'The Fault in Our Stars', author: 'John Green' },
-  { title: 'Looking for Alaska', author: 'John Green' },
-  { title: 'Diary of a Wimpy Kid', author: 'Jeff Kinney' },
-  { title: 'Wonder', author: 'R.J. Palacio' },
-  { title: 'The Giver', author: 'Lois Lowry' },
-  { title: 'Charlotte\'s Web', author: 'E.B. White' },
-  { title: 'Matilda', author: 'Roald Dahl' },
-  { title: 'Charlie and the Chocolate Factory', author: 'Roald Dahl' },
-  { title: 'The BFG', author: 'Roald Dahl' },
-  { title: 'The Chronicles of Narnia', author: 'C.S. Lewis' },
-  { title: 'A Wrinkle in Time', author: 'Madeleine L\'Engle' },
-  { title: 'Holes', author: 'Louis Sachar' },
+  // ── Harry Potter (English + official Thai titles) ──
+  { author: 'J.K. Rowling', titles: ['Harry Potter and the Philosopher\'s Stone', 'แฮร์รี่ พอตเตอร์กับศิลาอาถรรพ์'] },
+  { author: 'J.K. Rowling', titles: ['Harry Potter and the Chamber of Secrets', 'แฮร์รี่ พอตเตอร์กับห้องแห่งความลับ'] },
+  { author: 'J.K. Rowling', titles: ['Harry Potter and the Prisoner of Azkaban', 'แฮร์รี่ พอตเตอร์กับนักโทษแห่งอัซคาบัน'] },
+  { author: 'J.K. Rowling', titles: ['Harry Potter and the Goblet of Fire', 'แฮร์รี่ พอตเตอร์กับถ้วยอัคนี'] },
+  { author: 'J.K. Rowling', titles: ['Harry Potter and the Order of the Phoenix', 'แฮร์รี่ พอตเตอร์กับภาคีนกฟีนิกซ์'] },
+  { author: 'J.K. Rowling', titles: ['Harry Potter and the Half-Blood Prince', 'แฮร์รี่ พอตเตอร์กับเจ้าชายเลือดผสม'] },
+  { author: 'J.K. Rowling', titles: ['Harry Potter and the Deathly Hallows', 'แฮร์รี่ พอตเตอร์กับเครื่องรางยมทูต'] },
 
-  // Classics often assigned in school
-  { title: 'To Kill a Mockingbird', author: 'Harper Lee' },
-  { title: 'Nineteen Eighty-Four', author: 'George Orwell' },
-  { title: 'Animal Farm', author: 'George Orwell' },
-  { title: 'The Great Gatsby', author: 'F. Scott Fitzgerald' },
-  { title: 'Lord of the Flies', author: 'William Golding' },
-  { title: 'Of Mice and Men', author: 'John Steinbeck' },
-  { title: 'The Catcher in the Rye', author: 'J.D. Salinger' },
-  { title: 'Romeo and Juliet', author: 'William Shakespeare' },
-  { title: 'Macbeth', author: 'William Shakespeare' },
-  { title: 'Hamlet', author: 'William Shakespeare' },
-  { title: 'Pride and Prejudice', author: 'Jane Austen' },
-  { title: 'The Diary of a Young Girl', author: 'Anne Frank' },
-  { title: 'The Little Prince', author: 'Antoine de Saint-Exupéry' },
-  { title: 'Fahrenheit 451', author: 'Ray Bradbury' },
-  { title: 'The Outsiders', author: 'S.E. Hinton' },
+  // ── Fantasy / adventure series ──
+  { author: 'J.R.R. Tolkien', titles: ['The Hobbit', 'เดอะ ฮอบบิท'] },
+  { author: 'J.R.R. Tolkien', titles: ['The Lord of the Rings', 'ลอร์ดออฟเดอะริงส์'] },
+  { author: 'C.S. Lewis', titles: ['The Chronicles of Narnia', 'ตำนานแห่งนาร์เนีย'] },
+  { author: 'Suzanne Collins', titles: ['The Hunger Games', 'เกมล่าเกม'] },
+  { author: 'Suzanne Collins', titles: ['Catching Fire', 'ปีกแห่งไฟ'] },
+  { author: 'Suzanne Collins', titles: ['Mockingjay', 'ม็อกกิ้งเจย์'] },
+  { author: 'Rick Riordan', titles: ['Percy Jackson: The Lightning Thief', 'เพอร์ซีย์ แจ็กสัน กับสายฟ้าที่หายไป'] },
+  { author: 'Rick Riordan', titles: ['Percy Jackson: The Sea of Monsters'] },
+  { author: 'Veronica Roth', titles: ['Divergent', 'ไดเวอร์เจนท์'] },
+  { author: 'James Dashner', titles: ['The Maze Runner', 'วงกตมฤตยู'] },
+  { author: 'Cassandra Clare', titles: ['City of Bones'] },
+  { author: 'Stephenie Meyer', titles: ['Twilight', 'แสงเงาราตรี'] },
+  { author: 'Christopher Paolini', titles: ['Eragon', 'เอรากอน'] },
+  { author: 'Philip Pullman', titles: ['Northern Lights', 'The Golden Compass'] },
 
-  // Textbooks by subject
-  { title: 'Biology', author: 'Campbell & Reece' },
-  { title: 'Chemistry: The Central Science', author: 'Brown, LeMay & Bursten' },
-  { title: 'Physics for Scientists and Engineers', author: 'Serway & Jewett' },
-  { title: 'Fundamentals of Physics', author: 'Halliday, Resnick & Walker' },
-  { title: 'Calculus: Early Transcendentals', author: 'James Stewart' },
-  { title: 'Algebra 1', author: 'Larson & Boswell' },
-  { title: 'Geometry', author: 'Larson & Boswell' },
-  { title: 'Pre-Calculus', author: 'Blitzer' },
-  { title: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest & Stein' },
-  { title: 'A Brief History of Time', author: 'Stephen Hawking' },
-  { title: 'Sapiens: A Brief History of Humankind', author: 'Yuval Noah Harari' },
-  { title: 'The Elements of Style', author: 'Strunk & White' },
-  { title: 'Oxford Advanced Learner\'s Dictionary', author: 'Oxford University Press' },
+  // ── Children's / middle grade ──
+  { author: 'Jeff Kinney', titles: ['Diary of a Wimpy Kid', 'ไดอารี่ของเด็กไม่เอาถ่าน'] },
+  { author: 'R.J. Palacio', titles: ['Wonder', 'ชีวิตมหัศจรรย์ของออกัสต์'] },
+  { author: 'Lois Lowry', titles: ['The Giver', 'ผู้ให้'] },
+  { author: 'E.B. White', titles: ['Charlotte\'s Web', 'แมงมุมเพื่อนรัก'] },
+  { author: 'Roald Dahl', titles: ['Matilda', 'มาทิลดา'] },
+  { author: 'Roald Dahl', titles: ['Charlie and the Chocolate Factory', 'ชาร์ลีกับโรงงานช็อกโกแลต'] },
+  { author: 'Roald Dahl', titles: ['The BFG', 'ยักษ์ใหญ่ใจดี'] },
+  { author: 'Roald Dahl', titles: ['James and the Giant Peach', 'เจมส์กับลูกพีชยักษ์'] },
+  { author: 'Madeleine L\'Engle', titles: ['A Wrinkle in Time', 'ริ้วรอยแห่งกาลเวลา'] },
+  { author: 'Louis Sachar', titles: ['Holes', 'ขุมทรัพย์ปริศนา'] },
+  { author: 'Michael Morpurgo', titles: ['War Horse', 'ม้าศึก'] },
+  { author: 'Kate DiCamillo', titles: ['The Tale of Despereaux'] },
+  { author: 'Norton Juster', titles: ['The Phantom Tollbooth'] },
 
-  // Thai literature commonly read in Thai schools
-  { title: 'สี่แผ่นดิน', author: 'คึกฤทธิ์ ปราโมช' },
-  { title: 'ข้างหลังภาพ', author: 'ศรีบูรพา' },
-  { title: 'คู่กรรม', author: 'ทมยันตี' },
-  { title: 'เพชรพระอุมา', author: 'พนมเทียน' },
-  { title: 'ลูกอีสาน', author: 'คำพูน บุญทวี' },
-  { title: 'ความสุขของกะทิ', author: 'งามพรรณ เวชชาชีวะ' },
-  { title: 'พระอภัยมณี', author: 'สุนทรภู่' },
-  { title: 'รามเกียรติ์', author: 'รัชกาลที่ 1' },
+  // ── Classics often assigned in school ──
+  { author: 'Harper Lee', titles: ['To Kill a Mockingbird', 'ผู้บริสุทธิ์'] },
+  { author: 'George Orwell', titles: ['Nineteen Eighty-Four', '1984'] },
+  { author: 'George Orwell', titles: ['Animal Farm', 'การเมืองของสัตว์'] },
+  { author: 'F. Scott Fitzgerald', titles: ['The Great Gatsby', 'เดอะ เกรต แกตสบี'] },
+  { author: 'William Golding', titles: ['Lord of the Flies', 'เจ้าแห่งแมลงวัน'] },
+  { author: 'John Steinbeck', titles: ['Of Mice and Men', 'เพื่อนยาก'] },
+  { author: 'John Steinbeck', titles: ['The Grapes of Wrath', 'ผลพวงแห่งความคับแค้น'] },
+  { author: 'J.D. Salinger', titles: ['The Catcher in the Rye', 'จะเป็นผู้คอยรับไว้ ไม่ให้ใครร่วงหล่น'] },
+  { author: 'Charlotte Brontë', titles: ['Jane Eyre', 'เจน แอร์'] },
+  { author: 'Emily Brontë', titles: ['Wuthering Heights', 'ยอดรักยอดสวาท'] },
+  { author: 'Jane Austen', titles: ['Pride and Prejudice', 'ความรักและความหยิ่งยโส'] },
+  { author: 'Jane Austen', titles: ['Sense and Sensibility'] },
+  { author: 'Charles Dickens', titles: ['Great Expectations', 'ความหวังอันยิ่งใหญ่'] },
+  { author: 'Charles Dickens', titles: ['Oliver Twist', 'โอลิเวอร์ ทวิสต์'] },
+  { author: 'Charles Dickens', titles: ['A Tale of Two Cities', 'อมตะนคร'] },
+  { author: 'Mark Twain', titles: ['The Adventures of Huckleberry Finn'] },
+  { author: 'Mark Twain', titles: ['The Adventures of Tom Sawyer', 'การผจญภัยของทอม ซอว์เยอร์'] },
+  { author: 'Ernest Hemingway', titles: ['The Old Man and the Sea', 'เฒ่าผจญทะเล'] },
+  { author: 'Herman Melville', titles: ['Moby-Dick', 'โมบี้ ดิ๊ก'] },
+  { author: 'Ray Bradbury', titles: ['Fahrenheit 451', 'ฟาเรนไฮต์ 451'] },
+  { author: 'Aldous Huxley', titles: ['Brave New World', 'โลกใหม่ที่กล้าหาญ'] },
+  { author: 'Mary Shelley', titles: ['Frankenstein', 'แฟรงเกนสไตน์'] },
+  { author: 'Bram Stoker', titles: ['Dracula', 'แดร็กคูลา'] },
+  { author: 'Oscar Wilde', titles: ['The Picture of Dorian Gray', 'ภาพวาดของดอเรียน เกรย์'] },
+  { author: 'Victor Hugo', titles: ['Les Misérables', 'เหยื่ออธรรม'] },
+  { author: 'Fyodor Dostoevsky', titles: ['Crime and Punishment', 'อาชญากรรมและการลงทัณฑ์'] },
+  { author: 'Leo Tolstoy', titles: ['War and Peace', 'สงครามและสันติภาพ'] },
+  { author: 'Miguel de Cervantes', titles: ['Don Quixote', 'ดอน กิโฆเต้'] },
+  { author: 'S.E. Hinton', titles: ['The Outsiders', 'คนนอก'] },
+  { author: 'Anne Frank', titles: ['The Diary of a Young Girl', 'บันทึกลับของแอนน์ แฟรงค์'] },
+  { author: 'Antoine de Saint-Exupéry', titles: ['The Little Prince', 'เจ้าชายน้อย'] },
+  { author: 'Paulo Coelho', titles: ['The Alchemist', 'ขุมทรัพย์สุดปลายฝัน'] },
+  { author: 'Yann Martel', titles: ['Life of Pi', 'ชีวิตอัศจรรย์ของพาย'] },
+  { author: 'Khaled Hosseini', titles: ['The Kite Runner', 'เด็กเก็บว่าว'] },
+
+  // ── Shakespeare ──
+  { author: 'William Shakespeare', titles: ['Romeo and Juliet', 'โรมิโอกับจูเลียต'] },
+  { author: 'William Shakespeare', titles: ['Macbeth', 'แม็คเบธ'] },
+  { author: 'William Shakespeare', titles: ['Hamlet', 'แฮมเล็ต'] },
+  { author: 'William Shakespeare', titles: ['A Midsummer Night\'s Dream'] },
+  { author: 'William Shakespeare', titles: ['Othello'] },
+  { author: 'William Shakespeare', titles: ['The Merchant of Venice', 'เวนิสวาณิช'] },
+  { author: 'William Shakespeare', titles: ['King Lear'] },
+
+  // ── Non-fiction / popular science ──
+  { author: 'Stephen Hawking', titles: ['A Brief History of Time', 'ประวัติย่อของกาลเวลา'] },
+  { author: 'Yuval Noah Harari', titles: ['Sapiens: A Brief History of Humankind', 'เซเปียนส์ ประวัติย่อมนุษยชาติ'] },
+  { author: 'Yuval Noah Harari', titles: ['Homo Deus', 'โฮโม เดอุส'] },
+  { author: 'Carl Sagan', titles: ['Cosmos', 'คอสมอส'] },
+  { author: 'Richard Dawkins', titles: ['The Selfish Gene', 'ยีนเห็นแก่ตัว'] },
+  { author: 'James Clear', titles: ['Atomic Habits', 'Atomic Habits เพราะชีวิตดีได้กว่าที่เป็น'] },
+  { author: 'Dale Carnegie', titles: ['How to Win Friends and Influence People', 'วิธีชนะมิตรและจูงใจคน'] },
+  { author: 'Robert Kiyosaki', titles: ['Rich Dad Poor Dad', 'พ่อรวยสอนลูก'] },
+  { author: 'Napoleon Hill', titles: ['Think and Grow Rich', 'คิดแล้วรวย'] },
+
+  // ── Textbooks by subject ──
+  { author: 'Campbell & Reece', titles: ['Biology', 'ชีววิทยา'] },
+  { author: 'Brown, LeMay & Bursten', titles: ['Chemistry: The Central Science', 'เคมี'] },
+  { author: 'Serway & Jewett', titles: ['Physics for Scientists and Engineers', 'ฟิสิกส์'] },
+  { author: 'Halliday, Resnick & Walker', titles: ['Fundamentals of Physics'] },
+  { author: 'James Stewart', titles: ['Calculus: Early Transcendentals', 'แคลคูลัส'] },
+  { author: 'Larson & Boswell', titles: ['Algebra 1', 'พีชคณิต 1'] },
+  { author: 'Larson & Boswell', titles: ['Algebra 2', 'พีชคณิต 2'] },
+  { author: 'Larson & Boswell', titles: ['Geometry', 'เรขาคณิต'] },
+  { author: 'Blitzer', titles: ['Pre-Calculus', 'พรีแคลคูลัส'] },
+  { author: 'Cormen, Leiserson, Rivest & Stein', titles: ['Introduction to Algorithms'] },
+  { author: 'Robert C. Martin', titles: ['Clean Code'] },
+  { author: 'Strunk & White', titles: ['The Elements of Style'] },
+  { author: 'Raymond Murphy', titles: ['English Grammar in Use', 'ไวยากรณ์อังกฤษ'] },
+  { author: 'Oxford University Press', titles: ['Oxford Advanced Learner\'s Dictionary', 'พจนานุกรมออกซ์ฟอร์ด'] },
+  { author: 'National Geographic', titles: ['World Atlas', 'แผนที่โลก'] },
+
+  // ── Thai literature (Thai title + English translation where it exists) ──
+  { author: 'คึกฤทธิ์ ปราโมช', titles: ['สี่แผ่นดิน', 'Four Reigns'] },
+  { author: 'ศรีบูรพา', titles: ['ข้างหลังภาพ', 'Behind the Painting'] },
+  { author: 'ทมยันตี', titles: ['คู่กรรม'] },
+  { author: 'พนมเทียน', titles: ['เพชรพระอุมา'] },
+  { author: 'คำพูน บุญทวี', titles: ['ลูกอีสาน', 'A Child of the Northeast'] },
+  { author: 'งามพรรณ เวชชาชีวะ', titles: ['ความสุขของกะทิ', 'The Happiness of Kati'] },
+  { author: 'ชาติ กอบจิตติ', titles: ['คำพิพากษา', 'The Judgment'] },
+  { author: 'เสนีย์ เสาวพงศ์', titles: ['ปีศาจ'] },
+  { author: 'สุนทรภู่', titles: ['พระอภัยมณี'] },
+  { author: 'รัชกาลที่ 1', titles: ['รามเกียรติ์'] },
+  { author: 'รัชกาลที่ 2', titles: ['อิเหนา'] },
+  { author: 'เจ้าพระยาพระคลัง (หน)', titles: ['สามก๊ก', 'Romance of the Three Kingdoms'] },
+  { author: 'ว. วินิจฉัยกุล', titles: ['รัตนโกสินทร์'] },
+  { author: 'กฤษณา อโศกสิน', titles: ['เรือมนุษย์'] },
+  { author: 'บินหลา สันกาลาคีรี', titles: ['เจ้าหงิญ'] },
+  { author: 'วรรณกรรมเยาวชน', titles: ['แต่ปางก่อน'] },
 ];
+
+// A flat list of suggestion options for the <datalist>. Each title variant is
+// its own option; the label shows the equivalent name(s) in the other language.
+export function titleSuggestions(): { value: string; label?: string }[] {
+  const out: { value: string; label?: string }[] = [];
+  for (const book of BOOK_CATALOG) {
+    for (const title of book.titles) {
+      const others = book.titles.filter(x => x !== title);
+      out.push({ value: title, label: others.length ? others.join(' / ') : undefined });
+    }
+  }
+  return out;
+}
+
+// Find the catalog entry whose title (any language variant) matches the input.
+export function findByTitle(title: string): CatalogBook | undefined {
+  const q = title.trim().toLowerCase();
+  if (!q) return undefined;
+  return BOOK_CATALOG.find(b => b.titles.some(t => t.toLowerCase() === q));
+}

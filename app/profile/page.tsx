@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
 import { useI18n } from '@/lib/i18n';
-import { BOOK_CATALOG } from '@/lib/books-catalog';
+import { titleSuggestions, findByTitle } from '@/lib/books-catalog';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
+const TITLE_SUGGESTIONS = titleSuggestions();
 
 interface Book {
   id: number;
@@ -135,8 +136,8 @@ export default function ProfilePage() {
                   value={form.title}
                   onChange={e => {
                     const title = e.target.value;
-                    // If the typed/picked title exactly matches a known book, auto-fill the author.
-                    const match = BOOK_CATALOG.find(b => b.title.toLowerCase() === title.toLowerCase());
+                    // If the typed/picked title matches a known book (in any language), auto-fill the author.
+                    const match = findByTitle(title);
                     setForm(prev => ({ ...prev, title, author: match ? match.author : prev.author }));
                   }}
                   className="w-full p-2.5 rounded-xl text-sm"
@@ -144,8 +145,8 @@ export default function ProfilePage() {
                   placeholder={t('profile.fTitlePlaceholder')}
                 />
                 <datalist id="book-title-suggestions">
-                  {BOOK_CATALOG.map(b => (
-                    <option key={b.title} value={b.title} />
+                  {TITLE_SUGGESTIONS.map(s => (
+                    <option key={s.value} value={s.value} label={s.label} />
                   ))}
                 </datalist>
               </div>
