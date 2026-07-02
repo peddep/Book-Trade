@@ -39,6 +39,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ title: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [remoteBooks, setRemoteBooks] = useState<{ title: string; author: string }[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -48,6 +49,32 @@ export default function ProfilePage() {
     });
     fetchBooks();
   }, [router]);
+
+  // Live title suggestions from the public books API (debounced). Skips when a
+  // built-in catalog entry already matches, and fails silently to the catalog.
+  useEffect(() => {
+    const q = form.title.trim();
+    if (q.length < 2 || findByTitle(q)) {
+      setRemoteBooks([]);
+      return;
+    }
+    const id = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/book-search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        const found: { title: string; author: string }[] = data.books ?? [];
+        setRemoteBooks(found);
+        // Auto-fill author if a remote title matches exactly and author is empty.
+        const exact = found.find(b => b.title.toLowerCase() === q.toLowerCase());
+        if (exact?.author) {
+          setForm(prev => (prev.author ? prev : { ...prev, author: exact.author }));
+        }
+      } catch {
+        setRemoteBooks([]);
+      }
+    }, 350);
+    return () => clearTimeout(id);
+  }, [form.title]);
 
   async function fetchBooks() {
     setLoading(true);
@@ -136,18 +163,35 @@ export default function ProfilePage() {
                   value={form.title}
                   onChange={e => {
                     const title = e.target.value;
-                    // If the typed/picked title matches a known book (in any language), auto-fill the author.
-                    const match = findByTitle(title);
-                    setForm(prev => ({ ...prev, title, author: match ? match.author : prev.author }));
+                    // Auto-fill the author if the title matches the built-in catalog
+                    // (any language) or an already-loaded API suggestion.
+                    const local = findByTitle(title);
+                    const remote = remoteBooks.find(b => b.title.toLowerCase() === title.toLowerCase());
+                    const author = local?.author || remote?.author;
+                    setForm(prev => ({ ...prev, title, author: author ?? prev.author }));
                   }}
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
                   placeholder={t('profile.fTitlePlaceholder')}
                 />
                 <datalist id="book-title-suggestions">
-                  {TITLE_SUGGESTIONS.map(s => (
-                    <option key={s.value} value={s.value} label={s.label} />
-                  ))}
+                  {(() => {
+                    const seen = new Set<string>();
+                    const opts: { value: string; label?: string }[] = [];
+                    for (const s of TITLE_SUGGESTIONS) {
+                      const k = s.value.toLowerCase();
+                      if (seen.has(k)) continue;
+                      seen.add(k);
+                      opts.push(s);
+                    }
+                    for (const b of remoteBooks) {
+                      const k = b.title.toLowerCase();
+                      if (seen.has(k)) continue;
+                      seen.add(k);
+                      opts.push({ value: b.title, label: b.author || undefined });
+                    }
+                    return opts.map(s => <option key={s.value} value={s.value} label={s.label} />);
+                  })()}
                 </datalist>
               </div>
               <div>
