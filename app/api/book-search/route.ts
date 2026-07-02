@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDb } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -8,6 +9,41 @@ interface Suggestion {
 }
 
 const THAI_SCRIPT = /[฀-๿]/;
+
+let catalogEnsured = false;
+
+// Searches our own database: the harvested Thai catalog plus titles students
+// have already listed on the site. Instant and quota-free.
+async function searchLocalDb(q: string): Promise<Suggestion[]> {
+  try {
+    const db = getDb();
+    if (!catalogEnsured) {
+      await db.execute(`CREATE TABLE IF NOT EXISTS catalog_books (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL UNIQUE,
+        author TEXT,
+        publisher TEXT,
+        source TEXT DEFAULT 'harvest',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+      catalogEnsured = true;
+    }
+    const like = `%${q}%`;
+    const [catalog, listed] = await Promise.all([
+      db.execute({ sql: 'SELECT title, author FROM catalog_books WHERE title LIKE ? LIMIT 8', args: [like] }),
+      db.execute({ sql: 'SELECT DISTINCT title, author FROM books WHERE title LIKE ? LIMIT 4', args: [like] }),
+    ]);
+    const out: Suggestion[] = [];
+    for (const row of [...listed.rows, ...catalog.rows]) {
+      const title = typeof row.title === 'string' ? row.title.trim() : '';
+      if (!title) continue;
+      out.push({ title, author: typeof row.author === 'string' ? row.author : '' });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
 
 // Open Library: no key, no quota. Thin Thai coverage, good English coverage.
 async function searchOpenLibrary(q: string, thai: boolean): Promise<Suggestion[]> {
@@ -66,11 +102,12 @@ export async function GET(req: NextRequest) {
 
   const thai = THAI_SCRIPT.test(q);
 
-  // Thai input: Google Books (Thai-restricted) is the primary source, Open
-  // Library the backup. English input: Open Library alone is plenty.
+  // Our own database first (harvested Thai catalog + titles already listed on
+  // the site) — instant and quota-free. External APIs fill in the rest:
+  // Thai input prefers Google Books (Thai-restricted); English uses Open Library.
   const sources: Promise<Suggestion[]>[] = thai
-    ? [searchGoogleBooks(q), searchOpenLibrary(q, true)]
-    : [searchOpenLibrary(q, false)];
+    ? [searchLocalDb(q), searchGoogleBooks(q), searchOpenLibrary(q, true)]
+    : [searchLocalDb(q), searchOpenLibrary(q, false)];
 
   const settled = await Promise.allSettled(sources);
 

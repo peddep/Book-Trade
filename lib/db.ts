@@ -51,6 +51,14 @@ export async function initDb() {
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
       )`,
+      `CREATE TABLE IF NOT EXISTS catalog_books (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL UNIQUE,
+        author TEXT,
+        publisher TEXT,
+        source TEXT DEFAULT 'harvest',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
     ],
     'write'
   );
