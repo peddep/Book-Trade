@@ -2,38 +2,91 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-// Proxies the public Open Library search API (no key / no quota) so the
-// Add Book title field can suggest real titles. On any failure it returns an
-// empty list and the client falls back to the built-in catalog.
+interface Suggestion {
+  title: string;
+  author: string;
+}
+
+const THAI_SCRIPT = /[฀-๿]/;
+
+// Open Library: no key, no quota. Thin Thai coverage, good English coverage.
+async function searchOpenLibrary(q: string, thai: boolean): Promise<Suggestion[]> {
+  const query = thai ? `${q} language:tha` : q;
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,author_name`;
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' },
+    signal: AbortSignal.timeout(6000),
+    next: { revalidate: 86400 },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  const out: Suggestion[] = [];
+  for (const doc of data.docs ?? []) {
+    const title = typeof doc.title === 'string' ? doc.title.trim() : '';
+    if (!title) continue;
+    const author = Array.isArray(doc.author_name) && doc.author_name.length ? doc.author_name[0] : '';
+    out.push({ title, author });
+  }
+  return out;
+}
+
+// Google Books: much better Thai coverage (Thai publishers + translations).
+// Queried only for Thai-script input to conserve the free quota. An optional
+// GOOGLE_BOOKS_API_KEY env var raises the quota but is not required.
+async function searchGoogleBooks(q: string): Promise<Suggestion[]> {
+  const params = new URLSearchParams({
+    q,
+    langRestrict: 'th',
+    maxResults: '8',
+    printType: 'books',
+    fields: 'items(volumeInfo(title,authors))',
+  });
+  const key = process.env.GOOGLE_BOOKS_API_KEY;
+  if (key) params.set('key', key);
+  const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${params}`, {
+    signal: AbortSignal.timeout(6000),
+    next: { revalidate: 86400 },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  const out: Suggestion[] = [];
+  for (const item of data.items ?? []) {
+    const info = item.volumeInfo ?? {};
+    const title = typeof info.title === 'string' ? info.title.trim() : '';
+    if (!title) continue;
+    const author = Array.isArray(info.authors) && info.authors.length ? info.authors[0] : '';
+    out.push({ title, author });
+  }
+  return out;
+}
+
 export async function GET(req: NextRequest) {
   const q = new URL(req.url).searchParams.get('q')?.trim();
   if (!q || q.length < 2) return NextResponse.json({ books: [] });
 
-  try {
-    const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=8&fields=title,author_name`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' },
-      signal: AbortSignal.timeout(6000),
-      // Cache identical queries at the edge for a day to be kind to the API.
-      next: { revalidate: 86400 },
-    });
-    if (!res.ok) return NextResponse.json({ books: [] });
+  const thai = THAI_SCRIPT.test(q);
 
-    const data = await res.json();
-    const seen = new Set<string>();
-    const books: { title: string; author: string }[] = [];
-    for (const doc of data.docs ?? []) {
-      const title = typeof doc.title === 'string' ? doc.title.trim() : '';
-      if (!title) continue;
-      const key = title.toLowerCase();
+  // Thai input: Google Books (Thai-restricted) is the primary source, Open
+  // Library the backup. English input: Open Library alone is plenty.
+  const sources: Promise<Suggestion[]>[] = thai
+    ? [searchGoogleBooks(q), searchOpenLibrary(q, true)]
+    : [searchOpenLibrary(q, false)];
+
+  const settled = await Promise.allSettled(sources);
+
+  const seen = new Set<string>();
+  const books: Suggestion[] = [];
+  for (const result of settled) {
+    if (result.status !== 'fulfilled') continue;
+    for (const b of result.value) {
+      const key = b.title.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
-      const author = Array.isArray(doc.author_name) && doc.author_name.length ? doc.author_name[0] : '';
-      books.push({ title, author });
-      if (books.length >= 8) break;
+      books.push(b);
+      if (books.length >= 10) break;
     }
-    return NextResponse.json({ books });
-  } catch {
-    return NextResponse.json({ books: [] });
+    if (books.length >= 10) break;
   }
+
+  return NextResponse.json({ books });
 }
