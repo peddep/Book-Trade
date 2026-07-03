@@ -51,6 +51,7 @@ export default function Navbar() {
           {user ? (
             <>
               <Link href="/books" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.browse')}</Link>
+              <Link href="/trade" className="text-sm font-semibold hidden sm:block" style={{ color: '#a78bfa' }}>✨ {t('nav.hub')}</Link>
               <Link href="/trades" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.trades')}</Link>
               <Link href="/profile" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.myBooks')}</Link>
               <div className="relative">
@@ -75,6 +76,7 @@ export default function Navbar() {
                       {user.grade && <p className="text-xs text-slate-400">{t('common.grade')} {user.grade}</p>}
                     </div>
                     <Link href="/books" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.browse')}</Link>
+                    <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden" style={{ color: '#a78bfa' }}>✨ {t('nav.hub')}</Link>
                     <Link href="/trades" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.trades')}</Link>
                     <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.myBooks')}</Link>
                     <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-700">

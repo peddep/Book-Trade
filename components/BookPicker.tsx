@@ -1,0 +1,64 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
+
+export interface PickerBook {
+  id: number;
+  title: string;
+  author: string;
+  cover_color: string;
+  available: number;
+}
+
+interface Props {
+  excludeIds?: number[];
+  selected: number | null;
+  onSelect: (id: number) => void;
+}
+
+// Lists the user's available books as selectable rows.
+export default function BookPicker({ excludeIds = [], selected, onSelect }: Props) {
+  const { t } = useI18n();
+  const [books, setBooks] = useState<PickerBook[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/books?mine=1')
+      .then(r => r.json())
+      .then(d => {
+        setBooks((d.books ?? []).filter((b: PickerBook) => b.available));
+        setLoaded(true);
+      });
+  }, []);
+
+  const choices = books.filter(b => !excludeIds.includes(b.id));
+
+  if (loaded && choices.length === 0) {
+    return <p className="text-sm text-slate-400">{t('hub.noFreeBooks')}</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-2 max-h-56 overflow-y-auto">
+      {choices.map(b => (
+        <button
+          key={b.id}
+          type="button"
+          onClick={() => onSelect(b.id)}
+          className="flex items-center gap-3 p-3 rounded-xl text-left"
+          style={{
+            background: selected === b.id ? '#2d1e5a' : '#0f0f1a',
+            border: `1px solid ${selected === b.id ? '#8b5cf6' : '#2d2d4a'}`,
+          }}
+        >
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: b.cover_color }}>📖</div>
+          <div>
+            <p className="text-sm font-semibold text-white">{b.title}</p>
+            <p className="text-xs text-slate-400">{b.author}</p>
+          </div>
+          {selected === b.id && <span className="ml-auto text-purple-400">✓</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
