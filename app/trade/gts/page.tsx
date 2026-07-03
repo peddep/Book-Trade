@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import BookPicker from '@/components/BookPicker';
+import TitleInput from '@/components/TitleInput';
 import { useI18n } from '@/lib/i18n';
+import { titlesMatch } from '@/lib/books-catalog';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
 
@@ -158,13 +160,15 @@ export default function GtsPage() {
               <p className="text-sm font-semibold text-slate-300 mb-2">{t('hub.pickBook')}</p>
               <BookPicker selected={picked} onSelect={setPicked} />
               <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                <input
-                  value={wantTitle}
-                  onChange={e => setWantTitle(e.target.value)}
-                  placeholder={t('gts.wantedTitle')}
-                  className="p-2.5 rounded-xl text-sm"
-                  style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
-                />
+                <div>
+                  <TitleInput
+                    value={wantTitle}
+                    onChange={setWantTitle}
+                    placeholder={t('gts.wantedTitle')}
+                    listId="gts-wanted-suggestions"
+                  />
+                  <p className="text-[11px] mt-1" style={{ color: '#64748b' }}>{t('gts.exactHint')}</p>
+                </div>
                 <select
                   value={wantSubject}
                   onChange={e => setWantSubject(e.target.value)}
@@ -224,7 +228,15 @@ export default function GtsPage() {
                 {fulfilling?.id === o.id && (
                   <div className="mt-4 pt-4" style={{ borderTop: '1px solid #2d2d4a' }}>
                     <p className="text-sm font-semibold text-slate-300 mb-2">{t('gts.pickMatching')}</p>
-                    <BookPicker selected={fulfillBook} onSelect={setFulfillBook} />
+                    <BookPicker
+                      selected={fulfillBook}
+                      onSelect={setFulfillBook}
+                      filterFn={b =>
+                        (!o.wanted_title || titlesMatch(o.wanted_title, b.title)) &&
+                        (!o.wanted_subject || b.subject === o.wanted_subject)
+                      }
+                      emptyText={t('gts.noMatchingBook')}
+                    />
                     {err && <p className="text-sm text-red-400 mt-2">{err}</p>}
                     <button onClick={fulfill} disabled={!fulfillBook || busy} className="mt-3 w-full py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
                       style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>

@@ -227,3 +227,15 @@ export function findByTitle(title: string): CatalogBook | undefined {
   if (!q) return undefined;
   return BOOK_CATALOG.find(b => b.titles.some(t => t.toLowerCase() === q));
 }
+
+// True when two titles refer to the same book: exact match (case-insensitive)
+// or both are language variants of the same catalog entry (e.g. the Thai and
+// English names of one book).
+export function titlesMatch(a: string, b: string): boolean {
+  const x = a.trim().toLowerCase();
+  const y = b.trim().toLowerCase();
+  if (!x || !y) return false;
+  if (x === y) return true;
+  const ca = findByTitle(a);
+  return !!ca && ca === findByTitle(b);
+}

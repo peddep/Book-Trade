@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables, getFreeOwnedBook, createInstantTrade, PLAN } from '@/lib/hub';
+import { titlesMatch } from '@/lib/books-catalog';
 
 export const runtime = 'nodejs';
 
@@ -85,9 +86,10 @@ export async function PATCH(req: NextRequest) {
   const myBook = await getFreeOwnedBook(user.id, Number(offered_book_id));
   if (!myBook) return NextResponse.json({ error: 'book_unavailable' }, { status: 400 });
 
-  // My book must satisfy the depositor's wish.
-  const title = String(myBook.title ?? '').toLowerCase();
-  if (dep.wanted_title && !title.includes(String(dep.wanted_title).toLowerCase())) {
+  // My book must satisfy the depositor's wish. A wanted title is strict:
+  // only that exact book (or its Thai/English variant of the same catalog
+  // entry) can complete the trade.
+  if (dep.wanted_title && !titlesMatch(String(dep.wanted_title), String(myBook.title ?? ''))) {
     return NextResponse.json({ error: 'not_a_match' }, { status: 400 });
   }
   if (dep.wanted_subject && myBook.subject !== dep.wanted_subject) {

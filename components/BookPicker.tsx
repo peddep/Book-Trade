@@ -7,6 +7,7 @@ export interface PickerBook {
   id: number;
   title: string;
   author: string;
+  subject?: string;
   cover_color: string;
   available: number;
 }
@@ -15,10 +16,12 @@ interface Props {
   excludeIds?: number[];
   selected: number | null;
   onSelect: (id: number) => void;
+  filterFn?: (b: PickerBook) => boolean;
+  emptyText?: string;
 }
 
 // Lists the user's available books as selectable rows.
-export default function BookPicker({ excludeIds = [], selected, onSelect }: Props) {
+export default function BookPicker({ excludeIds = [], selected, onSelect, filterFn, emptyText }: Props) {
   const { t } = useI18n();
   const [books, setBooks] = useState<PickerBook[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -32,10 +35,10 @@ export default function BookPicker({ excludeIds = [], selected, onSelect }: Prop
       });
   }, []);
 
-  const choices = books.filter(b => !excludeIds.includes(b.id));
+  const choices = books.filter(b => !excludeIds.includes(b.id) && (!filterFn || filterFn(b)));
 
   if (loaded && choices.length === 0) {
-    return <p className="text-sm text-slate-400">{t('hub.noFreeBooks')}</p>;
+    return <p className="text-sm text-slate-400">{emptyText ?? t('hub.noFreeBooks')}</p>;
   }
 
   return (
