@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
+import AdminHarvestCard from '@/components/AdminHarvestCard';
 import { useI18n } from '@/lib/i18n';
 import { titleSuggestions, findByTitle } from '@/lib/books-catalog';
 
@@ -29,6 +30,7 @@ interface User {
   email: string;
   grade: string | null;
   avatar_color: string;
+  is_admin?: boolean;
 }
 
 export default function ProfilePage() {
@@ -137,6 +139,8 @@ export default function ProfilePage() {
             <p className="text-xs text-slate-400">{t('profile.booksListed')}</p>
           </div>
         </div>
+
+        {user.is_admin && <AdminHarvestCard />}
 
         {/* Add book */}
         <div className="flex items-center justify-between mb-6">

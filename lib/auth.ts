@@ -41,3 +41,12 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   if (!token) return null;
   return verifySession(token);
 }
+
+// Admin = the account whose email matches ADMIN_EMAIL, or (when ADMIN_EMAIL
+// is not set) the very first account created on the site (id 1).
+export function isAdmin(user: SessionUser | null): boolean {
+  if (!user) return false;
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (adminEmail) return user.email.toLowerCase() === adminEmail.toLowerCase();
+  return user.id === 1;
+}

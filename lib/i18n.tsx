@@ -137,6 +137,19 @@ const STRINGS: Dict = {
   'modal.send': { th: 'ส่งคำขอ', en: 'Send Offer' },
   'modal.error': { th: 'เกิดข้อผิดพลาด', en: 'Something went wrong' },
 
+  // Admin harvest card
+  'admin.title': { th: 'ผู้ดูแล: คลังหนังสือไทย', en: 'Admin: Thai Book Catalog' },
+  'admin.subtitle': { th: 'นำเข้าหนังสือจากสำนักพิมพ์ไทยเพื่อใช้แนะนำชื่อหนังสือ (ตอนนี้มี {count} เล่ม)', en: 'Import books from Thai publishers to power title suggestions (currently {count} titles)' },
+  'admin.start': { th: 'นำเข้าหนังสือไทย', en: 'Import Thai Books' },
+  'admin.continue': { th: 'นำเข้าต่อ', en: 'Continue Import' },
+  'admin.runAgain': { th: 'นำเข้าอีกครั้ง', en: 'Run Again' },
+  'admin.running': { th: 'กำลังนำเข้า... {pct}%', en: 'Importing... {pct}%' },
+  'admin.stop': { th: 'หยุด', en: 'Stop' },
+  'admin.progress': { th: 'คำค้น {current}/{total} • มีหนังสือ {count} เล่มแล้ว', en: 'Query {current}/{total} • {count} titles so far' },
+  'admin.done': { th: '✅ เสร็จสิ้น! คลังมีหนังสือ {count} เล่ม', en: '✅ Done! The catalog now holds {count} titles' },
+  'admin.rateLimited': { th: '⚠️ ถึงลิมิตของ Google Books แล้ว ความคืบหน้าถูกบันทึกไว้ ลองกด "นำเข้าต่อ" ภายหลัง หรือเพิ่ม GOOGLE_BOOKS_API_KEY ใน Vercel', en: '⚠️ Google Books rate limit reached. Progress is saved — press "Continue Import" later, or add GOOGLE_BOOKS_API_KEY in Vercel.' },
+  'admin.error': { th: 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง', en: 'Something went wrong. Try again.' },
+
   // Trades
   'trades.title': { th: 'การแลกเปลี่ยนของฉัน', en: 'My Trades' },
   'trades.subtitle': { th: 'จัดการคำขอแลกเปลี่ยนของคุณ', en: 'Manage your trade offers' },
