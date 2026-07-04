@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
 import TradeModal from '@/components/TradeModal';
@@ -23,7 +24,7 @@ interface Book {
   owner_grade?: string;
 }
 
-export default function BooksPage() {
+export default function FriendTradePage() {
   const { t } = useI18n();
   const [books, setBooks] = useState<Book[]>([]);
   const [query, setQuery] = useState('');
@@ -57,10 +58,11 @@ export default function BooksPage() {
   return (
     <>
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">{t('books.title')}</h1>
-          <p className="text-slate-400">{t('books.subtitle')}</p>
+      <main className="max-w-6xl mx-auto px-4 py-6">
+        <Link href="/trade" className="text-sm text-slate-400 hover:text-white">{t('hub.back')}</Link>
+        <div className="mt-2 mb-6">
+          <h1 className="text-3xl font-bold text-white mb-1">🤝 {t('hub.friend')}</h1>
+          <p className="text-slate-400 text-sm">{t('books.subtitle')}</p>
         </div>
 
         {success && (
@@ -100,22 +102,14 @@ export default function BooksPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {books.map(book => (
-              <BookCard
-                key={book.id}
-                book={book}
-                onTrade={() => setTradeBook(book)}
-              />
+              <BookCard key={book.id} book={book} onTrade={() => setTradeBook(book)} />
             ))}
           </div>
         )}
       </main>
 
       {tradeBook && (
-        <TradeModal
-          targetBook={tradeBook}
-          onClose={() => setTradeBook(null)}
-          onSuccess={handleTradeSuccess}
-        />
+        <TradeModal targetBook={tradeBook} onClose={() => setTradeBook(null)} onSuccess={handleTradeSuccess} />
       )}
     </>
   );

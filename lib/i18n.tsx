@@ -137,6 +137,37 @@ const STRINGS: Dict = {
   'modal.send': { th: 'ส่งคำขอ', en: 'Send Offer' },
   'modal.error': { th: 'เกิดข้อผิดพลาด', en: 'Something went wrong' },
 
+  // Top tabs
+  'tabs.trade': { th: 'เทรด', en: 'Trade' },
+  'tabs.room': { th: 'ห้องของคุณ', en: 'Your Room' },
+  'tabs.books': { th: 'หนังสือของคุณ', en: 'Your Books' },
+
+  // Rotate lock
+  'rotate.msg': { th: 'กรุณาหมุนโทรศัพท์เป็นแนวตั้ง', en: 'Please rotate your phone upright' },
+
+  // Your Room
+  'room2.title': { th: 'ห้องของคุณ', en: 'Your Room' },
+  'room2.news': { th: 'ข่าวสาร', en: 'News' },
+  'room2.newsEmpty': { th: 'ยังไม่มีข่าวสารใหม่', en: 'No news yet' },
+  'room2.news1Title': { th: 'ยินดีต้อนรับสู่ BookTrade! 📚', en: 'Welcome to BookTrade! 📚' },
+  'room2.news1Body': { th: 'ลงรายการหนังสือแล้วเริ่มเทรดกับเพื่อน ๆ ได้เลย ลองใช้ Wonder Box เพื่อสุ่มแลกหนังสือ!', en: 'List your books and start trading with classmates. Try the Wonder Box to swap books randomly!' },
+  'room2.news2Title': { th: 'ฟีเจอร์ใหม่: ห้องเทรด 🚪', en: 'New: Room Trade 🚪' },
+  'room2.news2Body': { th: 'สร้างห้องกับเพื่อน ๆ แล้วสุ่มแลกหนังสือกันได้สูงสุด 20 คน', en: 'Create a room with friends and shuffle-trade with up to 20 people.' },
+  'room2.challenges': { th: 'ภารกิจ', en: 'Challenges' },
+  'room2.achievements': { th: 'ความสำเร็จ', en: 'Achievements' },
+  'room2.settings': { th: 'ตั้งค่า', en: 'Settings' },
+  'room2.language': { th: 'ภาษา', en: 'Language' },
+  'room2.signOut': { th: 'ออกจากระบบ', en: 'Sign Out' },
+  'room2.tradesMade': { th: 'แลกเปลี่ยนสำเร็จ', en: 'Trades made' },
+  'room2.booksListed': { th: 'หนังสือที่ลง', en: 'Books listed' },
+  'ch.firstBook': { th: 'ลงหนังสือเล่มแรก', en: 'List your first book' },
+  'ch.firstTrade': { th: 'แลกเปลี่ยนครั้งแรก', en: 'Complete your first trade' },
+  'ch.threeBooks': { th: 'ลงหนังสือ 3 เล่ม', en: 'List 3 books' },
+  'ch.fiveTrades': { th: 'แลกเปลี่ยน 5 ครั้ง', en: 'Complete 5 trades' },
+  'ch.wonderbox': { th: 'ใช้ Wonder Box', en: 'Use the Wonder Box' },
+  'ach.done': { th: 'สำเร็จแล้ว', en: 'Unlocked' },
+  'ach.locked': { th: 'ยังไม่สำเร็จ', en: 'Locked' },
+
   // Trade Hub
   'nav.hub': { th: 'เทรด', en: 'Trade' },
   'hub.title': { th: 'เทรด', en: 'Trade' },

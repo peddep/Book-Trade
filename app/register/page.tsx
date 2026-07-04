@@ -30,7 +30,7 @@ export default function RegisterPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        router.push('/profile');
+        router.push('/trade');
         return;
       }
       setError(data.error ?? t('reg.failed', { status: res.status }));

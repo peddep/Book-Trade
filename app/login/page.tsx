@@ -26,7 +26,7 @@ export default function LoginPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        router.push('/books');
+        router.push('/trade');
         return;
       }
       const msg = data.error === 'Invalid credentials' ? t('login.invalid') : t('login.failed', { status: res.status });

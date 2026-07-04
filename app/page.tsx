@@ -49,11 +49,11 @@ export default function Home() {
                 {t('home.startTrading')}
               </Link>
               <Link
-                href="/books"
+                href="/login"
                 className="px-8 py-3 rounded-xl font-bold text-slate-200 text-lg"
                 style={{ background: '#2d2d4a' }}
               >
-                {t('home.browseBooks')}
+                {t('nav.signIn')}
               </Link>
             </div>
           </div>

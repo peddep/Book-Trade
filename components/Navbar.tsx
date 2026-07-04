@@ -49,43 +49,39 @@ export default function Navbar() {
             {lang === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
           </button>
           {user ? (
-            <>
-              <Link href="/books" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.browse')}</Link>
-              <Link href="/trade" className="text-sm font-semibold hidden sm:block" style={{ color: '#a78bfa' }}>✨ {t('nav.hub')}</Link>
-              <Link href="/trades" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.trades')}</Link>
-              <Link href="/profile" className="text-sm text-slate-300 hover:text-white hidden sm:block">{t('nav.myBooks')}</Link>
-              <div className="relative">
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex items-center gap-2 rounded-full p-1 hover:opacity-80"
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center gap-2 rounded-full p-1 hover:opacity-80"
+                aria-label="Menu"
+              >
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ background: user.avatar_color }}
                 >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                    style={{ background: user.avatar_color }}
-                  >
-                    {user.name[0].toUpperCase()}
+                  {user.name[0].toUpperCase()}
+                </div>
+              </button>
+              {menuOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-52 rounded-xl shadow-lg py-2 z-50"
+                  style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <div className="px-4 py-2 border-b" style={{ borderColor: '#2d2d4a' }}>
+                    <p className="font-semibold text-sm">{user.name}</p>
+                    {user.grade && <p className="text-xs text-slate-400">{t('common.grade')} {user.grade}</p>}
                   </div>
-                </button>
-                {menuOpen && (
-                  <div
-                    className="absolute right-0 mt-2 w-48 rounded-xl shadow-lg py-2 z-50"
-                    style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}
-                  >
-                    <div className="px-4 py-2 border-b" style={{ borderColor: '#2d2d4a' }}>
-                      <p className="font-semibold text-sm">{user.name}</p>
-                      {user.grade && <p className="text-xs text-slate-400">{t('common.grade')} {user.grade}</p>}
-                    </div>
-                    <Link href="/books" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.browse')}</Link>
-                    <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden" style={{ color: '#a78bfa' }}>✨ {t('nav.hub')}</Link>
-                    <Link href="/trades" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.trades')}</Link>
-                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-slate-700 sm:hidden">{t('nav.myBooks')}</Link>
-                    <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-700">
-                      {t('nav.signOut')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
+                  <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-slate-700" style={{ color: '#a78bfa' }}>✨ {t('tabs.trade')}</Link>
+                  <Link href="/room" className="block px-4 py-2 text-sm hover:bg-slate-700">{t('tabs.room')}</Link>
+                  <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-slate-700">{t('tabs.books')}</Link>
+                  <Link href="/trades" className="block px-4 py-2 text-sm hover:bg-slate-700">{t('nav.trades')}</Link>
+                  <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-700">
+                    {t('nav.signOut')}
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link

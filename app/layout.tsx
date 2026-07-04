@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description: "Trade books with other students at your school",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th">
