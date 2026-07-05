@@ -11,16 +11,18 @@ interface Deposit {
   id: number;
   status: string;
   my_title: string;
+  my_title_en?: string | null;
   my_color: string;
   my_cover_url?: string | null;
   received_title?: string;
+  received_title_en?: string | null;
   received_color?: string;
   received_cover_url?: string | null;
   received_from?: string;
 }
 
 export default function WonderBoxPage() {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [slots, setSlots] = useState(10);
   const [showPicker, setShowPicker] = useState(false);
@@ -97,7 +99,7 @@ export default function WonderBoxPage() {
               <div key={r.id} className="flex items-center gap-3 py-1.5">
                 <BookThumb coverUrl={r.received_cover_url} coverColor={r.received_color ?? '#2d2d4a'} />
                 <div>
-                  <p className="text-sm font-semibold text-white">{r.received_title}</p>
+                  <p className="text-sm font-semibold text-white">{bookTitle(r.received_title ?? "", r.received_title_en)}</p>
                   {r.received_from && <p className="text-xs text-slate-400">{t('wb.from', { name: r.received_from })}</p>}
                 </div>
               </div>
@@ -124,7 +126,7 @@ export default function WonderBoxPage() {
                 style={{ background: matched ? '#2d1e5a' : '#1a1a2e', border: `1px solid ${matched ? '#8b5cf6' : '#2d2d4a'}` }}>
                 {matched ? <span className="text-3xl">🎁</span> : <BookThumb coverUrl={d.my_cover_url} coverColor={d.my_color} size={44} />}
                 <p className="text-[11px] text-center leading-tight line-clamp-2" style={{ color: matched ? '#c4b5fd' : '#94a3b8' }}>
-                  {matched ? t('wb.matched') : d.my_title}
+                  {matched ? t('wb.matched') : bookTitle(d.my_title, d.my_title_en)}
                 </p>
                 {!matched && (
                   <button onClick={() => withdraw(d.id)} className="text-[10px] px-2 py-0.5 rounded-full mt-0.5"

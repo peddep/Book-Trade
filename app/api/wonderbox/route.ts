@@ -10,10 +10,13 @@ async function myBox(userId: number) {
   const res = await db.execute({
     sql: `
       SELECT wb.id, wb.status, wb.created_at,
-        b.title AS my_title, b.cover_color AS my_color, b.cover_url AS my_cover_url,
+        b.title AS my_title, b.title_en AS my_title_en, b.cover_color AS my_color, b.cover_url AS my_cover_url,
         CASE WHEN wb.status IN ('matched','received') THEN
           CASE WHEN t.requester_id = ? THEN wt.title ELSE ot.title END
         END AS received_title,
+        CASE WHEN wb.status IN ('matched','received') THEN
+          CASE WHEN t.requester_id = ? THEN wt.title_en ELSE ot.title_en END
+        END AS received_title_en,
         CASE WHEN wb.status IN ('matched','received') THEN
           CASE WHEN t.requester_id = ? THEN wt.cover_color ELSE ot.cover_color END
         END AS received_color,
@@ -33,7 +36,7 @@ async function myBox(userId: number) {
       WHERE wb.user_id = ? AND wb.status != 'received'
       ORDER BY wb.created_at
     `,
-    args: [userId, userId, userId, userId, userId],
+    args: [userId, userId, userId, userId, userId, userId],
   });
   return res.rows;
 }

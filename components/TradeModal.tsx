@@ -7,6 +7,7 @@ import { useI18n } from '@/lib/i18n';
 interface Book {
   id: number;
   title: string;
+  title_en?: string | null;
   author: string;
   cover_color: string;
   cover_url?: string | null;
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [myBooks, setMyBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<number | null>(null);
   const [message, setMessage] = useState('');
@@ -62,7 +63,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
           <BookThumb coverUrl={targetBook.cover_url} coverColor={targetBook.cover_color} size={40} />
           <div>
             <p className="text-xs text-slate-400">{t('modal.youWant')}</p>
-            <p className="font-semibold text-white text-sm">{targetBook.title}</p>
+            <p className="font-semibold text-white text-sm">{bookTitle(targetBook.title, targetBook.title_en)}</p>
           </div>
         </div>
 
@@ -84,7 +85,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
                 >
                   <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
                   <div>
-                    <p className="text-sm font-semibold text-white">{b.title}</p>
+                    <p className="text-sm font-semibold text-white">{bookTitle(b.title, b.title_en)}</p>
                     <p className="text-xs text-slate-400">{b.author}</p>
                   </div>
                   {selectedBook === b.id && <span className="ml-auto text-purple-400">✓</span>}

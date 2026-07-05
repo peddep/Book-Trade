@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, ensureCoverColumn } from '@/lib/db';
+import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function GET() {
@@ -7,12 +7,12 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = getDb();
-  await ensureCoverColumn();
+  await ensureBookColumns();
   const result = await db.execute({
     sql: `
       SELECT t.*,
-        rb.title as offered_title, rb.author as offered_author, rb.condition as offered_condition, rb.cover_color as offered_color, rb.cover_url as offered_cover_url,
-        wb.title as wanted_title, wb.author as wanted_author, wb.condition as wanted_condition, wb.cover_color as wanted_color, wb.cover_url as wanted_cover_url,
+        rb.title as offered_title, rb.title_en as offered_title_en, rb.author as offered_author, rb.condition as offered_condition, rb.cover_color as offered_color, rb.cover_url as offered_cover_url,
+        wb.title as wanted_title, wb.title_en as wanted_title_en, wb.author as wanted_author, wb.condition as wanted_condition, wb.cover_color as wanted_color, wb.cover_url as wanted_cover_url,
         ru.name as requester_name, ru.avatar_color as requester_avatar,
         ou.name as owner_name, ou.avatar_color as owner_avatar
       FROM trades t

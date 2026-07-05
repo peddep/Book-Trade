@@ -14,11 +14,13 @@ interface Trade {
   offered_author: string;
   offered_color: string;
   offered_cover_url?: string | null;
+  offered_title_en?: string | null;
   offered_condition: string;
   wanted_title: string;
   wanted_author: string;
   wanted_color: string;
   wanted_cover_url?: string | null;
+  wanted_title_en?: string | null;
   wanted_condition: string;
   requester_name: string;
   requester_avatar: string;
@@ -42,7 +44,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: strin
 };
 
 export default function TradesPage() {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -150,7 +152,7 @@ export default function TradesPage() {
                       <div className="flex items-center gap-2">
                         <BookThumb coverUrl={trade.offered_cover_url} coverColor={trade.offered_color} />
                         <div>
-                          <p className="text-sm font-semibold text-white leading-tight">{trade.offered_title}</p>
+                          <p className="text-sm font-semibold text-white leading-tight">{bookTitle(trade.offered_title, trade.offered_title_en)}</p>
                           <p className="text-xs text-slate-400">{trade.offered_author}</p>
                         </div>
                       </div>
@@ -163,7 +165,7 @@ export default function TradesPage() {
                       <div className="flex items-center gap-2">
                         <BookThumb coverUrl={trade.wanted_cover_url} coverColor={trade.wanted_color} />
                         <div>
-                          <p className="text-sm font-semibold text-white leading-tight">{trade.wanted_title}</p>
+                          <p className="text-sm font-semibold text-white leading-tight">{bookTitle(trade.wanted_title, trade.wanted_title_en)}</p>
                           <p className="text-xs text-slate-400">{trade.wanted_author}</p>
                         </div>
                       </div>

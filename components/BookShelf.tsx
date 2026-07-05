@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n';
 export interface ShelfBook {
   id: number;
   title: string;
+  title_en?: string | null;
   author: string;
   cover_color: string;
   cover_url?: string | null;
@@ -24,7 +25,7 @@ interface Props {
 // A 3-column scrollable shelf. Each item looks like a book (portrait cover with
 // a spine). Tapping a cover reveals its title and edit actions below it.
 export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, onChangeCover, maxHeight = '28rem' }: Props) {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [openId, setOpenId] = useState<number | null>(null);
 
   return (
@@ -46,12 +47,12 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
               >
                 {b.cover_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={b.cover_url} alt={b.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
+                  <img src={b.cover_url} alt={bookTitle(b.title, b.title_en)} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
                     onError={e => { e.currentTarget.style.display = 'none'; }} />
                 ) : (
                   <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1.5 text-center">
                     <span className="text-2xl">📖</span>
-                    <span className="text-[10px] font-semibold leading-tight line-clamp-3" style={{ color: 'rgba(255,255,255,0.95)' }}>{b.title}</span>
+                    <span className="text-[10px] font-semibold leading-tight line-clamp-3" style={{ color: 'rgba(255,255,255,0.95)' }}>{bookTitle(b.title, b.title_en)}</span>
                   </span>
                 )}
                 {/* Spine shading (book look) */}
@@ -65,7 +66,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
               </button>
 
               {/* Title (always shown small under the cover) */}
-              <p className="text-[11px] text-slate-300 mt-1.5 leading-tight line-clamp-2 text-center">{b.title}</p>
+              <p className="text-[11px] text-slate-300 mt-1.5 leading-tight line-clamp-2 text-center">{bookTitle(b.title, b.title_en)}</p>
 
               {/* Expanded actions on click */}
               {open && (

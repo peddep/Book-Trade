@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import BookShelf from '@/components/BookShelf';
 import TitleInput from '@/components/TitleInput';
 import { useI18n } from '@/lib/i18n';
-import { findByTitle } from '@/lib/books-catalog';
+import { catalogTitleParts } from '@/lib/books-catalog';
 import { fileToCoverDataUrl } from '@/lib/image';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
@@ -13,6 +13,7 @@ const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
 interface Book {
   id: number;
   title: string;
+  title_en?: string | null;
   author: string;
   subject?: string;
   grade_level?: string;
@@ -23,7 +24,7 @@ interface Book {
   available: number;
 }
 
-const EMPTY = { title: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
+const EMPTY = { title: '', title_en: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
 
 // Manages the user's books as a bookshelf (3-column scrollable grid). Tapping a
 // book reveals its title and edit actions. `compact` is the Trade page's left
@@ -57,7 +58,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: form.title, author: form.author, subject: form.subject,
+          title: form.title, title_en: form.title_en, author: form.author, subject: form.subject,
           grade_level: form.grade_level, condition: form.condition, description: form.description,
         }),
       });
@@ -89,7 +90,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     const b = books.find(x => x.id === id);
     if (!b) return;
     setForm({
-      title: b.title, author: b.author, subject: b.subject ?? '', grade_level: b.grade_level ?? '',
+      title: b.title, title_en: b.title_en ?? '', author: b.author, subject: b.subject ?? '', grade_level: b.grade_level ?? '',
       condition: b.condition, description: b.description ?? '', cover_url: b.cover_url ?? '',
     });
     setEditingId(id);
@@ -111,9 +112,16 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     fetchBooks();
   }
 
+  // Thai/primary title box. When it matches a known book, auto-fill the author
+  // and (if empty) the English title from the catalog.
   function setTitle(title: string) {
-    const match = findByTitle(title);
-    setForm(prev => ({ ...prev, title, author: match?.author ?? prev.author }));
+    const parts = catalogTitleParts(title);
+    setForm(prev => ({
+      ...prev,
+      title,
+      author: parts?.author ?? prev.author,
+      title_en: prev.title_en || parts?.en || '',
+    }));
   }
 
   async function onPickCover(file: File | undefined) {
@@ -147,8 +155,14 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       <h3 className="font-bold text-white">{editingId ? t('profile.editBookTitle') : t('profile.addBookTitle')}</h3>
       <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}>
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fTitle')} *</label>
+          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fTitleTh')} *</label>
           <TitleInput value={form.title} onChange={setTitle} placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
+        </div>
+        <div>
+          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fTitleEn')}</label>
+          <input value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+            placeholder={t('profile.fTitleEnPlaceholder')} />
         </div>
         <div>
           <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fAuthor')} *</label>

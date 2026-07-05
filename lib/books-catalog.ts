@@ -228,6 +228,19 @@ export function findByTitle(title: string): CatalogBook | undefined {
   return BOOK_CATALOG.find(b => b.titles.some(t => t.toLowerCase() === q));
 }
 
+const THAI_RE = /[฀-๿]/;
+
+// For a title that matches a catalog entry, return its Thai and English
+// variants (either may be null) plus the author — used to auto-fill both title
+// boxes when a student picks a known book.
+export function catalogTitleParts(title: string): { th: string | null; en: string | null; author: string } | null {
+  const book = findByTitle(title);
+  if (!book) return null;
+  const th = book.titles.find(t => THAI_RE.test(t)) ?? null;
+  const en = book.titles.find(t => !THAI_RE.test(t)) ?? null;
+  return { th, en, author: book.author };
+}
+
 // True when two titles refer to the same book: exact match (case-insensitive)
 // or both are language variants of the same catalog entry (e.g. the Thai and
 // English names of one book).

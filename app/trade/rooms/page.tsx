@@ -12,9 +12,11 @@ interface Member {
   name: string;
   avatar_color: string;
   title: string;
+  title_en?: string | null;
   cover_color: string;
   cover_url?: string | null;
   received_title?: string;
+  received_title_en?: string | null;
   received_color?: string;
   received_book_id?: number;
 }
@@ -29,7 +31,7 @@ interface Room {
 }
 
 export default function RoomsPage() {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [me, setMe] = useState<number | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [mode, setMode] = useState<'create' | 'join' | null>(null);
@@ -167,7 +169,7 @@ export default function RoomsPage() {
                   <span className="text-sm text-white font-semibold">{m.name}</span>
                   <span className="ml-auto flex items-center gap-2 text-xs text-slate-400 min-w-0">
                     <BookThumb coverUrl={m.cover_url} coverColor={m.cover_color} size={24} />
-                    <span className="truncate max-w-[10rem]">{m.title}</span>
+                    <span className="truncate max-w-[10rem]">{bookTitle(m.title, m.title_en)}</span>
                   </span>
                 </div>
               ))}

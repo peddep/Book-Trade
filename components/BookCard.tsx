@@ -12,6 +12,7 @@ interface Book {
   description?: string;
   cover_color: string;
   cover_url?: string | null;
+  title_en?: string | null;
   available: number;
   owner_name?: string;
   owner_avatar_color?: string;
@@ -35,7 +36,7 @@ const CONDITION_COLORS: Record<string, string> = {
 };
 
 export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, onChangeCover, isOwner }: Props) {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
@@ -50,7 +51,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={book.cover_url}
-            alt={book.title}
+            alt={bookTitle(book.title, book.title_en)}
             className="absolute inset-0 w-full h-full object-cover"
             loading="lazy"
             onError={e => { e.currentTarget.style.display = 'none'; }}
@@ -77,7 +78,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
       {/* Info */}
       <div className="p-4 flex flex-col gap-2 flex-1">
         <div>
-          <h3 className="font-bold text-white leading-tight line-clamp-2">{book.title}</h3>
+          <h3 className="font-bold text-white leading-tight line-clamp-2">{bookTitle(book.title, book.title_en)}</h3>
           <p className="text-sm text-slate-400 mt-0.5">{book.author}</p>
         </div>
 

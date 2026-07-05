@@ -11,8 +11,8 @@ async function roomPayload(code: string, userId: number) {
   const room = roomRes.rows[0] as any;
   if (!room) return null;
   const members = await db.execute({
-    sql: `SELECT rm.user_id, rm.received_book_id, u.name, u.avatar_color, b.title, b.cover_color, b.cover_url,
-            rb.title AS received_title, rb.cover_color AS received_color, rb.cover_url AS received_cover_url
+    sql: `SELECT rm.user_id, rm.received_book_id, u.name, u.avatar_color, b.title, b.title_en, b.cover_color, b.cover_url,
+            rb.title AS received_title, rb.title_en AS received_title_en, rb.cover_color AS received_color, rb.cover_url AS received_cover_url
           FROM room_members rm
           JOIN users u ON rm.user_id = u.id
           JOIN books b ON rm.book_id = b.id

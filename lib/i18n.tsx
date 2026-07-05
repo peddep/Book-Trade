@@ -124,6 +124,9 @@ const STRINGS: Dict = {
   'profile.none': { th: 'ยังไม่มีหนังสือที่ลงไว้', en: 'No books listed yet' },
   'profile.noneHint': { th: 'เพิ่มหนังสือที่คุณต้องการแลกเปลี่ยน!', en: 'Add books you want to trade!' },
   'profile.confirmRemove': { th: 'ลบหนังสือเล่มนี้?', en: 'Remove this book?' },
+  'profile.fTitleTh': { th: 'ชื่อหนังสือ (ภาษาไทย)', en: 'Title (Thai)' },
+  'profile.fTitleEn': { th: 'ชื่อหนังสือ (ภาษาอังกฤษ, ไม่บังคับ)', en: 'Title (English, optional)' },
+  'profile.fTitleEnPlaceholder': { th: 'เช่น Harry Potter', en: 'e.g. Harry Potter' },
   'profile.cover': { th: 'รูปปกหนังสือ', en: 'Book cover photo' },
   'profile.addCover': { th: '📷 เพิ่มรูปปก', en: '📷 Add cover photo' },
   'profile.changeCover': { th: 'เปลี่ยนรูป', en: 'Change photo' },
@@ -295,6 +298,9 @@ interface I18nContextType {
   lang: Lang;
   setLang: (l: Lang) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
+  // Language-aware book title: shows the English title when viewing in English
+  // and one exists, otherwise the primary (Thai) title.
+  bookTitle: (title: string, titleEn?: string | null) => string;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
@@ -329,7 +335,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     [lang]
   );
 
-  return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
+  const bookTitle = useCallback(
+    (title: string, titleEn?: string | null) => {
+      if (lang === 'en' && titleEn && titleEn.trim()) return titleEn;
+      return title;
+    },
+    [lang]
+  );
+
+  return <I18nContext.Provider value={{ lang, setLang, t, bookTitle }}>{children}</I18nContext.Provider>;
 }
 
 export function useI18n(): I18nContextType {

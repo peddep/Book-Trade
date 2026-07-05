@@ -14,17 +14,23 @@ export function getDb(): Client {
   return client;
 }
 
-// Adds books.cover_url to databases created before covers existed.
-let coverColumnEnsured = false;
-export async function ensureCoverColumn() {
-  if (coverColumnEnsured) return;
-  try {
-    await getDb().execute('ALTER TABLE books ADD COLUMN cover_url TEXT');
-  } catch {
-    // column already exists
+// Adds newer books columns (cover_url, title_en) to databases created before
+// those features existed. Idempotent.
+let bookColumnsEnsured = false;
+export async function ensureBookColumns() {
+  if (bookColumnsEnsured) return;
+  for (const col of ['cover_url TEXT', 'title_en TEXT']) {
+    try {
+      await getDb().execute(`ALTER TABLE books ADD COLUMN ${col}`);
+    } catch {
+      // column already exists
+    }
   }
-  coverColumnEnsured = true;
+  bookColumnsEnsured = true;
 }
+
+// Back-compat alias.
+export const ensureCoverColumn = ensureBookColumns;
 
 export async function initDb() {
   const db = getDb();
@@ -43,6 +49,7 @@ export async function initDb() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         owner_id INTEGER NOT NULL REFERENCES users(id),
         title TEXT NOT NULL,
+        title_en TEXT,
         author TEXT NOT NULL,
         subject TEXT,
         grade_level TEXT,

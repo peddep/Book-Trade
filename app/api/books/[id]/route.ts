@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, ensureCoverColumn } from '@/lib/db';
+import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 const MAX_COVER_LEN = 400_000;
@@ -43,6 +43,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const args: unknown[] = [];
   if (typeof body.title === 'string' && body.title.trim()) { sets.push('title = ?'); args.push(body.title.trim()); }
   if (typeof body.author === 'string' && body.author.trim()) { sets.push('author = ?'); args.push(body.author.trim()); }
+  if (typeof body.title_en !== 'undefined') {
+    await ensureBookColumns();
+    sets.push('title_en = ?');
+    args.push(typeof body.title_en === 'string' && body.title_en.trim() ? body.title_en.trim() : null);
+  }
   for (const f of ['subject', 'grade_level', 'condition', 'description'] as const) {
     if (typeof body[f] !== 'undefined') {
       sets.push(`${f} = ?`);
@@ -58,7 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await db.execute({ sql: 'UPDATE books SET available = ? WHERE id = ?', args: [body.available ? 1 : 0, id] });
   }
   if (typeof body.cover_url !== 'undefined') {
-    await ensureCoverColumn();
+    await ensureBookColumns();
     // Empty string clears the cover; a valid data URL sets it.
     const cover = body.cover_url === '' ? null : sanitizeCover(body.cover_url);
     if (body.cover_url !== '' && cover === null) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, ensureCoverColumn } from '@/lib/db';
+import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 const COVER_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
@@ -18,7 +18,7 @@ function sanitizeCover(cover: unknown): string | null {
 
 export async function GET(req: NextRequest) {
   const db = getDb();
-  await ensureCoverColumn();
+  await ensureBookColumns();
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q') ?? '';
   const subject = searchParams.get('subject') ?? '';
@@ -62,17 +62,18 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { title, author, subject, grade_level, condition, description, cover_url } = await req.json();
+  const { title, title_en, author, subject, grade_level, condition, description, cover_url } = await req.json();
   if (!title || !author) return NextResponse.json({ error: 'Title and author required' }, { status: 400 });
 
   const color = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)];
   const db = getDb();
-  await ensureCoverColumn();
+  await ensureBookColumns();
   // Cover is the student's uploaded photo (or none).
   const coverUrl = sanitizeCover(cover_url);
+  const titleEn = typeof title_en === 'string' && title_en.trim() ? title_en.trim() : null;
   const result = await db.execute({
-    sql: 'INSERT INTO books (owner_id, title, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    args: [user.id, title, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
+    sql: 'INSERT INTO books (owner_id, title, title_en, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [user.id, title, titleEn, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
   });
 
   const book = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [Number(result.lastInsertRowid)] });

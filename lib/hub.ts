@@ -1,4 +1,4 @@
-import { getDb, ensureCoverColumn } from './db';
+import { getDb, ensureBookColumns } from './db';
 
 // Premium Plan limits (this app runs everyone on the Premium Plan).
 export const PLAN = {
@@ -12,7 +12,7 @@ let ensured = false;
 
 export async function ensureHubTables() {
   if (ensured) return;
-  await ensureCoverColumn();
+  await ensureBookColumns();
   const db = getDb();
   await db.batch(
     [
