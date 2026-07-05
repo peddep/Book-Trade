@@ -6,6 +6,7 @@ import BookThumb from '@/components/BookThumb';
 import TitleInput from '@/components/TitleInput';
 import { useI18n } from '@/lib/i18n';
 import { findByTitle } from '@/lib/books-catalog';
+import { fileToCoverDataUrl } from '@/lib/image';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
@@ -23,7 +24,7 @@ interface Book {
   available: number;
 }
 
-const EMPTY = { title: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '' };
+const EMPTY = { title: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
 
 // Manages the user's books: add form + list. `compact` renders a slim single
 // column (for the Trade page's left panel); otherwise a full card grid.
@@ -80,6 +81,32 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     setForm(prev => ({ ...prev, title, author: match?.author ?? prev.author }));
   }
 
+  async function onPickCover(file: File | undefined) {
+    if (!file) return;
+    try {
+      const dataUrl = await fileToCoverDataUrl(file);
+      setForm(prev => ({ ...prev, cover_url: dataUrl }));
+    } catch {
+      // ignore unreadable images
+    }
+  }
+
+  // Upload / replace the cover of an existing book.
+  async function changeCover(bookId: number, file: File | undefined) {
+    if (!file) return;
+    try {
+      const dataUrl = await fileToCoverDataUrl(file);
+      await fetch(`/api/books/${bookId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cover_url: dataUrl }),
+      });
+      fetchBooks();
+    } catch {
+      // ignore
+    }
+  }
+
   const addForm = showForm && (
     <form onSubmit={addBook} className="p-4 rounded-2xl flex flex-col gap-3 mb-4" style={{ background: compact ? '#0f0f1a' : '#1a1a2e', border: '1px solid #2d2d4a' }}>
       {!compact && <h3 className="font-bold text-white">{t('profile.addBookTitle')}</h3>}
@@ -126,6 +153,32 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           </>
         )}
       </div>
+
+      {/* Cover photo upload */}
+      <div>
+        <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.cover')}</label>
+        <div className="flex items-center gap-3">
+          <div className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: '#2d2d4a' }}>
+            {form.cover_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.cover_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl">📖</span>
+            )}
+          </div>
+          <label className="px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: '#2d2d4a', color: '#e2e8f0' }}>
+            {form.cover_url ? t('profile.changeCover') : t('profile.addCover')}
+            <input type="file" accept="image/*" className="hidden" onChange={e => onPickCover(e.target.files?.[0])} />
+          </label>
+          {form.cover_url && (
+            <button type="button" onClick={() => setForm(prev => ({ ...prev, cover_url: '' }))} className="text-xs px-2.5 py-1 rounded-full" style={{ background: '#3a1e1e', color: '#ef4444' }}>
+              {t('profile.removeCover')}
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] mt-1.5" style={{ color: '#64748b' }}>{t('profile.coverHint')}</p>
+      </div>
+
       <div className="flex gap-2">
         <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: '#2d2d4a', color: '#94a3b8' }}>
           {t('profile.cancel')}
@@ -160,7 +213,10 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           <div className="flex flex-col gap-2 max-h-[26rem] overflow-y-auto">
             {books.map(b => (
               <div key={b.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: '#0f0f1a' }}>
-                <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
+                <label className="cursor-pointer flex-shrink-0" title={t('card.changeCover')}>
+                  <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
+                  <input type="file" accept="image/*" className="hidden" onChange={e => changeCover(b.id, e.target.files?.[0])} />
+                </label>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-white truncate">{b.title}</p>
                   <p className="text-xs text-slate-400 truncate">{b.author}</p>
@@ -198,7 +254,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {books.map(book => (
-            <BookCard key={book.id} book={book} isOwner onDelete={() => deleteBook(book.id)} onToggleAvailable={() => toggleAvailable(book)} />
+            <BookCard key={book.id} book={book} isOwner onDelete={() => deleteBook(book.id)} onToggleAvailable={() => toggleAvailable(book)} onChangeCover={file => changeCover(book.id, file)} />
           ))}
         </div>
       )}

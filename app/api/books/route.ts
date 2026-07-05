@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureCoverColumn } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { findCoverUrl } from '@/lib/covers';
 
 const COVER_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+// Max size for a user-uploaded cover (base64 data URL). ~400KB of base64 keeps
+// rows small; the client resizes to well under this before uploading.
+const MAX_COVER_LEN = 400_000;
+
+// Accepts only inline image data URLs (uploaded photos), rejects anything else.
+function sanitizeCover(cover: unknown): string | null {
+  if (typeof cover !== 'string' || !cover) return null;
+  if (!cover.startsWith('data:image/')) return null;
+  if (cover.length > MAX_COVER_LEN) return null;
+  return cover;
+}
 
 export async function GET(req: NextRequest) {
   const db = getDb();
@@ -51,14 +62,14 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { title, author, subject, grade_level, condition, description } = await req.json();
+  const { title, author, subject, grade_level, condition, description, cover_url } = await req.json();
   if (!title || !author) return NextResponse.json({ error: 'Title and author required' }, { status: 400 });
 
   const color = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)];
   const db = getDb();
   await ensureCoverColumn();
-  // Best-effort cover image from Google Books / Open Library.
-  const coverUrl = await findCoverUrl(title);
+  // Cover is the student's uploaded photo (or none).
+  const coverUrl = sanitizeCover(cover_url);
   const result = await db.execute({
     sql: 'INSERT INTO books (owner_id, title, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     args: [user.id, title, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],

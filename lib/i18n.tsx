@@ -124,6 +124,13 @@ const STRINGS: Dict = {
   'profile.none': { th: 'ยังไม่มีหนังสือที่ลงไว้', en: 'No books listed yet' },
   'profile.noneHint': { th: 'เพิ่มหนังสือที่คุณต้องการแลกเปลี่ยน!', en: 'Add books you want to trade!' },
   'profile.confirmRemove': { th: 'ลบหนังสือเล่มนี้?', en: 'Remove this book?' },
+  'profile.cover': { th: 'รูปปกหนังสือ', en: 'Book cover photo' },
+  'profile.addCover': { th: '📷 เพิ่มรูปปก', en: '📷 Add cover photo' },
+  'profile.changeCover': { th: 'เปลี่ยนรูป', en: 'Change photo' },
+  'profile.removeCover': { th: 'ลบรูป', en: 'Remove photo' },
+  'profile.coverHint': { th: 'ถ่ายรูปหรือเลือกรูปปกหนังสือของคุณ (ไม่บังคับ)', en: 'Take or choose a photo of your book cover (optional)' },
+  'card.changeCover': { th: '📷 เปลี่ยนปก', en: '📷 Change cover' },
+  'card.addCover': { th: '📷 เพิ่มปก', en: '📷 Add cover' },
 
   // Trade modal
   'modal.title': { th: 'เสนอการแลกเปลี่ยน', en: 'Offer a Trade' },
@@ -254,9 +261,6 @@ const STRINGS: Dict = {
   'admin.done': { th: '✅ เสร็จสิ้น! คลังมีหนังสือ {count} เล่ม', en: '✅ Done! The catalog now holds {count} titles' },
   'admin.rateLimited': { th: '⚠️ ถึงลิมิตของ Google Books แล้ว ความคืบหน้าถูกบันทึกไว้ ลองกด "นำเข้าต่อ" ภายหลัง หรือเพิ่ม GOOGLE_BOOKS_API_KEY ใน Vercel', en: '⚠️ Google Books rate limit reached. Progress is saved — press "Continue Import" later, or add GOOGLE_BOOKS_API_KEY in Vercel.' },
   'admin.error': { th: 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง', en: 'Something went wrong. Try again.' },
-  'admin.covers': { th: '🖼️ เติมปกหนังสือ', en: '🖼️ Fetch book covers' },
-  'admin.coversRunning': { th: 'กำลังหาปก...', en: 'Fetching covers...' },
-  'admin.coversDone': { th: '✅ อัปเดตปกแล้ว {n} เล่ม', en: '✅ Updated {n} covers' },
 
   // Trades
   'trades.title': { th: 'การแลกเปลี่ยนของฉัน', en: 'My Trades' },

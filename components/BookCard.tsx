@@ -23,6 +23,7 @@ interface Props {
   onTrade?: () => void;
   onDelete?: () => void;
   onToggleAvailable?: () => void;
+  onChangeCover?: (file: File | undefined) => void;
   isOwner?: boolean;
 }
 
@@ -33,7 +34,7 @@ const CONDITION_COLORS: Record<string, string> = {
   'Poor': '#ef4444',
 };
 
-export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, isOwner }: Props) {
+export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, onChangeCover, isOwner }: Props) {
   const { t } = useI18n();
   return (
     <div
@@ -65,6 +66,12 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, i
             <span className="text-xs font-bold bg-black/60 text-white px-2 py-1 rounded-full">{t('card.traded')}</span>
           )}
         </div>
+        {isOwner && onChangeCover && (
+          <label className="absolute bottom-2 right-2 z-20 text-[11px] font-semibold px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(0,0,0,0.6)', color: '#fff' }}>
+            {book.cover_url ? t('card.changeCover') : t('card.addCover')}
+            <input type="file" accept="image/*" className="hidden" onChange={e => onChangeCover(e.target.files?.[0])} />
+          </label>
+        )}
       </div>
 
       {/* Info */}
