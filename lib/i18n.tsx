@@ -131,6 +131,10 @@ const STRINGS: Dict = {
   'profile.coverHint': { th: 'ถ่ายรูปหรือเลือกรูปปกหนังสือของคุณ (ไม่บังคับ)', en: 'Take or choose a photo of your book cover (optional)' },
   'card.changeCover': { th: '📷 เปลี่ยนปก', en: '📷 Change cover' },
   'card.addCover': { th: '📷 เพิ่มปก', en: '📷 Add cover' },
+  'shelf.edit': { th: 'แก้ไข', en: 'Edit' },
+  'profile.editBookTitle': { th: 'แก้ไขหนังสือ', en: 'Edit Book' },
+  'profile.saveBtn': { th: 'บันทึก', en: 'Save' },
+  'profile.saving': { th: 'กำลังบันทึก...', en: 'Saving...' },
 
   // Trade modal
   'modal.title': { th: 'เสนอการแลกเปลี่ยน', en: 'Offer a Trade' },

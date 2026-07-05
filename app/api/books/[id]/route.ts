@@ -37,6 +37,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (Number(book.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
+
+  // Editable text fields.
+  const sets: string[] = [];
+  const args: unknown[] = [];
+  if (typeof body.title === 'string' && body.title.trim()) { sets.push('title = ?'); args.push(body.title.trim()); }
+  if (typeof body.author === 'string' && body.author.trim()) { sets.push('author = ?'); args.push(body.author.trim()); }
+  for (const f of ['subject', 'grade_level', 'condition', 'description'] as const) {
+    if (typeof body[f] !== 'undefined') {
+      sets.push(`${f} = ?`);
+      args.push(body[f] === '' ? null : body[f]);
+    }
+  }
+  if (sets.length) {
+    args.push(id);
+    await db.execute({ sql: `UPDATE books SET ${sets.join(', ')} WHERE id = ?`, args: args as any[] });
+  }
+
   if (typeof body.available !== 'undefined') {
     await db.execute({ sql: 'UPDATE books SET available = ? WHERE id = ?', args: [body.available ? 1 : 0, id] });
   }
