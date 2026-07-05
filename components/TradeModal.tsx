@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
 
 interface Book {
@@ -8,6 +9,7 @@ interface Book {
   title: string;
   author: string;
   cover_color: string;
+  cover_url?: string | null;
 }
 
 interface Props {
@@ -57,7 +59,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#0f0f1a' }}>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style={{ background: targetBook.cover_color }}>📖</div>
+          <BookThumb coverUrl={targetBook.cover_url} coverColor={targetBook.cover_color} size={40} />
           <div>
             <p className="text-xs text-slate-400">{t('modal.youWant')}</p>
             <p className="font-semibold text-white text-sm">{targetBook.title}</p>
@@ -80,7 +82,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
                     border: `1px solid ${selectedBook === b.id ? '#8b5cf6' : '#2d2d4a'}`
                   }}
                 >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: b.cover_color }}>📖</div>
+                  <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
                   <div>
                     <p className="text-sm font-semibold text-white">{b.title}</p>
                     <p className="text-xs text-slate-400">{b.author}</p>

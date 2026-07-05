@@ -11,6 +11,7 @@ interface Book {
   condition: string;
   description?: string;
   cover_color: string;
+  cover_url?: string | null;
   available: number;
   owner_name?: string;
   owner_avatar_color?: string;
@@ -41,16 +42,27 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, i
     >
       {/* Book cover */}
       <div
-        className="relative flex items-center justify-center p-6"
-        style={{ background: book.cover_color, minHeight: '140px' }}
+        className="relative flex items-center justify-center p-6 overflow-hidden"
+        style={{ background: book.cover_color, minHeight: '160px' }}
       >
-        <div className="absolute inset-0 opacity-20"
-          style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px)' }}
-        />
+        {book.cover_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={book.cover_url}
+            alt={book.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+            onError={e => { e.currentTarget.style.display = 'none'; }}
+          />
+        ) : (
+          <div className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px)' }}
+          />
+        )}
         <div className="text-center relative z-10">
-          <div className="text-4xl mb-2">📖</div>
+          {!book.cover_url && <div className="text-4xl mb-2">📖</div>}
           {!book.available && (
-            <span className="text-xs font-bold bg-black/50 text-white px-2 py-1 rounded-full">{t('card.traded')}</span>
+            <span className="text-xs font-bold bg-black/60 text-white px-2 py-1 rounded-full">{t('card.traded')}</span>
           )}
         </div>
       </div>

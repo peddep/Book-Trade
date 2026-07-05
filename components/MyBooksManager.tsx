@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import BookCard from '@/components/BookCard';
+import BookThumb from '@/components/BookThumb';
 import TitleInput from '@/components/TitleInput';
 import { useI18n } from '@/lib/i18n';
 import { findByTitle } from '@/lib/books-catalog';
@@ -18,6 +19,7 @@ interface Book {
   condition: string;
   description?: string;
   cover_color: string;
+  cover_url?: string | null;
   available: number;
 }
 
@@ -158,7 +160,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           <div className="flex flex-col gap-2 max-h-[26rem] overflow-y-auto">
             {books.map(b => (
               <div key={b.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: '#0f0f1a' }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: b.cover_color }}>📖</div>
+                <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-white truncate">{b.title}</p>
                   <p className="text-xs text-slate-400 truncate">{b.author}</p>

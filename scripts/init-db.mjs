@@ -35,6 +35,7 @@ await db.batch(
       condition TEXT NOT NULL DEFAULT 'Good',
       description TEXT,
       cover_color TEXT DEFAULT '#f59e0b',
+      cover_url TEXT,
       available INTEGER NOT NULL DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     )`,

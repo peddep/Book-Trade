@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import BookPicker from '@/components/BookPicker';
+import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
 
 interface Deposit {
@@ -11,8 +12,10 @@ interface Deposit {
   status: string;
   my_title: string;
   my_color: string;
+  my_cover_url?: string | null;
   received_title?: string;
   received_color?: string;
+  received_cover_url?: string | null;
   received_from?: string;
 }
 
@@ -92,7 +95,7 @@ export default function WonderBoxPage() {
             <p className="font-bold mb-2" style={{ color: '#10b981' }}>🎉 {t('wb.youGot')}</p>
             {receivedMsg.map(r => (
               <div key={r.id} className="flex items-center gap-3 py-1.5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: r.received_color ?? '#2d2d4a' }}>📖</div>
+                <BookThumb coverUrl={r.received_cover_url} coverColor={r.received_color ?? '#2d2d4a'} />
                 <div>
                   <p className="text-sm font-semibold text-white">{r.received_title}</p>
                   {r.received_from && <p className="text-xs text-slate-400">{t('wb.from', { name: r.received_from })}</p>}
@@ -119,7 +122,7 @@ export default function WonderBoxPage() {
             return (
               <div key={d.id} className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 p-2 relative"
                 style={{ background: matched ? '#2d1e5a' : '#1a1a2e', border: `1px solid ${matched ? '#8b5cf6' : '#2d2d4a'}` }}>
-                <span className="text-3xl">{matched ? '🎁' : '📖'}</span>
+                {matched ? <span className="text-3xl">🎁</span> : <BookThumb coverUrl={d.my_cover_url} coverColor={d.my_color} size={44} />}
                 <p className="text-[11px] text-center leading-tight line-clamp-2" style={{ color: matched ? '#c4b5fd' : '#94a3b8' }}>
                   {matched ? t('wb.matched') : d.my_title}
                 </p>

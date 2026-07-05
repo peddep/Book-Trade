@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   // My open deposits
   const mine = await db.execute({
-    sql: `SELECT g.*, b.title, b.cover_color FROM gts_deposits g JOIN books b ON g.book_id = b.id
+    sql: `SELECT g.*, b.title, b.cover_color, b.cover_url FROM gts_deposits g JOIN books b ON g.book_id = b.id
           WHERE g.user_id = ? AND g.status = 'open' ORDER BY g.created_at DESC`,
     args: [user.id],
   });
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   // Other users' open deposits (searchable by offered title)
   let sql = `
     SELECT g.id, g.wanted_title, g.wanted_subject, g.created_at,
-      b.title, b.author, b.condition, b.cover_color, b.subject,
+      b.title, b.author, b.condition, b.cover_color, b.cover_url, b.subject,
       u.name AS owner_name, u.avatar_color AS owner_avatar
     FROM gts_deposits g
     JOIN books b ON g.book_id = b.id

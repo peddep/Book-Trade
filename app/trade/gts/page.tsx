@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import BookPicker from '@/components/BookPicker';
+import BookThumb from '@/components/BookThumb';
 import TitleInput from '@/components/TitleInput';
 import { useI18n } from '@/lib/i18n';
 import { titlesMatch } from '@/lib/books-catalog';
@@ -14,6 +15,7 @@ interface MyDeposit {
   id: number;
   title: string;
   cover_color: string;
+  cover_url?: string | null;
   wanted_title?: string;
   wanted_subject?: string;
 }
@@ -24,6 +26,7 @@ interface OpenOffer {
   author: string;
   condition: string;
   cover_color: string;
+  cover_url?: string | null;
   owner_name: string;
   owner_avatar: string;
   wanted_title?: string;
@@ -143,7 +146,7 @@ export default function GtsPage() {
 
           {mine.map(d => (
             <div key={d.id} className="flex items-center gap-3 py-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: d.cover_color }}>📖</div>
+              <BookThumb coverUrl={d.cover_url} coverColor={d.cover_color} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-white truncate">{d.title}</p>
                 <p className="text-xs truncate" style={{ color: '#a78bfa' }}>{t('gts.wants', { want: wishText(d) })}</p>
@@ -205,7 +208,7 @@ export default function GtsPage() {
             {open.map(o => (
               <div key={o.id} className="p-4 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-xl" style={{ background: o.cover_color }}>📖</div>
+                  <BookThumb coverUrl={o.cover_url} coverColor={o.cover_color} size={40} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-white truncate">{o.title}</p>
                     <p className="text-xs text-slate-400 truncate">{o.author} • {t(`cond.${o.condition}`)}</p>

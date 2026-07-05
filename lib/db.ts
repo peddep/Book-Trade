@@ -14,6 +14,18 @@ export function getDb(): Client {
   return client;
 }
 
+// Adds books.cover_url to databases created before covers existed.
+let coverColumnEnsured = false;
+export async function ensureCoverColumn() {
+  if (coverColumnEnsured) return;
+  try {
+    await getDb().execute('ALTER TABLE books ADD COLUMN cover_url TEXT');
+  } catch {
+    // column already exists
+  }
+  coverColumnEnsured = true;
+}
+
 export async function initDb() {
   const db = getDb();
   await db.batch(
@@ -37,6 +49,7 @@ export async function initDb() {
         condition TEXT NOT NULL DEFAULT 'Good',
         description TEXT,
         cover_color TEXT DEFAULT '#f59e0b',
+        cover_url TEXT,
         available INTEGER NOT NULL DEFAULT 1,
         created_at TEXT DEFAULT (datetime('now'))
       )`,

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getDb, ensureCoverColumn } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { findCoverUrl } from '@/lib/covers';
 
 const COVER_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
 export async function GET(req: NextRequest) {
   const db = getDb();
+  await ensureCoverColumn();
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q') ?? '';
   const subject = searchParams.get('subject') ?? '';
@@ -54,9 +56,12 @@ export async function POST(req: NextRequest) {
 
   const color = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)];
   const db = getDb();
+  await ensureCoverColumn();
+  // Best-effort cover image from Google Books / Open Library.
+  const coverUrl = await findCoverUrl(title);
   const result = await db.execute({
-    sql: 'INSERT INTO books (owner_id, title, author, subject, grade_level, condition, description, cover_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    args: [user.id, title, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color],
+    sql: 'INSERT INTO books (owner_id, title, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [user.id, title, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
   });
 
   const book = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [Number(result.lastInsertRowid)] });

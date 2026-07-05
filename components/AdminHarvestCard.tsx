@@ -60,6 +60,30 @@ export default function AdminHarvestCard() {
     }
   }
 
+  // Backfills covers for books added before cover support existed.
+  const [coversRunning, setCoversRunning] = useState(false);
+  async function fetchCovers() {
+    setCoversRunning(true);
+    setMessage('');
+    let total = 0;
+    try {
+      for (let i = 0; i < 30; i++) {
+        const res = await fetch('/api/admin/covers', { method: 'POST' });
+        if (!res.ok) { setMessage(t('admin.error')); break; }
+        const d = await res.json();
+        total += d.updated;
+        if (d.remaining === 0 || d.checked === 0) {
+          setMessage(t('admin.coversDone', { n: total }));
+          break;
+        }
+      }
+    } catch {
+      setMessage(t('admin.error'));
+    } finally {
+      setCoversRunning(false);
+    }
+  }
+
   if (!state) return null;
 
   const pct = state.totalQueries ? Math.round((Math.min(state.nextIndex, state.totalQueries) / state.totalQueries) * 100) : 0;
@@ -81,6 +105,14 @@ export default function AdminHarvestCard() {
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
             {running ? t('admin.running', { pct }) : state.done ? t('admin.runAgain') : state.nextIndex > 0 ? t('admin.continue') : t('admin.start')}
+          </button>
+          <button
+            onClick={fetchCovers}
+            disabled={coversRunning || running}
+            className="px-4 py-2 rounded-xl font-semibold text-sm disabled:opacity-50"
+            style={{ background: '#2d2d4a', color: '#e2e8f0' }}
+          >
+            {coversRunning ? t('admin.coversRunning') : t('admin.covers')}
           </button>
           {running && (
             <button

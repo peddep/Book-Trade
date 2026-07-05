@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import BookPicker from '@/components/BookPicker';
+import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
 
 interface Member {
@@ -12,6 +13,7 @@ interface Member {
   avatar_color: string;
   title: string;
   cover_color: string;
+  cover_url?: string | null;
   received_title?: string;
   received_color?: string;
   received_book_id?: number;
@@ -164,7 +166,7 @@ export default function RoomsPage() {
                   </div>
                   <span className="text-sm text-white font-semibold">{m.name}</span>
                   <span className="ml-auto flex items-center gap-2 text-xs text-slate-400 min-w-0">
-                    <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: m.cover_color }}>📖</span>
+                    <BookThumb coverUrl={m.cover_url} coverColor={m.cover_color} size={24} />
                     <span className="truncate max-w-[10rem]">{m.title}</span>
                   </span>
                 </div>

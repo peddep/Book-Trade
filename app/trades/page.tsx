@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
 
 interface Trade {
@@ -12,10 +13,12 @@ interface Trade {
   offered_title: string;
   offered_author: string;
   offered_color: string;
+  offered_cover_url?: string | null;
   offered_condition: string;
   wanted_title: string;
   wanted_author: string;
   wanted_color: string;
+  wanted_cover_url?: string | null;
   wanted_condition: string;
   requester_name: string;
   requester_avatar: string;
@@ -145,7 +148,7 @@ export default function TradesPage() {
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#0f0f1a' }}>
                       <p className="text-xs text-slate-400 mb-1">{isIncoming ? t('trades.userOffers', { name: trade.requester_name }) : t('trades.youOffer')}</p>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: trade.offered_color }}>📖</div>
+                        <BookThumb coverUrl={trade.offered_cover_url} coverColor={trade.offered_color} />
                         <div>
                           <p className="text-sm font-semibold text-white leading-tight">{trade.offered_title}</p>
                           <p className="text-xs text-slate-400">{trade.offered_author}</p>
@@ -158,7 +161,7 @@ export default function TradesPage() {
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#0f0f1a' }}>
                       <p className="text-xs text-slate-400 mb-1">{isIncoming ? t('trades.wantsYour') : t('trades.usersBook', { name: trade.owner_name })}</p>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: trade.wanted_color }}>📖</div>
+                        <BookThumb coverUrl={trade.wanted_cover_url} coverColor={trade.wanted_color} />
                         <div>
                           <p className="text-sm font-semibold text-white leading-tight">{trade.wanted_title}</p>
                           <p className="text-xs text-slate-400">{trade.wanted_author}</p>

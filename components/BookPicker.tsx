@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
 
 export interface PickerBook {
@@ -9,6 +10,7 @@ export interface PickerBook {
   author: string;
   subject?: string;
   cover_color: string;
+  cover_url?: string | null;
   available: number;
 }
 
@@ -54,7 +56,7 @@ export default function BookPicker({ excludeIds = [], selected, onSelect, filter
             border: `1px solid ${selected === b.id ? '#8b5cf6' : '#2d2d4a'}`,
           }}
         >
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: b.cover_color }}>📖</div>
+          <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
           <div>
             <p className="text-sm font-semibold text-white">{b.title}</p>
             <p className="text-xs text-slate-400">{b.author}</p>
