@@ -249,7 +249,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       onDelete={deleteBook}
       onToggleAvailable={toggleAvailable}
       onChangeCover={changeCover}
-      maxHeight={compact ? '26rem' : '65vh'}
+      maxHeight={compact ? '70vh' : '65vh'}
     />
   );
 
