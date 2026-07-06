@@ -77,11 +77,13 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   onClick={() => toggleTrade(b)}
                   title={t('shelf.allowTrade')}
                   aria-label={t('shelf.allowTrade')}
-                  className="absolute top-1 right-1 z-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
-                  style={{ width: 24, height: 24, background: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
+                  className="absolute top-0 right-0 z-10 flex items-center justify-center transition-transform hover:scale-110"
+                  style={{ width: 40, height: 40 }}
                 >
-                  <span className="text-[13px] leading-none" style={{ color: b.available ? '#10b981' : '#cbd5e1' }}>
-                    {b.available ? '★' : '☆'}
+                  <span className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, background: '#ffffff', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                    <span className="text-[14px] leading-none" style={{ color: b.available ? '#10b981' : '#cbd5e1' }}>
+                      {b.available ? '★' : '☆'}
+                    </span>
                   </span>
                 </button>
               </div>
