@@ -164,23 +164,33 @@ export default function WonderBoxPage() {
           </button>
         )}
 
-        {/* Book picker (looks like Your Books, but selecting deposits — no edit options) */}
+        {/* Book picker — pops up on top (looks like Your Books, selecting deposits) */}
         {pickerOpen && (
-          <div className="mt-5 p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-[#4b5563]">{t('wb.chooseBook')}</p>
-              <button onClick={() => setPickerOpen(false)} className="text-[#6b7280] hover:text-[#2e1065] text-lg">✕</button>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(46, 16, 101, 0.35)' }}
+            onClick={() => setPickerOpen(false)}
+          >
+            <div
+              className="w-full max-w-lg p-5 rounded-2xl shadow-2xl"
+              style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-base font-bold text-[#2e1065]">{t('wb.chooseBook')}</p>
+                <button onClick={() => setPickerOpen(false)} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
+              </div>
+              {pickable.length === 0 ? (
+                <p className="text-sm text-[#6b7280]">{t('hub.noFreeBooks')}</p>
+              ) : (
+                <BookShelf
+                  books={pickable}
+                  selectMode
+                  onSelect={id => { if (!busy) deposit(id); }}
+                  maxHeight="65vh"
+                />
+              )}
             </div>
-            {pickable.length === 0 ? (
-              <p className="text-sm text-[#6b7280]">{t('hub.noFreeBooks')}</p>
-            ) : (
-              <BookShelf
-                books={pickable}
-                selectMode
-                onSelect={id => { if (!busy) deposit(id); }}
-                maxHeight="60vh"
-              />
-            )}
           </div>
         )}
       </main>
