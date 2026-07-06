@@ -28,13 +28,9 @@ interface Props {
 export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, onChangeCover, maxHeight = '28rem' }: Props) {
   const { t, bookTitle } = useI18n();
   const [openId, setOpenId] = useState<number | null>(null);
-  const [toast, setToast] = useState('');
 
   function toggleTrade(b: ShelfBook) {
-    const next = !b.available;
-    onToggleAvailable(b.id, next);
-    setToast(next ? t('shelf.tradeOn') : t('shelf.tradeOff'));
-    window.setTimeout(() => setToast(''), 1600);
+    onToggleAvailable(b.id, !b.available);
   }
 
   return (
@@ -113,15 +109,6 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
           );
         })}
       </div>
-
-      {/* Toggle toast */}
-      {toast && (
-        <div className="sticky bottom-2 flex justify-center pointer-events-none">
-          <span className="px-4 py-2 rounded-full text-sm font-bold text-white shadow-lg" style={{ background: '#7c3aed' }}>
-            {toast}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
