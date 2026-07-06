@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { ensureHubTables, getFreeOwnedBook, createInstantTrade, PLAN } from '@/lib/hub';
+import { ensureHubTables, getFreeOwnedBook, createInstantTrade, priceDiffOk, PLAN } from '@/lib/hub';
 import { titlesMatch } from '@/lib/books-catalog';
 
 export const runtime = 'nodejs';
@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest) {
   const { deposit_id, offered_book_id } = await req.json();
 
   const depRes = await db.execute({
-    sql: `SELECT g.*, b.available FROM gts_deposits g JOIN books b ON g.book_id = b.id WHERE g.id = ? AND g.status = 'open'`,
+    sql: `SELECT g.*, b.available, b.price FROM gts_deposits g JOIN books b ON g.book_id = b.id WHERE g.id = ? AND g.status = 'open'`,
     args: [Number(deposit_id)],
   });
   const dep = depRes.rows[0] as any;
@@ -85,6 +85,10 @@ export async function PATCH(req: NextRequest) {
 
   const myBook = await getFreeOwnedBook(user.id, Number(offered_book_id));
   if (!myBook) return NextResponse.json({ error: 'book_unavailable' }, { status: 400 });
+
+  if (!priceDiffOk(dep.price as number, myBook.price as number)) {
+    return NextResponse.json({ error: 'price_gap' }, { status: 400 });
+  }
 
   // My book must satisfy the depositor's wish. A wanted title is strict:
   // only that exact book (or its Thai/English variant of the same catalog

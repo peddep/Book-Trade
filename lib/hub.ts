@@ -8,6 +8,13 @@ export const PLAN = {
   roomMax: 20,
 };
 
+// Two books can only be traded when their prices are within this many baht.
+// A book with no price counts as 0.
+export const MAX_PRICE_DIFF = 100;
+export function priceDiffOk(a?: number | null, b?: number | null): boolean {
+  return Math.abs((Number(a) || 0) - (Number(b) || 0)) <= MAX_PRICE_DIFF;
+}
+
 let ensured = false;
 
 export async function ensureHubTables() {
@@ -108,13 +115,15 @@ export async function createInstantTrade(
 export async function runWonderBoxMatcher() {
   const db = getDb();
   const waiting = await db.execute(
-    "SELECT wb.id, wb.user_id, wb.book_id FROM wonder_box wb JOIN books b ON wb.book_id = b.id WHERE wb.status = 'waiting' AND b.available = 1 ORDER BY wb.created_at"
+    "SELECT wb.id, wb.user_id, wb.book_id, b.price FROM wonder_box wb JOIN books b ON wb.book_id = b.id WHERE wb.status = 'waiting' AND b.available = 1 ORDER BY wb.created_at"
   );
   const pool = [...waiting.rows] as any[];
-  while (pool.length >= 2) {
+  let guard = 0;
+  while (pool.length >= 2 && guard++ < 1000) {
     const a = pool.shift()!;
-    const idx = pool.findIndex(d => Number(d.user_id) !== Number(a.user_id));
-    if (idx === -1) break;
+    // Pair with the oldest waiting deposit from another user whose price is close enough.
+    const idx = pool.findIndex(d => Number(d.user_id) !== Number(a.user_id) && priceDiffOk(a.price, d.price));
+    if (idx === -1) continue; // no compatible partner for `a` right now; leave it waiting
     const b = pool.splice(idx, 1)[0];
     const tradeId = await createInstantTrade(
       Number(a.user_id), Number(b.user_id), Number(a.book_id), Number(b.book_id), 'Wonder Box'

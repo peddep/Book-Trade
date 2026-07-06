@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { priceDiffOk } from '@/lib/hub';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -40,7 +41,8 @@ export async function POST(req: NextRequest) {
 
   const db = getDb();
   const offered = await db.execute({ sql: 'SELECT * FROM books WHERE id = ? AND owner_id = ?', args: [offered_book_id, user.id] });
-  if (offered.rows.length === 0) return NextResponse.json({ error: 'You do not own this book' }, { status: 400 });
+  const offeredBook = offered.rows[0] as any;
+  if (!offeredBook) return NextResponse.json({ error: 'You do not own this book' }, { status: 400 });
 
   const wanted = await db.execute({ sql: 'SELECT * FROM books WHERE id = ? AND available = 1', args: [wanted_book_id] });
   const wantedBook = wanted.rows[0] as any;
@@ -48,6 +50,10 @@ export async function POST(req: NextRequest) {
 
   if (Number(wantedBook.owner_id) === user.id) {
     return NextResponse.json({ error: 'Cannot trade with yourself' }, { status: 400 });
+  }
+
+  if (!priceDiffOk(offeredBook.price, wantedBook.price)) {
+    return NextResponse.json({ error: 'price_gap' }, { status: 400 });
   }
 
   const result = await db.execute({

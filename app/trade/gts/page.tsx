@@ -105,7 +105,7 @@ export default function GtsPage() {
       setTimeout(() => setMsg(''), 6000);
       load();
     } else {
-      setErr(d.error === 'not_a_match' ? t('gts.notMatch') : t('hub.noFreeBooks'));
+      setErr(d.error === 'not_a_match' ? t('gts.notMatch') : d.error === 'price_gap' ? t('err.priceGap') : t('hub.noFreeBooks'));
     }
     setBusy(false);
   }

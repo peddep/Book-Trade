@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { ensureHubTables, getFreeOwnedBook, createInstantTrade, makeRoomCode, PLAN } from '@/lib/hub';
+import { ensureHubTables, getFreeOwnedBook, createInstantTrade, makeRoomCode, priceDiffOk, PLAN } from '@/lib/hub';
 
 export const runtime = 'nodejs';
 
@@ -107,21 +107,24 @@ export async function POST(req: NextRequest) {
     if (Number(room.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const membersRes = await db.execute({
-      sql: `SELECT rm.id, rm.user_id, rm.book_id FROM room_members rm JOIN books b ON rm.book_id = b.id
+      sql: `SELECT rm.id, rm.user_id, rm.book_id, b.price FROM room_members rm JOIN books b ON rm.book_id = b.id
             WHERE rm.room_id = ? AND b.available = 1`,
       args: [Number(room.id)],
     });
     const members = [...membersRes.rows] as any[];
     if (members.length < 2) return NextResponse.json({ error: 'need_two' }, { status: 400 });
 
-    // Random pairing; each pair swaps books (odd member sits this round out).
+    // Shuffle, then greedily pair members whose book prices are within range.
     for (let i = members.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [members[i], members[j]] = [members[j], members[i]];
     }
-    for (let i = 0; i + 1 < members.length; i += 2) {
-      const a = members[i];
-      const b = members[i + 1];
+    const remaining = [...members];
+    while (remaining.length >= 2) {
+      const a = remaining.shift()!;
+      const idx = remaining.findIndex(m => priceDiffOk(a.price, m.price));
+      if (idx === -1) continue; // no price-compatible partner; a sits this round out
+      const b = remaining.splice(idx, 1)[0];
       await createInstantTrade(Number(a.user_id), Number(b.user_id), Number(a.book_id), Number(b.book_id), 'Room Trade');
       await db.execute({ sql: 'UPDATE room_members SET received_book_id = ? WHERE id = ?', args: [Number(b.book_id), Number(a.id)] });
       await db.execute({ sql: 'UPDATE room_members SET received_book_id = ? WHERE id = ?', args: [Number(a.book_id), Number(b.id)] });
