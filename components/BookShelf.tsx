@@ -45,7 +45,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
           const open = openId === b.id;
           const selected = selectMode && selectedId === b.id;
           return (
-            <div key={b.id} className="flex flex-col">
+            <div key={b.id} className="flex flex-col relative">
               {/* Book cover (relative wrapper so the star button isn't nested in a button) */}
               <div className="relative w-full">
                 <button
@@ -102,9 +102,9 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
               {/* Title (always shown small under the cover) */}
               <p className="text-[11px] text-[#4b5563] mt-1.5 leading-tight line-clamp-2 text-center">{bookTitle(b.title, b.title_en)}</p>
 
-              {/* Expanded actions on click */}
+              {/* Expanded actions — floats on top of the book (doesn't push the grid) */}
               {!selectMode && open && (
-                <div className="mt-1.5 flex flex-col gap-1.5 rounded-xl p-2" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+                <div className="absolute left-0 right-0 top-1 z-30 flex flex-col gap-1.5 rounded-xl p-2 shadow-xl" style={{ background: '#ffffff', border: '1px solid #8b5cf6' }}>
                   <p className="text-[11px] text-[#6b7280] text-center truncate">{b.author}</p>
                   <button onClick={() => onEdit?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                     ✏️ {t('shelf.edit')}
