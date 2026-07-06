@@ -19,7 +19,7 @@ export function getDb(): Client {
 let bookColumnsEnsured = false;
 export async function ensureBookColumns() {
   if (bookColumnsEnsured) return;
-  for (const col of ['cover_url TEXT', 'title_en TEXT']) {
+  for (const col of ['cover_url TEXT', 'title_en TEXT', 'price REAL']) {
     try {
       await getDb().execute(`ALTER TABLE books ADD COLUMN ${col}`);
     } catch {
@@ -50,6 +50,7 @@ export async function initDb() {
         owner_id INTEGER NOT NULL REFERENCES users(id),
         title TEXT NOT NULL,
         title_en TEXT,
+        price REAL,
         author TEXT NOT NULL,
         subject TEXT,
         grade_level TEXT,

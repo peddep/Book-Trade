@@ -48,6 +48,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     sets.push('title_en = ?');
     args.push(typeof body.title_en === 'string' && body.title_en.trim() ? body.title_en.trim() : null);
   }
+  if (typeof body.price !== 'undefined') {
+    await ensureBookColumns();
+    const p = body.price === '' || body.price === null ? null : Number(body.price);
+    sets.push('price = ?');
+    args.push(p !== null && !isNaN(p) && p >= 0 ? p : null);
+  }
   for (const f of ['subject', 'grade_level', 'condition', 'description'] as const) {
     if (typeof body[f] !== 'undefined') {
       sets.push(`${f} = ?`);

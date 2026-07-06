@@ -30,6 +30,7 @@ await db.batch(
       owner_id INTEGER NOT NULL REFERENCES users(id),
       title TEXT NOT NULL,
       title_en TEXT,
+      price REAL,
       author TEXT NOT NULL,
       subject TEXT,
       grade_level TEXT,

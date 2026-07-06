@@ -21,10 +21,11 @@ interface Book {
   description?: string;
   cover_color: string;
   cover_url?: string | null;
+  price?: number | null;
   available: number;
 }
 
-const EMPTY = { title: '', title_en: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
+const EMPTY = { title: '', title_en: '', price: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
 
 // Manages the user's books as a bookshelf (3-column scrollable grid). Tapping a
 // book reveals its title and edit actions. `compact` is the Trade page's left
@@ -58,7 +59,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: form.title, title_en: form.title_en, author: form.author, subject: form.subject,
+          title: form.title, title_en: form.title_en, price: form.price, author: form.author, subject: form.subject,
           grade_level: form.grade_level, condition: form.condition, description: form.description,
         }),
       });
@@ -90,7 +91,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     const b = books.find(x => x.id === id);
     if (!b) return;
     setForm({
-      title: b.title, title_en: b.title_en ?? '', author: b.author, subject: b.subject ?? '', grade_level: b.grade_level ?? '',
+      title: b.title, title_en: b.title_en ?? '', price: b.price != null ? String(b.price) : '', author: b.author, subject: b.subject ?? '', grade_level: b.grade_level ?? '',
       condition: b.condition, description: b.description ?? '', cover_url: b.cover_url ?? '',
     });
     setEditingId(id);
@@ -184,6 +185,13 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
             className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}>
             {CONDITIONS.map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
           </select>
+        </div>
+        <div>
+          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fPrice')}</label>
+          <input type="number" min="0" step="1" inputMode="numeric" value={form.price}
+            onChange={e => setForm({ ...form, price: e.target.value })}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+            placeholder={t('profile.fPricePlaceholder')} />
         </div>
         {!compact && (
           <>

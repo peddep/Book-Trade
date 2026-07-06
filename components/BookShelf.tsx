@@ -10,6 +10,7 @@ export interface ShelfBook {
   author: string;
   cover_color: string;
   cover_url?: string | null;
+  price?: number | null;
   available: number;
 }
 
@@ -61,6 +62,11 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                 {!b.available && (
                   <span className="absolute top-1 right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.65)', color: '#fff' }}>
                     {t('card.traded')}
+                  </span>
+                )}
+                {b.price != null && (
+                  <span className="absolute bottom-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fbbf24' }}>
+                    {b.price > 0 ? `฿${b.price}` : t('card.free')}
                   </span>
                 )}
               </button>

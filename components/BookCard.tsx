@@ -13,6 +13,7 @@ interface Book {
   cover_color: string;
   cover_url?: string | null;
   title_en?: string | null;
+  price?: number | null;
   available: number;
   owner_name?: string;
   owner_avatar_color?: string;
@@ -99,6 +100,11 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
           >
             {t(`cond.${book.condition}`)}
           </span>
+          {book.price != null && (
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: '#3a2f0a', color: '#fbbf24' }}>
+              {book.price > 0 ? `฿${book.price}` : t('card.free')}
+            </span>
+          )}
         </div>
 
         {book.description && (
