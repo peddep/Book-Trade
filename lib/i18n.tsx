@@ -226,6 +226,7 @@ const STRINGS: Dict = {
   'wb.from': { th: 'จาก {name}', en: 'from {name}' },
   'wb.full': { th: 'กล่องเต็มแล้ว (สูงสุด {total} เล่ม)', en: 'Box is full (max {total} books)' },
   'wb.meetHint': { th: 'ดูรายละเอียดนัดรับหนังสือได้ที่ "การแลกเปลี่ยนของฉัน"', en: 'See meet-up details in "My Trades"' },
+  'wb.chooseBook': { th: 'เลือกหนังสือที่จะฝาก', en: 'Choose a book to deposit' },
 
   // GTS
   'gts.desc': { th: 'ฝากหนังสือพร้อมระบุเล่มที่ต้องการ เมื่อมีคนมีเล่มที่ตรงมาแลก การเทรดจะเกิดขึ้นทันที', en: 'Deposit a book and specify what you want in return. When someone fulfills it with a matching book, the trade happens instantly.' },

@@ -3,13 +3,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import BookPicker from '@/components/BookPicker';
 import BookThumb from '@/components/BookThumb';
+import BookShelf, { type ShelfBook } from '@/components/BookShelf';
 import { useI18n } from '@/lib/i18n';
 
 interface Deposit {
   id: number;
   status: string;
+  book_id: number;
   my_title: string;
   my_title_en?: string | null;
   my_color: string;
@@ -25,11 +26,11 @@ export default function WonderBoxPage() {
   const { t, bookTitle } = useI18n();
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [slots, setSlots] = useState(10);
-  const [showPicker, setShowPicker] = useState(false);
-  const [picked, setPicked] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [receivedMsg, setReceivedMsg] = useState<Deposit[]>([]);
   const [error, setError] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [myBooks, setMyBooks] = useState<ShelfBook[]>([]);
 
   const load = useCallback(async () => {
     const res = await fetch('/api/wonderbox');
@@ -42,20 +43,26 @@ export default function WonderBoxPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function deposit() {
-    if (!picked) return;
+  async function openPicker() {
+    setError('');
+    const res = await fetch('/api/books?mine=1');
+    const d = await res.json();
+    setMyBooks((d.books ?? []).filter((b: ShelfBook) => b.available));
+    setPickerOpen(true);
+  }
+
+  async function deposit(bookId: number) {
     setBusy(true);
     setError('');
     const res = await fetch('/api/wonderbox', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ book_id: picked }),
+      body: JSON.stringify({ book_id: bookId }),
     });
     const d = await res.json();
     if (res.ok) {
       setDeposits(d.deposits ?? []);
-      setShowPicker(false);
-      setPicked(null);
+      setPickerOpen(false);
     } else {
       setError(d.error === 'box_full' ? t('wb.full', { total: slots }) : t('hub.noFreeBooks'));
     }
@@ -80,6 +87,8 @@ export default function WonderBoxPage() {
 
   const matchedCount = deposits.filter(d => d.status === 'matched').length;
   const used = deposits.length;
+  const depositedIds = new Set(deposits.map(d => d.book_id));
+  const pickable = myBooks.filter(b => !depositedIds.has(b.id));
 
   return (
     <>
@@ -99,7 +108,7 @@ export default function WonderBoxPage() {
               <div key={r.id} className="flex items-center gap-3 py-1.5">
                 <BookThumb coverUrl={r.received_cover_url} coverColor={r.received_color ?? '#e9d5ff'} />
                 <div>
-                  <p className="text-sm font-semibold text-[#2e1065]">{bookTitle(r.received_title ?? "", r.received_title_en)}</p>
+                  <p className="text-sm font-semibold text-[#2e1065]">{bookTitle(r.received_title ?? '', r.received_title_en)}</p>
                   {r.received_from && <p className="text-xs text-[#6b7280]">{t('wb.from', { name: r.received_from })}</p>}
                 </div>
               </div>
@@ -108,16 +117,22 @@ export default function WonderBoxPage() {
           </div>
         )}
 
-        {/* Slots grid */}
+        {/* Slots grid — click an empty slot to pick a book */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {Array.from({ length: slots }).map((_, i) => {
             const d = deposits[i];
             if (!d) {
+              const firstEmpty = i === used;
               return (
-                <div key={i} className="aspect-square rounded-2xl flex items-center justify-center"
-                  style={{ background: '#faf5ff', border: '2px dashed #e9d5ff' }}>
-                  <span className="text-2xl opacity-30">＋</span>
-                </div>
+                <button
+                  key={i}
+                  onClick={firstEmpty ? openPicker : undefined}
+                  disabled={!firstEmpty}
+                  className="aspect-square rounded-2xl flex items-center justify-center transition-colors"
+                  style={{ background: '#faf5ff', border: '2px dashed #e9d5ff', cursor: firstEmpty ? 'pointer' : 'default' }}
+                >
+                  <span className="text-2xl" style={{ opacity: firstEmpty ? 0.6 : 0.25, color: '#8b5cf6' }}>＋</span>
+                </button>
               );
             }
             const matched = d.status === 'matched';
@@ -139,32 +154,33 @@ export default function WonderBoxPage() {
           })}
         </div>
 
-        {deposits.length === 0 && <p className="text-center text-sm text-[#9ca3af] mb-6">{t('wb.empty')}</p>}
+        {deposits.length === 0 && !pickerOpen && <p className="text-center text-sm text-[#9ca3af] mb-6">{t('wb.empty')}</p>}
         {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
 
-        <div className="flex gap-3 flex-wrap">
-          {used < slots && (
-            <button onClick={() => setShowPicker(!showPicker)} className="px-5 py-2.5 rounded-xl font-semibold text-sm text-white"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-              {t('wb.deposit')}
-            </button>
-          )}
-          {matchedCount > 0 && (
-            <button onClick={receiveAll} disabled={busy} className="px-5 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
-              🎁 {t('wb.receiveAll')} ({matchedCount})
-            </button>
-          )}
-        </div>
+        {matchedCount > 0 && (
+          <button onClick={receiveAll} disabled={busy} className="px-5 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+            🎁 {t('wb.receiveAll')} ({matchedCount})
+          </button>
+        )}
 
-        {showPicker && (
+        {/* Book picker (looks like Your Books, but selecting deposits — no edit options) */}
+        {pickerOpen && (
           <div className="mt-5 p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-            <p className="text-sm font-semibold text-[#4b5563] mb-3">{t('hub.pickBook')}</p>
-            <BookPicker selected={picked} onSelect={setPicked} />
-            <button onClick={deposit} disabled={!picked || busy} className="mt-4 w-full py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-              {t('wb.deposit')}
-            </button>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-[#4b5563]">{t('wb.chooseBook')}</p>
+              <button onClick={() => setPickerOpen(false)} className="text-[#6b7280] hover:text-[#2e1065] text-lg">✕</button>
+            </div>
+            {pickable.length === 0 ? (
+              <p className="text-sm text-[#6b7280]">{t('hub.noFreeBooks')}</p>
+            ) : (
+              <BookShelf
+                books={pickable}
+                selectMode
+                onSelect={id => { if (!busy) deposit(id); }}
+                maxHeight="60vh"
+              />
+            )}
           </div>
         )}
       </main>
