@@ -61,7 +61,7 @@ export default function FriendTradePage() {
       <main className="max-w-6xl mx-auto px-4 py-6">
         <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <div className="mt-2 mb-6">
-          <h1 className="text-3xl font-bold text-[#2e1065] mb-1">🤝 {t('hub.friend')}</h1>
+          <h1 className="text-3xl font-bold text-[#2e1065] mb-1">🔍 {t('hub.browse')}</h1>
           <p className="text-[#6b7280] text-sm">{t('books.subtitle')}</p>
         </div>
 

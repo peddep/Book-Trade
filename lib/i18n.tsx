@@ -200,6 +200,8 @@ const STRINGS: Dict = {
   'hub.roomsDesc': { th: 'สร้างห้องกับเพื่อน ๆ แล้วสุ่มแลกหนังสือกันในห้อง (สูงสุด 20 คน)', en: 'Create a room with friends and trade randomly within it (up to 20 people)' },
   'hub.friend': { th: 'เทรดกับเพื่อน', en: 'Friend Trade' },
   'hub.friendDesc': { th: 'เลือกหนังสือของเพื่อนแล้วส่งข้อเสนอแลกเปลี่ยนโดยตรง', en: 'Pick a classmate\'s book and send them a direct trade offer' },
+  'hub.browse': { th: 'ค้นหาและแลกหนังสือ', en: 'Browse & Trade' },
+  'hub.browseDesc': { th: 'ดูหนังสือของเพื่อน ๆ แล้วส่งข้อเสนอแลกเปลี่ยน', en: 'Browse classmates\' books and send a trade offer' },
   'hub.back': { th: '← กลับ', en: '← Back' },
   'hub.pickBook': { th: 'เลือกหนังสือของคุณ', en: 'Pick one of your books' },
   'hub.noFreeBooks': { th: 'ไม่มีหนังสือที่ว่างอยู่ — เพิ่มหนังสือใหม่ หรือถอนจากการเทรดอื่นก่อน', en: 'No free books — add a new book or withdraw one from another trade first' },

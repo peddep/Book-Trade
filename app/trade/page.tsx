@@ -10,9 +10,7 @@ import { useI18n } from '@/lib/i18n';
 
 const OPTIONS = [
   { href: '/trade/wonderbox', icon: '✨', key: 'wonderbox', color: 'linear-gradient(135deg, #6366f1, #4f46e5)' },
-  { href: '/trade/gts', icon: '🌐', key: 'gts', color: 'linear-gradient(135deg, #3b82f6, #2563eb)' },
-  { href: '/trade/rooms', icon: '🚪', key: 'rooms', color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' },
-  { href: '/trade/friend', icon: '🤝', key: 'friend', color: 'linear-gradient(135deg, #ec4899, #db2777)' },
+  { href: '/trade/friend', icon: '🔍', key: 'browse', color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' },
 ];
 
 export default function TradeHubPage() {
