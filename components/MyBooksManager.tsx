@@ -10,6 +10,8 @@ import { fileToCoverDataUrl } from '@/lib/image';
 const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
 
+type SortKey = 'recent' | 'price' | 'alpha';
+
 interface Book {
   id: number;
   title: string;
@@ -22,6 +24,7 @@ interface Book {
   cover_color: string;
   cover_url?: string | null;
   price?: number | null;
+  created_at?: string;
   available: number;
 }
 
@@ -31,13 +34,29 @@ const EMPTY = { title: '', title_en: '', price: '', author: '', subject: '', gra
 // book reveals its title and edit actions. `compact` is the Trade page's left
 // panel; the full variant is the Your Books page.
 export default function MyBooksManager({ compact = false, onChange }: { compact?: boolean; onChange?: () => void }) {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(EMPTY);
   const [submitting, setSubmitting] = useState(false);
+  const [sort, setSort] = useState<SortKey>('recent');
+
+  // Sorted view of the books for display.
+  const sortedBooks = [...books].sort((a, b) => {
+    if (sort === 'price') {
+      const pa = a.price ?? Infinity; // no-price goes last
+      const pb = b.price ?? Infinity;
+      return pa - pb;
+    }
+    if (sort === 'alpha') {
+      return bookTitle(a.title, a.title_en).localeCompare(bookTitle(b.title, b.title_en), undefined, { numeric: true });
+    }
+    // recent: newest first (fall back to id if no timestamp)
+    if (a.created_at && b.created_at) return b.created_at.localeCompare(a.created_at);
+    return b.id - a.id;
+  });
 
   const fetchBooks = useCallback(async () => {
     setLoading(true);
@@ -266,13 +285,32 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     </div>
   ) : (
     <BookShelf
-      books={books}
+      books={sortedBooks}
       onEdit={startEdit}
       onDelete={deleteBook}
       onToggleAvailable={toggleAvailable}
       onChangeCover={changeCover}
       maxHeight={compact ? '70vh' : '65vh'}
     />
+  );
+
+  // Sort selector (segmented buttons).
+  const sortControl = books.length > 1 && (
+    <div className="flex items-center gap-1.5 flex-wrap mb-4">
+      <span className="text-xs text-[#9ca3af] mr-1">{t('sort.by')}:</span>
+      {(['recent', 'price', 'alpha'] as SortKey[]).map(k => (
+        <button
+          key={k}
+          onClick={() => setSort(k)}
+          className="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+          style={sort === k
+            ? { background: '#7c3aed', color: '#ffffff' }
+            : { background: '#ede9fe', color: '#7c3aed' }}
+        >
+          {t(`sort.${k}`)}
+        </button>
+      ))}
+    </div>
   );
 
   if (compact) {
@@ -283,6 +321,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           {addButton}
         </div>
         {bookForm}
+        {sortControl}
         {shelf}
       </div>
     );
@@ -295,6 +334,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         {addButton}
       </div>
       {bookForm}
+      {sortControl}
       <div className="max-w-md">{shelf}</div>
     </div>
   );
