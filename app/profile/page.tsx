@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import Loading from '@/components/Loading';
 import TopTabs from '@/components/TopTabs';
 import MyBooksManager from '@/components/MyBooksManager';
 import AdminHarvestCard from '@/components/AdminHarvestCard';
@@ -23,7 +24,12 @@ export default function ProfilePage() {
     });
   }, [router]);
 
-  if (!user) return null;
+  if (!user) return (
+    <>
+      <Navbar />
+      <Loading />
+    </>
+  );
 
   return (
     <>

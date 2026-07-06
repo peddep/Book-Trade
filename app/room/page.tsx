@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import Loading from '@/components/Loading';
 import TopTabs from '@/components/TopTabs';
 import { useI18n, type Lang } from '@/lib/i18n';
 
@@ -37,7 +38,12 @@ export default function RoomPage() {
     router.push('/');
   }
 
-  if (!user) return null;
+  if (!user) return (
+    <>
+      <Navbar />
+      <Loading />
+    </>
+  );
 
   const news = [
     { title: t('room2.news1Title'), body: t('room2.news1Body') },

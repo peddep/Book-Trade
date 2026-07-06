@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import Loading from '@/components/Loading';
 import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
 
@@ -84,7 +85,12 @@ export default function TradesPage() {
     return true;
   });
 
-  if (!user) return null;
+  if (!user) return (
+    <>
+      <Navbar />
+      <Loading />
+    </>
+  );
 
   return (
     <>
