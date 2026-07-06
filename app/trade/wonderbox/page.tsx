@@ -30,6 +30,7 @@ export default function WonderBoxPage() {
   const [receivedMsg, setReceivedMsg] = useState<Deposit[]>([]);
   const [error, setError] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [myBooks, setMyBooks] = useState<ShelfBook[]>([]);
 
   const load = useCallback(async () => {
@@ -43,15 +44,18 @@ export default function WonderBoxPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function openPicker() {
+  function openPicker() {
     setError('');
-    const res = await fetch('/api/books?mine=1');
-    const d = await res.json();
-    setMyBooks((d.books ?? []).filter((b: ShelfBook) => b.available));
-    setPickerOpen(true);
+    setPickerOpen(true);           // open immediately
+    setPicking(true);
+    fetch('/api/books?mine=1')     // load books in the background
+      .then(r => r.json())
+      .then(d => setMyBooks((d.books ?? []).filter((b: ShelfBook) => b.available)))
+      .finally(() => setPicking(false));
   }
 
   async function deposit(bookId: number) {
+    setPickerOpen(false);          // close instantly — no waiting
     setBusy(true);
     setError('');
     const res = await fetch('/api/wonderbox', {
@@ -62,7 +66,6 @@ export default function WonderBoxPage() {
     const d = await res.json();
     if (res.ok) {
       setDeposits(d.deposits ?? []);
-      setPickerOpen(false);
     } else {
       setError(d.error === 'box_full' ? t('wb.full', { total: slots }) : t('hub.noFreeBooks'));
     }
@@ -70,6 +73,7 @@ export default function WonderBoxPage() {
   }
 
   async function withdraw(id: number) {
+    setDeposits(prev => prev.filter(d => d.id !== id)); // optimistic
     await fetch(`/api/wonderbox?id=${id}`, { method: 'DELETE' });
     load();
   }
@@ -180,7 +184,9 @@ export default function WonderBoxPage() {
                 <p className="text-base font-bold text-[#2e1065]">{t('wb.chooseBook')}</p>
                 <button onClick={() => setPickerOpen(false)} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
               </div>
-              {pickable.length === 0 ? (
+              {picking ? (
+                <p className="text-sm text-[#9ca3af] py-6 text-center">{t('profile.loading')}</p>
+              ) : pickable.length === 0 ? (
                 <p className="text-sm text-[#6b7280]">{t('hub.noFreeBooks')}</p>
               ) : (
                 <BookShelf
