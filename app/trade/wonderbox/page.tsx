@@ -140,19 +140,36 @@ export default function WonderBoxPage() {
               );
             }
             const matched = d.status === 'matched';
+            if (matched) {
+              return (
+                <div key={`dep-${d.id}`} className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 p-2"
+                  style={{ background: '#ede9fe', border: '1px solid #8b5cf6' }}>
+                  <span className="text-3xl">🎁</span>
+                  <p className="text-[11px] text-center font-semibold" style={{ color: '#7c3aed' }}>{t('wb.matched')}</p>
+                </div>
+              );
+            }
+            // Waiting: show the book cover filling the slot.
             return (
-              <div key={`dep-${d.id}`} className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 p-2 relative"
-                style={{ background: matched ? '#ede9fe' : '#ffffff', border: `1px solid ${matched ? '#8b5cf6' : '#e9d5ff'}` }}>
-                {matched ? <span className="text-3xl">🎁</span> : <BookThumb coverUrl={d.my_cover_url} coverColor={d.my_color} size={44} />}
-                <p className="text-[11px] text-center leading-tight line-clamp-2" style={{ color: matched ? '#7c3aed' : '#6b7280' }}>
-                  {matched ? t('wb.matched') : bookTitle(d.my_title, d.my_title_en)}
-                </p>
-                {!matched && (
-                  <button onClick={() => withdraw(d.id)} className="text-[10px] px-2 py-0.5 rounded-full mt-0.5"
-                    style={{ background: '#fee2e2', color: '#ef4444' }}>
-                    {t('wb.withdraw')}
-                  </button>
+              <div key={`dep-${d.id}`} className="aspect-square rounded-2xl overflow-hidden relative"
+                style={{ background: d.my_color, border: '1px solid #e9d5ff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+                {d.my_cover_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={d.my_cover_url} alt={bookTitle(d.my_title, d.my_title_en)} className="absolute inset-0 w-full h-full object-cover"
+                    onError={e => { e.currentTarget.style.display = 'none'; }} />
+                ) : (
+                  <span className="absolute inset-0 flex items-center justify-center text-4xl">📖</span>
                 )}
+                {/* Title overlay */}
+                <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1" style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0))' }}>
+                  <p className="text-[10px] font-semibold leading-tight line-clamp-2 text-white">{bookTitle(d.my_title, d.my_title_en)}</p>
+                </div>
+                {/* Withdraw */}
+                <button onClick={() => withdraw(d.id)} title={t('wb.withdraw')} aria-label={t('wb.withdraw')}
+                  className="absolute top-1 right-1 rounded-full flex items-center justify-center text-[13px] font-bold"
+                  style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.9)', color: '#ef4444' }}>
+                  ✕
+                </button>
               </div>
             );
           })}
