@@ -65,13 +65,16 @@ export async function POST(req: NextRequest) {
   const { title, title_en, author, subject, grade_level, condition, description, cover_url, price } = await req.json();
   if (!title || !author) return NextResponse.json({ error: 'Title and author required' }, { status: 400 });
 
+  // Price is required when adding a book.
+  const priceNum = price !== undefined && price !== null && price !== '' && !isNaN(Number(price)) && Number(price) >= 0 ? Number(price) : null;
+  if (priceNum === null) return NextResponse.json({ error: 'price_required' }, { status: 400 });
+
   const color = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)];
   const db = getDb();
   await ensureBookColumns();
   // Cover is the student's uploaded photo (or none).
   const coverUrl = sanitizeCover(cover_url);
   const titleEn = typeof title_en === 'string' && title_en.trim() ? title_en.trim() : null;
-  const priceNum = price !== undefined && price !== null && price !== '' && !isNaN(Number(price)) && Number(price) >= 0 ? Number(price) : null;
   const result = await db.execute({
     sql: 'INSERT INTO books (owner_id, title, title_en, price, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     args: [user.id, title, titleEn, priceNum, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],

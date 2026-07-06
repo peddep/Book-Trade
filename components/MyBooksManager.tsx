@@ -213,8 +213,8 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           </select>
         </div>
         <div>
-          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPrice')}</label>
-          <input type="number" min="0" step="1" inputMode="numeric" value={form.price}
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPrice')}{!editingId && ' *'}</label>
+          <input type="number" min="0" step="1" inputMode="numeric" required={!editingId} value={form.price}
             onChange={e => setForm({ ...form, price: e.target.value })}
             className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fPricePlaceholder')} />
