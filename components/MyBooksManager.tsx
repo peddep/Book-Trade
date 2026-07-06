@@ -124,12 +124,19 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   }
 
   async function toggleAvailable(id: number, next: boolean) {
-    await fetch(`/api/books/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ available: next }),
-    });
-    fetchBooks();
+    // Optimistic update: flip locally so the shelf doesn't reload/flicker.
+    setBooks(prev => prev.map(b => (b.id === id ? { ...b, available: next ? 1 : 0 } : b)));
+    try {
+      const res = await fetch(`/api/books/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ available: next }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      // Revert on failure.
+      setBooks(prev => prev.map(b => (b.id === id ? { ...b, available: next ? 0 : 1 } : b)));
+    }
   }
 
   // Thai/primary title box. When it matches a known book, auto-fill the author
