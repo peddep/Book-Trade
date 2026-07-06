@@ -25,7 +25,7 @@ export default function TopTabs() {
             href={tab.href}
             className="flex-1 max-w-[10rem] text-center py-2.5 text-sm font-bold transition-colors"
             style={{
-              color: active ? '#ffffff' : '#64748b',
+              color: active ? '#ffffff' : '#9ca3af',
               borderBottom: active ? '3px solid #8b5cf6' : '3px solid transparent',
             }}
           >

@@ -85,26 +85,26 @@ export default function WonderBoxPage() {
     <>
       <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <Link href="/trade" className="text-sm text-slate-400 hover:text-white">{t('hub.back')}</Link>
+        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <div className="flex items-center justify-between mt-2 mb-1">
-          <h1 className="text-3xl font-bold text-white">✨ {t('hub.wonderbox')}</h1>
-          <span className="text-sm font-semibold" style={{ color: '#a78bfa' }}>{t('wb.slots', { used, total: slots })}</span>
+          <h1 className="text-3xl font-bold text-[#2e1065]">✨ {t('hub.wonderbox')}</h1>
+          <span className="text-sm font-semibold" style={{ color: '#7c3aed' }}>{t('wb.slots', { used, total: slots })}</span>
         </div>
-        <p className="text-sm text-slate-400 mb-6">{t('wb.desc')}</p>
+        <p className="text-sm text-[#6b7280] mb-6">{t('wb.desc')}</p>
 
         {receivedMsg.length > 0 && (
-          <div className="mb-6 p-4 rounded-2xl" style={{ background: '#0d2b1a', border: '1px solid #10b981' }}>
+          <div className="mb-6 p-4 rounded-2xl" style={{ background: '#dcfce7', border: '1px solid #10b981' }}>
             <p className="font-bold mb-2" style={{ color: '#10b981' }}>🎉 {t('wb.youGot')}</p>
             {receivedMsg.map(r => (
               <div key={r.id} className="flex items-center gap-3 py-1.5">
-                <BookThumb coverUrl={r.received_cover_url} coverColor={r.received_color ?? '#2d2d4a'} />
+                <BookThumb coverUrl={r.received_cover_url} coverColor={r.received_color ?? '#e9d5ff'} />
                 <div>
-                  <p className="text-sm font-semibold text-white">{bookTitle(r.received_title ?? "", r.received_title_en)}</p>
-                  {r.received_from && <p className="text-xs text-slate-400">{t('wb.from', { name: r.received_from })}</p>}
+                  <p className="text-sm font-semibold text-[#2e1065]">{bookTitle(r.received_title ?? "", r.received_title_en)}</p>
+                  {r.received_from && <p className="text-xs text-[#6b7280]">{t('wb.from', { name: r.received_from })}</p>}
                 </div>
               </div>
             ))}
-            <p className="text-xs mt-2" style={{ color: '#6ee7b7' }}>{t('wb.meetHint')}</p>
+            <p className="text-xs mt-2" style={{ color: '#059669' }}>{t('wb.meetHint')}</p>
           </div>
         )}
 
@@ -115,7 +115,7 @@ export default function WonderBoxPage() {
             if (!d) {
               return (
                 <div key={i} className="aspect-square rounded-2xl flex items-center justify-center"
-                  style={{ background: '#12122a', border: '2px dashed #2d2d4a' }}>
+                  style={{ background: '#faf5ff', border: '2px dashed #e9d5ff' }}>
                   <span className="text-2xl opacity-30">＋</span>
                 </div>
               );
@@ -123,14 +123,14 @@ export default function WonderBoxPage() {
             const matched = d.status === 'matched';
             return (
               <div key={d.id} className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 p-2 relative"
-                style={{ background: matched ? '#2d1e5a' : '#1a1a2e', border: `1px solid ${matched ? '#8b5cf6' : '#2d2d4a'}` }}>
+                style={{ background: matched ? '#ede9fe' : '#ffffff', border: `1px solid ${matched ? '#8b5cf6' : '#e9d5ff'}` }}>
                 {matched ? <span className="text-3xl">🎁</span> : <BookThumb coverUrl={d.my_cover_url} coverColor={d.my_color} size={44} />}
-                <p className="text-[11px] text-center leading-tight line-clamp-2" style={{ color: matched ? '#c4b5fd' : '#94a3b8' }}>
+                <p className="text-[11px] text-center leading-tight line-clamp-2" style={{ color: matched ? '#7c3aed' : '#6b7280' }}>
                   {matched ? t('wb.matched') : bookTitle(d.my_title, d.my_title_en)}
                 </p>
                 {!matched && (
                   <button onClick={() => withdraw(d.id)} className="text-[10px] px-2 py-0.5 rounded-full mt-0.5"
-                    style={{ background: '#3a1e1e', color: '#ef4444' }}>
+                    style={{ background: '#fee2e2', color: '#ef4444' }}>
                     {t('wb.withdraw')}
                   </button>
                 )}
@@ -139,7 +139,7 @@ export default function WonderBoxPage() {
           })}
         </div>
 
-        {deposits.length === 0 && <p className="text-center text-sm text-slate-500 mb-6">{t('wb.empty')}</p>}
+        {deposits.length === 0 && <p className="text-center text-sm text-[#9ca3af] mb-6">{t('wb.empty')}</p>}
         {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
 
         <div className="flex gap-3 flex-wrap">
@@ -158,8 +158,8 @@ export default function WonderBoxPage() {
         </div>
 
         {showPicker && (
-          <div className="mt-5 p-5 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
-            <p className="text-sm font-semibold text-slate-300 mb-3">{t('hub.pickBook')}</p>
+          <div className="mt-5 p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+            <p className="text-sm font-semibold text-[#4b5563] mb-3">{t('hub.pickBook')}</p>
             <BookPicker selected={picked} onSelect={setPicked} />
             <button onClick={deposit} disabled={!picked || busy} className="mt-4 w-full py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>

@@ -48,36 +48,36 @@ export default function RegisterPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">📚</div>
-            <h1 className="text-2xl font-bold text-white">{t('reg.join')}</h1>
-            <p className="text-slate-400 text-sm mt-1">{t('reg.subtitle')}</p>
+            <h1 className="text-2xl font-bold text-[#2e1065]">{t('reg.join')}</h1>
+            <p className="text-[#6b7280] text-sm mt-1">{t('reg.subtitle')}</p>
           </div>
-          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
+          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('reg.yourName')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.yourName')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder="Alex Johnson"
               />
             </div>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('auth.email')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.email')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder="your@school.edu"
               />
             </div>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('auth.password')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.password')}</label>
               <input
                 type="password"
                 value={password}
@@ -85,17 +85,17 @@ export default function RegisterPage() {
                 required
                 minLength={6}
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder={t('reg.passwordHint')}
               />
             </div>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('reg.gradeOptional')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.gradeOptional')}</label>
               <select
                 value={grade}
                 onChange={e => setGrade(e.target.value)}
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: grade ? '#e2e8f0' : '#64748b', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: grade ? '#2e1065' : '#9ca3af', outline: 'none' }}
               >
                 <option value="">{t('reg.selectGrade')}</option>
                 {GRADES.map(g => <option key={g} value={g}>{t('common.grade')} {g}</option>)}
@@ -110,7 +110,7 @@ export default function RegisterPage() {
             >
               {loading ? t('reg.creating') : t('reg.createAccount')}
             </button>
-            <p className="text-center text-sm text-slate-400">
+            <p className="text-center text-sm text-[#6b7280]">
               {t('reg.haveAccount')}{' '}
               <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
                 {t('login.signIn')}

@@ -152,59 +152,59 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   }
 
   const bookForm = showForm && (
-    <form onSubmit={submitBook} className="p-4 rounded-2xl flex flex-col gap-3 mb-4" style={{ background: compact ? '#0f0f1a' : '#1a1a2e', border: '1px solid #2d2d4a' }}>
-      <h3 className="font-bold text-white">{editingId ? t('profile.editBookTitle') : t('profile.addBookTitle')}</h3>
+    <form onSubmit={submitBook} className="p-4 rounded-2xl flex flex-col gap-3 mb-4" style={{ background: compact ? '#ffffff' : '#ffffff', border: '1px solid #e9d5ff' }}>
+      <h3 className="font-bold text-[#2e1065]">{editingId ? t('profile.editBookTitle') : t('profile.addBookTitle')}</h3>
       <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}>
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fTitleTh')} *</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleTh')} *</label>
           <TitleInput value={form.title} onChange={setTitle} placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
         </div>
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fTitleEn')}</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleEn')}</label>
           <input value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fTitleEnPlaceholder')} />
         </div>
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fAuthor')} *</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fAuthor')} *</label>
           <input required value={form.author} onChange={e => setForm({ ...form, author: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fAuthorPlaceholder')} />
         </div>
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fSubject')}</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fSubject')}</label>
           <select value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: form.subject ? '#e2e8f0' : '#64748b', outline: 'none' }}>
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: form.subject ? '#2e1065' : '#9ca3af', outline: 'none' }}>
             <option value="">{t('profile.fSelectSubject')}</option>
             {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fCondition')}</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fCondition')}</label>
           <select value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}>
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}>
             {CONDITIONS.map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fPrice')}</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPrice')}</label>
           <input type="number" min="0" step="1" inputMode="numeric" value={form.price}
             onChange={e => setForm({ ...form, price: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fPricePlaceholder')} />
         </div>
         {!compact && (
           <>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fGradeLevel')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fGradeLevel')}</label>
               <input value={form.grade_level} onChange={e => setForm({ ...form, grade_level: e.target.value })}
-                className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+                className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder={t('profile.fGradePlaceholder')} />
             </div>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.fDescription')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fDescription')}</label>
               <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+                className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder={t('profile.fDescPlaceholder')} />
             </div>
           </>
@@ -214,9 +214,9 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       {/* Cover upload — only when adding; existing books change cover from the shelf */}
       {!editingId && (
         <div>
-          <label className="text-sm text-slate-300 mb-1.5 block">{t('profile.cover')}</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.cover')}</label>
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: '#2d2d4a' }}>
+            <div className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: '#e9d5ff' }}>
               {form.cover_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={form.cover_url} alt="" className="w-full h-full object-cover" />
@@ -224,22 +224,22 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
                 <span className="text-2xl">📖</span>
               )}
             </div>
-            <label className="px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: '#2d2d4a', color: '#e2e8f0' }}>
+            <label className="px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: '#e9d5ff', color: '#2e1065' }}>
               {form.cover_url ? t('profile.changeCover') : t('profile.addCover')}
               <input type="file" accept="image/*" className="hidden" onChange={e => onPickCover(e.target.files?.[0])} />
             </label>
             {form.cover_url && (
-              <button type="button" onClick={() => setForm(prev => ({ ...prev, cover_url: '' }))} className="text-xs px-2.5 py-1 rounded-full" style={{ background: '#3a1e1e', color: '#ef4444' }}>
+              <button type="button" onClick={() => setForm(prev => ({ ...prev, cover_url: '' }))} className="text-xs px-2.5 py-1 rounded-full" style={{ background: '#fee2e2', color: '#ef4444' }}>
                 {t('profile.removeCover')}
               </button>
             )}
           </div>
-          <p className="text-[11px] mt-1.5" style={{ color: '#64748b' }}>{t('profile.coverHint')}</p>
+          <p className="text-[11px] mt-1.5" style={{ color: '#9ca3af' }}>{t('profile.coverHint')}</p>
         </div>
       )}
 
       <div className="flex gap-2">
-        <button type="button" onClick={closeForm} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: '#2d2d4a', color: '#94a3b8' }}>
+        <button type="button" onClick={closeForm} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: '#e9d5ff', color: '#6b7280' }}>
           {t('profile.cancel')}
         </button>
         <button type="submit" disabled={submitting} className="px-6 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
@@ -257,12 +257,12 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   );
 
   const shelf = loading ? (
-    <p className="text-sm text-slate-400">{t('profile.loading')}</p>
+    <p className="text-sm text-[#6b7280]">{t('profile.loading')}</p>
   ) : books.length === 0 ? (
     <div className={compact ? '' : 'text-center py-16'}>
       {!compact && <div className="text-5xl mb-4">📚</div>}
-      <p className="text-slate-400">{compact ? t('hub.noBooks') : t('profile.none')}</p>
-      {!compact && <p className="text-slate-500 text-sm mt-1">{t('profile.noneHint')}</p>}
+      <p className="text-[#6b7280]">{compact ? t('hub.noBooks') : t('profile.none')}</p>
+      {!compact && <p className="text-[#9ca3af] text-sm mt-1">{t('profile.noneHint')}</p>}
     </div>
   ) : (
     <BookShelf
@@ -279,7 +279,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     return (
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-white">📚 {t('hub.myBooks')} <span className="text-slate-500 font-normal">({books.length})</span></h2>
+          <h2 className="font-bold text-[#2e1065]">📚 {t('hub.myBooks')} <span className="text-[#9ca3af] font-normal">({books.length})</span></h2>
           {addButton}
         </div>
         {bookForm}
@@ -291,7 +291,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">{t('tabs.books')}</h2>
+        <h2 className="text-xl font-bold text-[#2e1065]">{t('tabs.books')}</h2>
         {addButton}
       </div>
       {bookForm}

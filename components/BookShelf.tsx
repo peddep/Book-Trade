@@ -65,34 +65,34 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   </span>
                 )}
                 {b.price != null && (
-                  <span className="absolute bottom-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fbbf24' }}>
+                  <span className="absolute bottom-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#b45309' }}>
                     {b.price > 0 ? `฿${b.price}` : t('card.free')}
                   </span>
                 )}
               </button>
 
               {/* Title (always shown small under the cover) */}
-              <p className="text-[11px] text-slate-300 mt-1.5 leading-tight line-clamp-2 text-center">{bookTitle(b.title, b.title_en)}</p>
+              <p className="text-[11px] text-[#4b5563] mt-1.5 leading-tight line-clamp-2 text-center">{bookTitle(b.title, b.title_en)}</p>
 
               {/* Expanded actions on click */}
               {open && (
-                <div className="mt-1.5 flex flex-col gap-1.5 rounded-xl p-2" style={{ background: '#0f0f1a', border: '1px solid #2d2d4a' }}>
-                  <p className="text-[11px] text-slate-400 text-center truncate">{b.author}</p>
+                <div className="mt-1.5 flex flex-col gap-1.5 rounded-xl p-2" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+                  <p className="text-[11px] text-[#6b7280] text-center truncate">{b.author}</p>
                   <button onClick={() => onEdit(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                     ✏️ {t('shelf.edit')}
                   </button>
-                  <label className="w-full py-1 rounded-lg text-[11px] font-semibold text-center cursor-pointer" style={{ background: '#2d2d4a', color: '#e2e8f0' }}>
+                  <label className="w-full py-1 rounded-lg text-[11px] font-semibold text-center cursor-pointer" style={{ background: '#e9d5ff', color: '#2e1065' }}>
                     {b.cover_url ? t('card.changeCover') : t('card.addCover')}
                     <input type="file" accept="image/*" className="hidden" onChange={e => onChangeCover(b.id, e.target.files?.[0])} />
                   </label>
                   <button
                     onClick={() => onToggleAvailable(b.id, !b.available)}
                     className="w-full py-1 rounded-lg text-[11px] font-semibold"
-                    style={{ background: b.available ? '#1e3a2f' : '#1e2a3a', color: b.available ? '#10b981' : '#94a3b8' }}
+                    style={{ background: b.available ? '#dcfce7' : '#e9d5ff', color: b.available ? '#10b981' : '#6b7280' }}
                   >
                     {b.available ? t('card.available') : t('card.unavailable')}
                   </button>
-                  <button onClick={() => onDelete(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#3a1e1e', color: '#ef4444' }}>
+                  <button onClick={() => onDelete(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#fee2e2', color: '#ef4444' }}>
                     {t('card.remove')}
                   </button>
                 </div>

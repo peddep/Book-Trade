@@ -40,7 +40,7 @@ export default function BookPicker({ excludeIds = [], selected, onSelect, filter
   const choices = books.filter(b => !excludeIds.includes(b.id) && (!filterFn || filterFn(b)));
 
   if (loaded && choices.length === 0) {
-    return <p className="text-sm text-slate-400">{emptyText ?? t('hub.noFreeBooks')}</p>;
+    return <p className="text-sm text-[#6b7280]">{emptyText ?? t('hub.noFreeBooks')}</p>;
   }
 
   return (
@@ -52,14 +52,14 @@ export default function BookPicker({ excludeIds = [], selected, onSelect, filter
           onClick={() => onSelect(b.id)}
           className="flex items-center gap-3 p-3 rounded-xl text-left"
           style={{
-            background: selected === b.id ? '#2d1e5a' : '#0f0f1a',
-            border: `1px solid ${selected === b.id ? '#8b5cf6' : '#2d2d4a'}`,
+            background: selected === b.id ? '#ede9fe' : '#ffffff',
+            border: `1px solid ${selected === b.id ? '#8b5cf6' : '#e9d5ff'}`,
           }}
         >
           <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
           <div>
-            <p className="text-sm font-semibold text-white">{b.title}</p>
-            <p className="text-xs text-slate-400">{b.author}</p>
+            <p className="text-sm font-semibold text-[#2e1065]">{b.title}</p>
+            <p className="text-xs text-[#6b7280]">{b.author}</p>
           </div>
           {selected === b.id && <span className="ml-auto text-purple-400">✓</span>}
         </button>

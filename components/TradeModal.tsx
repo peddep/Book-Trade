@@ -53,24 +53,24 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
-      <div className="w-full max-w-md rounded-2xl p-6 flex flex-col gap-4" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
+      <div className="w-full max-w-md rounded-2xl p-6 flex flex-col gap-4" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
         <div className="flex justify-between items-start">
-          <h2 className="text-lg font-bold text-white">{t('modal.title')}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-xl">✕</button>
+          <h2 className="text-lg font-bold text-[#2e1065]">{t('modal.title')}</h2>
+          <button onClick={onClose} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
         </div>
 
-        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#0f0f1a' }}>
+        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#ffffff' }}>
           <BookThumb coverUrl={targetBook.cover_url} coverColor={targetBook.cover_color} size={40} />
           <div>
-            <p className="text-xs text-slate-400">{t('modal.youWant')}</p>
-            <p className="font-semibold text-white text-sm">{bookTitle(targetBook.title, targetBook.title_en)}</p>
+            <p className="text-xs text-[#6b7280]">{t('modal.youWant')}</p>
+            <p className="font-semibold text-[#2e1065] text-sm">{bookTitle(targetBook.title, targetBook.title_en)}</p>
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-slate-300 mb-2">{t('modal.offerOne')}</p>
+          <p className="text-sm font-semibold text-[#4b5563] mb-2">{t('modal.offerOne')}</p>
           {myBooks.length === 0 ? (
-            <p className="text-sm text-slate-400">{t('modal.noBooks')}</p>
+            <p className="text-sm text-[#6b7280]">{t('modal.noBooks')}</p>
           ) : (
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
               {myBooks.map(b => (
@@ -79,14 +79,14 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
                   onClick={() => setSelectedBook(b.id)}
                   className="flex items-center gap-3 p-3 rounded-xl transition-colors text-left"
                   style={{
-                    background: selectedBook === b.id ? '#2d1e5a' : '#0f0f1a',
-                    border: `1px solid ${selectedBook === b.id ? '#8b5cf6' : '#2d2d4a'}`
+                    background: selectedBook === b.id ? '#ede9fe' : '#ffffff',
+                    border: `1px solid ${selectedBook === b.id ? '#8b5cf6' : '#e9d5ff'}`
                   }}
                 >
                   <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
                   <div>
-                    <p className="text-sm font-semibold text-white">{bookTitle(b.title, b.title_en)}</p>
-                    <p className="text-xs text-slate-400">{b.author}</p>
+                    <p className="text-sm font-semibold text-[#2e1065]">{bookTitle(b.title, b.title_en)}</p>
+                    <p className="text-xs text-[#6b7280]">{b.author}</p>
                   </div>
                   {selectedBook === b.id && <span className="ml-auto text-purple-400">✓</span>}
                 </button>
@@ -96,13 +96,13 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-slate-300 mb-1">{t('modal.messageOptional')}</p>
+          <p className="text-sm font-semibold text-[#4b5563] mb-1">{t('modal.messageOptional')}</p>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
             placeholder={t('modal.messagePlaceholder')}
             className="w-full text-sm p-2.5 rounded-xl resize-none"
-            style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             rows={3}
           />
         </div>
@@ -113,7 +113,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
           <button
             onClick={onClose}
             className="flex-1 py-2 rounded-xl font-semibold text-sm"
-            style={{ background: '#2d2d4a', color: '#94a3b8' }}
+            style={{ background: '#e9d5ff', color: '#6b7280' }}
           >
             {t('modal.cancel')}
           </button>

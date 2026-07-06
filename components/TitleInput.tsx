@@ -61,7 +61,7 @@ export default function TitleInput({ value, onChange, placeholder, listId, requi
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full p-2.5 rounded-xl text-sm"
-        style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+        style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
       />
       <datalist id={listId}>
         {options.map(s => (

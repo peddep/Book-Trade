@@ -41,7 +41,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
-      style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}
+      style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
     >
       {/* Book cover */}
       <div
@@ -65,7 +65,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
         <div className="text-center relative z-10">
           {!book.cover_url && <div className="text-4xl mb-2">📖</div>}
           {!book.available && (
-            <span className="text-xs font-bold bg-black/60 text-white px-2 py-1 rounded-full">{t('card.traded')}</span>
+            <span className="text-xs font-bold bg-black/60 text-[#2e1065] px-2 py-1 rounded-full">{t('card.traded')}</span>
           )}
         </div>
         {isOwner && onChangeCover && (
@@ -79,18 +79,18 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
       {/* Info */}
       <div className="p-4 flex flex-col gap-2 flex-1">
         <div>
-          <h3 className="font-bold text-white leading-tight line-clamp-2">{bookTitle(book.title, book.title_en)}</h3>
-          <p className="text-sm text-slate-400 mt-0.5">{book.author}</p>
+          <h3 className="font-bold text-[#2e1065] leading-tight line-clamp-2">{bookTitle(book.title, book.title_en)}</h3>
+          <p className="text-sm text-[#6b7280] mt-0.5">{book.author}</p>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
           {book.subject && (
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#2d2d4a', color: '#a78bfa' }}>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
               {t(`subj.${book.subject}`)}
             </span>
           )}
           {book.grade_level && (
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#2d2d4a', color: '#94a3b8' }}>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#6b7280' }}>
               {t('card.gr')} {book.grade_level}
             </span>
           )}
@@ -101,25 +101,25 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
             {t(`cond.${book.condition}`)}
           </span>
           {book.price != null && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: '#3a2f0a', color: '#fbbf24' }}>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: '#fef9c3', color: '#b45309' }}>
               {book.price > 0 ? `฿${book.price}` : t('card.free')}
             </span>
           )}
         </div>
 
         {book.description && (
-          <p className="text-xs text-slate-400 line-clamp-2">{book.description}</p>
+          <p className="text-xs text-[#6b7280] line-clamp-2">{book.description}</p>
         )}
 
         {book.owner_name && !isOwner && (
           <div className="flex items-center gap-2 mt-auto pt-2">
             <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[#2e1065] text-xs font-bold"
               style={{ background: book.owner_avatar_color }}
             >
               {book.owner_name[0].toUpperCase()}
             </div>
-            <span className="text-xs text-slate-400">{book.owner_name}{book.owner_grade ? `, Gr. ${book.owner_grade}` : ''}</span>
+            <span className="text-xs text-[#6b7280]">{book.owner_name}{book.owner_grade ? `, Gr. ${book.owner_grade}` : ''}</span>
           </div>
         )}
 
@@ -130,9 +130,9 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
                 onClick={onToggleAvailable}
                 className="flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors"
                 style={{
-                  background: book.available ? '#1e3a2f' : '#1e2a3a',
-                  color: book.available ? '#10b981' : '#94a3b8',
-                  border: `1px solid ${book.available ? '#10b981' : '#2d2d4a'}`
+                  background: book.available ? '#dcfce7' : '#e9d5ff',
+                  color: book.available ? '#10b981' : '#6b7280',
+                  border: `1px solid ${book.available ? '#10b981' : '#e9d5ff'}`
                 }}
               >
                 {book.available ? t('card.available') : t('card.unavailable')}
@@ -140,7 +140,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
               <button
                 onClick={onDelete}
                 className="px-3 py-1.5 text-xs rounded-lg font-semibold"
-                style={{ background: '#3a1e1e', color: '#ef4444', border: '1px solid #ef4444' }}
+                style={{ background: '#fee2e2', color: '#ef4444', border: '1px solid #ef4444' }}
               >
                 {t('card.remove')}
               </button>

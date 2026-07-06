@@ -42,7 +42,7 @@ export default function TradeHubPage() {
         >
           <span className="text-3xl w-10 text-center flex-shrink-0">{o.icon}</span>
           <span className="flex-1">
-            <span className="block font-bold text-white text-lg leading-tight">{t(`hub.${o.key}`)}</span>
+            <span className="block font-bold text-[#2e1065] text-lg leading-tight">{t(`hub.${o.key}`)}</span>
             <span className="block text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.75)' }}>{t(`hub.${o.key}Desc`)}</span>
           </span>
         </Link>
@@ -57,10 +57,10 @@ export default function TradeHubPage() {
         <TopTabs />
 
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-white">{t('hub.title')}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2e1065]">{t('hub.title')}</h1>
           <span
             className="text-xs font-bold px-3 py-1.5 rounded-full"
-            style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#1a1a2e' }}
+            style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#ffffff' }}
           >
             ⭐ {t('hub.premium')}
           </span>
@@ -69,17 +69,17 @@ export default function TradeHubPage() {
         {/* Total trades counter (Pokémon HOME style) */}
         <div
           className="flex items-center justify-between px-4 py-2.5 rounded-xl mb-6"
-          style={{ background: '#1e2a5a', border: '1px solid #34418a' }}
+          style={{ background: '#ede9fe', border: '1px solid #7c3aed' }}
         >
-          <span className="text-sm font-semibold" style={{ color: '#a5b4fc' }}>{t('hub.totalTrades')}</span>
-          <span className="font-mono text-lg tracking-widest" style={{ color: '#e0e7ff' }}>{counter}</span>
+          <span className="text-sm font-semibold" style={{ color: '#7c3aed' }}>{t('hub.totalTrades')}</span>
+          <span className="font-mono text-lg tracking-widest" style={{ color: '#6d28d9' }}>{counter}</span>
         </div>
 
         {/* Desktop (16:9): books + add on the left, trade options on the right.
             Phone: just the trade banners (books live in the Your Books tab). */}
         <div className="md:grid md:grid-cols-2 md:gap-6">
           <aside className="hidden md:block">
-            <div className="p-4 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
+            <div className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
               <MyBooksManager compact />
             </div>
           </aside>

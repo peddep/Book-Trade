@@ -59,14 +59,14 @@ export default function FriendTradePage() {
     <>
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-6">
-        <Link href="/trade" className="text-sm text-slate-400 hover:text-white">{t('hub.back')}</Link>
+        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <div className="mt-2 mb-6">
-          <h1 className="text-3xl font-bold text-white mb-1">🤝 {t('hub.friend')}</h1>
-          <p className="text-slate-400 text-sm">{t('books.subtitle')}</p>
+          <h1 className="text-3xl font-bold text-[#2e1065] mb-1">🤝 {t('hub.friend')}</h1>
+          <p className="text-[#6b7280] text-sm">{t('books.subtitle')}</p>
         </div>
 
         {success && (
-          <div className="mb-6 p-4 rounded-xl text-sm font-semibold" style={{ background: '#1e3a2f', color: '#10b981', border: '1px solid #10b981' }}>
+          <div className="mb-6 p-4 rounded-xl text-sm font-semibold" style={{ background: '#dcfce7', color: '#10b981', border: '1px solid #10b981' }}>
             ✓ {success}
           </div>
         )}
@@ -78,13 +78,13 @@ export default function FriendTradePage() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="flex-1 p-3 rounded-xl text-sm"
-            style={{ background: '#1a1a2e', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
           />
           <select
             value={subject}
             onChange={e => setSubject(e.target.value)}
             className="sm:w-48 p-3 rounded-xl text-sm"
-            style={{ background: '#1a1a2e', border: '1px solid #2d2d4a', color: subject ? '#e2e8f0' : '#64748b', outline: 'none' }}
+            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: subject ? '#2e1065' : '#9ca3af', outline: 'none' }}
           >
             <option value="">{t('books.allSubjects')}</option>
             {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}
@@ -92,12 +92,12 @@ export default function FriendTradePage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-slate-400">{t('books.loading')}</div>
+          <div className="text-center py-20 text-[#6b7280]">{t('books.loading')}</div>
         ) : books.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">🔍</div>
-            <p className="text-slate-400 text-lg">{t('books.noneFound')}</p>
-            <p className="text-slate-500 text-sm mt-1">{t('books.noneFoundHint')}</p>
+            <p className="text-[#6b7280] text-lg">{t('books.noneFound')}</p>
+            <p className="text-[#9ca3af] text-sm mt-1">{t('books.noneFoundHint')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

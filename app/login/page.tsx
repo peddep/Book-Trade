@@ -45,31 +45,31 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">📚</div>
-            <h1 className="text-2xl font-bold text-white">{t('login.welcome')}</h1>
-            <p className="text-slate-400 text-sm mt-1">{t('login.subtitle')}</p>
+            <h1 className="text-2xl font-bold text-[#2e1065]">{t('login.welcome')}</h1>
+            <p className="text-[#6b7280] text-sm mt-1">{t('login.subtitle')}</p>
           </div>
-          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>
+          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('auth.email')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.email')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder="your@school.edu"
               />
             </div>
             <div>
-              <label className="text-sm text-slate-300 mb-1.5 block">{t('auth.password')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.password')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#0f0f1a', border: '1px solid #2d2d4a', color: '#e2e8f0', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder="••••••••"
               />
             </div>
@@ -82,7 +82,7 @@ export default function LoginPage() {
             >
               {loading ? t('login.signingIn') : t('login.signIn')}
             </button>
-            <p className="text-center text-sm text-slate-400">
+            <p className="text-center text-sm text-[#6b7280]">
               {t('login.noAccount')}{' '}
               <Link href="/register" className="text-purple-400 hover:text-purple-300 font-semibold">
                 {t('login.joinLink')}

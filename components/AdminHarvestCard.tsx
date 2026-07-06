@@ -65,11 +65,11 @@ export default function AdminHarvestCard() {
   const pct = state.totalQueries ? Math.round((Math.min(state.nextIndex, state.totalQueries) / state.totalQueries) * 100) : 0;
 
   return (
-    <div className="mb-8 p-6 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #6d28d9' }}>
+    <div className="mb-8 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #6d28d9' }}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h3 className="font-bold text-white flex items-center gap-2">🛠️ {t('admin.title')}</h3>
-          <p className="text-sm text-slate-400 mt-1">
+          <h3 className="font-bold text-[#2e1065] flex items-center gap-2">🛠️ {t('admin.title')}</h3>
+          <p className="text-sm text-[#6b7280] mt-1">
             {t('admin.subtitle', { count: state.catalogCount })}
           </p>
         </div>
@@ -86,7 +86,7 @@ export default function AdminHarvestCard() {
             <button
               onClick={() => { stopRef.current = true; }}
               className="px-4 py-2 rounded-xl font-semibold text-sm"
-              style={{ background: '#2d2d4a', color: '#94a3b8' }}
+              style={{ background: '#e9d5ff', color: '#6b7280' }}
             >
               {t('admin.stop')}
             </button>
@@ -96,16 +96,16 @@ export default function AdminHarvestCard() {
 
       {(running || (state.nextIndex > 0 && !state.done)) && (
         <div className="mt-4">
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: '#0f0f1a' }}>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: '#ffffff' }}>
             <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
           </div>
-          <p className="text-xs text-slate-400 mt-1.5">
+          <p className="text-xs text-[#6b7280] mt-1.5">
             {t('admin.progress', { current: Math.min(state.nextIndex, state.totalQueries), total: state.totalQueries, count: state.catalogCount })}
           </p>
         </div>
       )}
 
-      {message && <p className="text-sm mt-3" style={{ color: '#a78bfa' }}>{message}</p>}
+      {message && <p className="text-sm mt-3" style={{ color: '#7c3aed' }}>{message}</p>}
     </div>
   );
 }

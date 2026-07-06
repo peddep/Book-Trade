@@ -54,7 +54,7 @@ export default function RoomPage() {
   const achievements = challenges.filter(c => c.done);
 
   const Card = ({ children }: { children: React.ReactNode }) => (
-    <div className="p-5 rounded-2xl" style={{ background: '#1a1a2e', border: '1px solid #2d2d4a' }}>{children}</div>
+    <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>{children}</div>
   );
 
   return (
@@ -64,38 +64,38 @@ export default function RoomPage() {
         <TopTabs />
 
         {/* User card */}
-        <div className="flex items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, #1a1a2e, #241a3e)', border: '1px solid #2d2d4a' }}>
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0" style={{ background: user.avatar_color }}>
+        <div className="flex items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, #ffffff, #ede9fe)', border: '1px solid #e9d5ff' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-[#2e1065] text-2xl font-bold flex-shrink-0" style={{ background: user.avatar_color }}>
             {user.name[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-white truncate">{user.name}</h1>
-            <p className="text-slate-400 text-sm truncate">{user.email}</p>
-            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#a78bfa' }}>{t('common.grade')} {user.grade}</p>}
+            <h1 className="text-2xl font-bold text-[#2e1065] truncate">{user.name}</h1>
+            <p className="text-[#6b7280] text-sm truncate">{user.email}</p>
+            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{t('common.grade')} {user.grade}</p>}
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Card>
-            <p className="text-3xl font-bold text-white">{tradesMade}</p>
-            <p className="text-xs text-slate-400 mt-1">{t('room2.tradesMade')}</p>
+            <p className="text-3xl font-bold text-[#2e1065]">{tradesMade}</p>
+            <p className="text-xs text-[#6b7280] mt-1">{t('room2.tradesMade')}</p>
           </Card>
           <Card>
-            <p className="text-3xl font-bold text-white">{booksListed}</p>
-            <p className="text-xs text-slate-400 mt-1">{t('room2.booksListed')}</p>
+            <p className="text-3xl font-bold text-[#2e1065]">{booksListed}</p>
+            <p className="text-xs text-[#6b7280] mt-1">{t('room2.booksListed')}</p>
           </Card>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* News */}
           <div>
-            <h2 className="font-bold text-white mb-3">📰 {t('room2.news')}</h2>
+            <h2 className="font-bold text-[#2e1065] mb-3">📰 {t('room2.news')}</h2>
             <div className="flex flex-col gap-3">
               {news.map((n, i) => (
                 <Card key={i}>
-                  <p className="font-semibold text-white text-sm">{n.title}</p>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">{n.body}</p>
+                  <p className="font-semibold text-[#2e1065] text-sm">{n.title}</p>
+                  <p className="text-xs text-[#6b7280] mt-1 leading-relaxed">{n.body}</p>
                 </Card>
               ))}
             </div>
@@ -104,13 +104,13 @@ export default function RoomPage() {
           <div className="flex flex-col gap-6">
             {/* Challenges */}
             <div>
-              <h2 className="font-bold text-white mb-3">🎯 {t('room2.challenges')}</h2>
+              <h2 className="font-bold text-[#2e1065] mb-3">🎯 {t('room2.challenges')}</h2>
               <Card>
                 <div className="flex flex-col gap-2.5">
                   {challenges.map(c => (
                     <div key={c.key} className="flex items-center gap-3">
                       <span className="text-lg">{c.done ? '✅' : '⬜'}</span>
-                      <span className="text-sm" style={{ color: c.done ? '#10b981' : '#94a3b8' }}>{t(c.key)}</span>
+                      <span className="text-sm" style={{ color: c.done ? '#10b981' : '#6b7280' }}>{t(c.key)}</span>
                     </div>
                   ))}
                 </div>
@@ -119,14 +119,14 @@ export default function RoomPage() {
 
             {/* Achievements */}
             <div>
-              <h2 className="font-bold text-white mb-3">🏆 {t('room2.achievements')} <span className="text-slate-500 font-normal">({achievements.length}/{challenges.length})</span></h2>
+              <h2 className="font-bold text-[#2e1065] mb-3">🏆 {t('room2.achievements')} <span className="text-[#9ca3af] font-normal">({achievements.length}/{challenges.length})</span></h2>
               <Card>
                 {achievements.length === 0 ? (
-                  <p className="text-sm text-slate-400">{t('ach.locked')}</p>
+                  <p className="text-sm text-[#6b7280]">{t('ach.locked')}</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {achievements.map(a => (
-                      <span key={a.key} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: '#0d2b1a', color: '#10b981' }}>
+                      <span key={a.key} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: '#dcfce7', color: '#10b981' }}>
                         🏅 {t(a.key)}
                       </span>
                     ))}
@@ -138,24 +138,24 @@ export default function RoomPage() {
         </div>
 
         {/* Settings */}
-        <h2 className="font-bold text-white mt-6 mb-3">⚙️ {t('room2.settings')}</h2>
+        <h2 className="font-bold text-[#2e1065] mt-6 mb-3">⚙️ {t('room2.settings')}</h2>
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-slate-300">{t('room2.language')}</span>
-            <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#0f0f1a' }}>
+            <span className="text-sm text-[#4b5563]">{t('room2.language')}</span>
+            <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#ffffff' }}>
               {(['th', 'en'] as Lang[]).map(l => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
                   className="px-3 py-1.5 rounded-lg text-sm font-semibold"
-                  style={lang === l ? { background: '#6366f1', color: 'white' } : { color: '#94a3b8' }}
+                  style={lang === l ? { background: '#6366f1', color: 'white' } : { color: '#6b7280' }}
                 >
                   {l === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
                 </button>
               ))}
             </div>
           </div>
-          <button onClick={logout} className="w-full py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#3a1e1e', color: '#ef4444' }}>
+          <button onClick={logout} className="w-full py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#fee2e2', color: '#ef4444' }}>
             {t('room2.signOut')}
           </button>
         </Card>
