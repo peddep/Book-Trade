@@ -121,8 +121,8 @@ export default function WonderBoxPage() {
           </div>
         )}
 
-        {/* Slots grid — click an empty slot to pick a book */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        {/* Slots grid — book-shaped, click an empty slot to pick a book */}
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-6">
           {Array.from({ length: slots }).map((_, i) => {
             const d = deposits[i];
             if (!d) {
@@ -132,41 +132,49 @@ export default function WonderBoxPage() {
                   key={`empty-${i}`}
                   onClick={firstEmpty ? openPicker : undefined}
                   disabled={!firstEmpty}
-                  className="aspect-square rounded-2xl flex items-center justify-center transition-colors"
-                  style={{ background: '#faf5ff', border: '2px dashed #e9d5ff', cursor: firstEmpty ? 'pointer' : 'default' }}
+                  className="w-full rounded-r-md rounded-l-sm flex items-center justify-center transition-colors"
+                  style={{ aspectRatio: '2 / 3', background: '#faf5ff', border: '2px dashed #e9d5ff', cursor: firstEmpty ? 'pointer' : 'default' }}
                 >
-                  <span className="text-2xl" style={{ opacity: firstEmpty ? 0.6 : 0.25, color: '#8b5cf6' }}>＋</span>
+                  <span className="text-3xl" style={{ opacity: firstEmpty ? 0.6 : 0.25, color: '#8b5cf6' }}>＋</span>
                 </button>
               );
             }
             const matched = d.status === 'matched';
             if (matched) {
               return (
-                <div key={`dep-${d.id}`} className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 p-2"
-                  style={{ background: '#ede9fe', border: '1px solid #8b5cf6' }}>
+                <div key={`dep-${d.id}`} className="w-full rounded-r-md rounded-l-sm flex flex-col items-center justify-center gap-1 p-2"
+                  style={{ aspectRatio: '2 / 3', background: '#ede9fe', border: '1px solid #8b5cf6' }}>
                   <span className="text-3xl">🎁</span>
                   <p className="text-[11px] text-center font-semibold" style={{ color: '#7c3aed' }}>{t('wb.matched')}</p>
                 </div>
               );
             }
-            // Waiting: show the book cover filling the slot.
+            // Waiting: a book-shaped cover filling the slot.
             return (
-              <div key={`dep-${d.id}`} className="aspect-square rounded-2xl overflow-hidden relative"
-                style={{ background: d.my_color, border: '1px solid #e9d5ff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+              <div key={`dep-${d.id}`} className="w-full rounded-r-md rounded-l-sm overflow-hidden relative"
+                style={{ aspectRatio: '2 / 3', background: d.my_color, boxShadow: '0 4px 10px rgba(0,0,0,0.35)' }}>
                 {d.my_cover_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={d.my_cover_url} alt={bookTitle(d.my_title, d.my_title_en)} className="absolute inset-0 w-full h-full object-cover"
                     onError={e => { e.currentTarget.style.display = 'none'; }} />
                 ) : (
-                  <span className="absolute inset-0 flex items-center justify-center text-4xl">📖</span>
+                  <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1.5 text-center">
+                    <span className="text-2xl">📖</span>
+                    <span className="text-[10px] font-semibold leading-tight line-clamp-3" style={{ color: 'rgba(255,255,255,0.95)' }}>{bookTitle(d.my_title, d.my_title_en)}</span>
+                  </span>
                 )}
-                {/* Title overlay */}
-                <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1" style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0))' }}>
-                  <p className="text-[10px] font-semibold leading-tight line-clamp-2 text-white">{bookTitle(d.my_title, d.my_title_en)}</p>
-                </div>
+                {/* Spine shading (book look) */}
+                <span className="absolute left-0 top-0 bottom-0 w-2" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0))' }} />
+                <span className="absolute right-0 top-0 bottom-0 w-px" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                {/* Title overlay (only when there's a cover image) */}
+                {d.my_cover_url && (
+                  <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1" style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0))' }}>
+                    <p className="text-[10px] font-semibold leading-tight line-clamp-2 text-white">{bookTitle(d.my_title, d.my_title_en)}</p>
+                  </div>
+                )}
                 {/* Withdraw */}
                 <button onClick={() => withdraw(d.id)} title={t('wb.withdraw')} aria-label={t('wb.withdraw')}
-                  className="absolute top-1 right-1 rounded-full flex items-center justify-center text-[13px] font-bold"
+                  className="absolute top-1 right-1 rounded-full flex items-center justify-center text-[13px] font-bold z-10"
                   style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.9)', color: '#ef4444' }}>
                   ✕
                 </button>
