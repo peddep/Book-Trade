@@ -13,24 +13,72 @@ const OPTIONS = [
   { href: '/trade/friend', icon: '🔍', key: 'browse', color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' },
 ];
 
+interface RecentTrade {
+  offered_title: string;
+  offered_title_en?: string | null;
+  offered_color: string;
+  offered_cover_url?: string | null;
+  wanted_title: string;
+  wanted_title_en?: string | null;
+  wanted_color: string;
+  wanted_cover_url?: string | null;
+}
+
+function MiniCover({ url, color, title }: { url?: string | null; color: string; title: string }) {
+  return (
+    <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0"
+      style={{ width: 40, aspectRatio: '2 / 3', background: color, boxShadow: '0 2px 6px rgba(0,0,0,0.25)' }}>
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={title} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
+          onError={e => { e.currentTarget.style.display = 'none'; }} />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center text-base">📖</span>
+      )}
+      <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0))' }} />
+    </div>
+  );
+}
+
 export default function TradeHubPage() {
-  const { t } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [totalTrades, setTotalTrades] = useState<number | null>(null);
+  const [recent, setRecent] = useState<RecentTrade | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => {
       if (!d.user) router.push('/login');
     });
-    fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).then(d =>
-      setTotalTrades((d.trades ?? []).filter((x: any) => x.status === 'accepted').length)
-    );
+    fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).then(d => {
+      const all = d.trades ?? [];
+      setTotalTrades(all.filter((x: any) => x.status === 'accepted').length);
+      // Most recently completed in-person trade.
+      const completed = all
+        .filter((x: any) => x.status === 'completed')
+        .sort((a: any, b: any) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')));
+      setRecent(completed[0] ?? null);
+    });
   }, [router]);
 
   const counter = String(totalTrades ?? 0).padStart(10, '0');
 
+  const recentCard = recent && (
+    <div className="p-3 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+      <p className="text-xs font-semibold mb-2" style={{ color: '#7c3aed' }}>🤝 {t('hub.recentIrl')}</p>
+      <div className="flex items-center gap-2">
+        <MiniCover url={recent.offered_cover_url} color={recent.offered_color} title={bookTitle(recent.offered_title, recent.offered_title_en)} />
+        <p className="text-xs font-semibold text-[#2e1065] leading-tight flex-1 min-w-0 truncate">{bookTitle(recent.offered_title, recent.offered_title_en)}</p>
+        <span className="text-sm text-[#9ca3af] flex-shrink-0">⇄</span>
+        <p className="text-xs font-semibold text-[#2e1065] leading-tight flex-1 min-w-0 truncate text-right">{bookTitle(recent.wanted_title, recent.wanted_title_en)}</p>
+        <MiniCover url={recent.wanted_cover_url} color={recent.wanted_color} title={bookTitle(recent.wanted_title, recent.wanted_title_en)} />
+      </div>
+    </div>
+  );
+
   const banners = (
     <div className="flex flex-col gap-3">
+      {recentCard}
       {OPTIONS.map(o => (
         <Link
           key={o.key}

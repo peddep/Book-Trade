@@ -248,6 +248,7 @@ const STRINGS: Dict = {
   'hub.title': { th: 'เทรด', en: 'Trade' },
   'hub.premium': { th: 'แผนพรีเมียม', en: 'Premium Plan' },
   'hub.totalTrades': { th: 'การแลกเปลี่ยนทั้งหมด', en: 'Total trades' },
+  'hub.recentIrl': { th: 'แลกเปลี่ยนตัวจริงล่าสุด', en: 'Most recent in-person trade' },
   'hub.myBooks': { th: 'หนังสือของฉัน', en: 'My Books' },
   'hub.noBooks': { th: 'ยังไม่มีหนังสือ — เพิ่มหนังสือก่อนเพื่อเริ่มเทรด', en: 'No books yet — add books first to start trading' },
   'hub.wonderbox': { th: 'กล่องมหัศจรรย์', en: 'Wonder Box' },
