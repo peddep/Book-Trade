@@ -9,7 +9,8 @@ import { useI18n } from '@/lib/i18n';
 const GRADES = ['6', '7', '8', '9', '10', '11', '12'];
 const DAYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
 const SLOTS = [
-  { key: 'noon', label: 'reg.slotNoon' },
+  { key: 'p4', label: 'reg.slotP4' },
+  { key: 'p5', label: 'reg.slotP5' },
   { key: 'after', label: 'reg.slotAfter' },
 ];
 
