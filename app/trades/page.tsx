@@ -10,7 +10,7 @@ import { useI18n } from '@/lib/i18n';
 function MiniCover({ url, color, title }: { url?: string | null; color: string; title: string }) {
   return (
     <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0"
-      style={{ width: 40, aspectRatio: '2 / 3', background: color, boxShadow: '0 2px 6px rgba(0,0,0,0.25)' }}>
+      style={{ width: 60, aspectRatio: '2 / 3', background: color, boxShadow: '0 2px 6px rgba(0,0,0,0.25)' }}>
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={title} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
