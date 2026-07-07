@@ -4,8 +4,24 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
-import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
+
+// Small book-shaped cover for the traded books.
+function MiniCover({ url, color, title }: { url?: string | null; color: string; title: string }) {
+  return (
+    <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0"
+      style={{ width: 40, aspectRatio: '2 / 3', background: color, boxShadow: '0 2px 6px rgba(0,0,0,0.25)' }}>
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={title} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
+          onError={e => { e.currentTarget.style.display = 'none'; }} />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center text-lg">📖</span>
+      )}
+      <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0))' }} />
+    </div>
+  );
+}
 
 interface Trade {
   id: number;
@@ -154,7 +170,7 @@ export default function TradesPage() {
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#ffffff' }}>
                       <p className="text-xs text-[#6b7280] mb-1">{isIncoming ? t('trades.userOffers', { name: trade.requester_name }) : t('trades.youOffer')}</p>
                       <div className="flex items-center gap-2">
-                        <BookThumb coverUrl={trade.offered_cover_url} coverColor={trade.offered_color} />
+                        <MiniCover url={trade.offered_cover_url} color={trade.offered_color} title={bookTitle(trade.offered_title, trade.offered_title_en)} />
                         <div>
                           <p className="text-sm font-semibold text-[#2e1065] leading-tight">{bookTitle(trade.offered_title, trade.offered_title_en)}</p>
                           <p className="text-xs text-[#6b7280]">{trade.offered_author}</p>
@@ -167,7 +183,7 @@ export default function TradesPage() {
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#ffffff' }}>
                       <p className="text-xs text-[#6b7280] mb-1">{isIncoming ? t('trades.wantsYour') : t('trades.usersBook', { name: trade.owner_name })}</p>
                       <div className="flex items-center gap-2">
-                        <BookThumb coverUrl={trade.wanted_cover_url} coverColor={trade.wanted_color} />
+                        <MiniCover url={trade.wanted_cover_url} color={trade.wanted_color} title={bookTitle(trade.wanted_title, trade.wanted_title_en)} />
                         <div>
                           <p className="text-sm font-semibold text-[#2e1065] leading-tight">{bookTitle(trade.wanted_title, trade.wanted_title_en)}</p>
                           <p className="text-xs text-[#6b7280]">{trade.wanted_author}</p>
