@@ -18,6 +18,7 @@ interface Member {
   received_title?: string;
   received_title_en?: string | null;
   received_color?: string;
+  received_cover_url?: string | null;
   received_book_id?: number;
 }
 
@@ -197,7 +198,10 @@ export default function RoomsPage() {
                 <p className="font-bold mb-1" style={{ color: '#10b981' }}>🎉 {t('room.done')}</p>
                 {myResult?.received_title ? (
                   <>
-                    <p className="text-sm text-[#2e1065]">{t('room.youGot', { title: myResult.received_title })}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <BookThumb coverUrl={myResult.received_cover_url} coverColor={myResult.received_color ?? '#e9d5ff'} size={40} />
+                      <p className="text-sm text-[#2e1065] font-semibold">{bookTitle(myResult.received_title, myResult.received_title_en)}</p>
+                    </div>
                     <p className="text-xs mt-1" style={{ color: '#059669' }}>{t('wb.meetHint')}</p>
                   </>
                 ) : (
