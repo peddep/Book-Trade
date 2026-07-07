@@ -26,6 +26,15 @@ export async function ensureBookColumns() {
       // column already exists
     }
   }
+  // Backfill: give any book without a price a random one (50–300 baht,
+  // rounded to the nearest 10) so no listing is left blank.
+  try {
+    await getDb().execute(
+      'UPDATE books SET price = (50 + ABS(RANDOM() % 26) * 10) WHERE price IS NULL OR price <= 0'
+    );
+  } catch {
+    // ignore if the column isn't ready yet
+  }
   bookColumnsEnsured = true;
 }
 
