@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
@@ -164,6 +165,22 @@ export default function TradesPage() {
                       {new Date(trade.created_at).toLocaleDateString()}
                     </span>
                   </div>
+
+                  {/* Clickable profile of the other person */}
+                  {(() => {
+                    const otherId = isIncoming ? trade.requester_id : trade.owner_id;
+                    const otherName = isIncoming ? trade.requester_name : trade.owner_name;
+                    const otherAvatar = isIncoming ? trade.requester_avatar : trade.owner_avatar;
+                    return (
+                      <Link href={`/u/${otherId}`} className="inline-flex items-center gap-2 mb-4 px-2 py-1 rounded-full hover:opacity-80" style={{ background: '#f5f3ff', border: '1px solid #e9d5ff' }}>
+                        <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: otherAvatar }}>
+                          {otherName[0].toUpperCase()}
+                        </span>
+                        <span className="text-sm font-semibold text-[#2e1065]">{otherName}</span>
+                        <span className="text-xs" style={{ color: '#7c3aed' }}>{t('user.viewProfile')} ›</span>
+                      </Link>
+                    );
+                  })()}
 
                   {/* Trade visualization */}
                   <div className="flex items-center gap-3 mb-4">

@@ -166,6 +166,12 @@ const STRINGS: Dict = {
   'tabs.room': { th: 'ห้องของคุณ', en: 'Your Room' },
   'tabs.books': { th: 'หนังสือของคุณ', en: 'Your Books' },
 
+  // Public user profile
+  'user.booksOf': { th: 'หนังสือของ {name}', en: '{name}\'s books' },
+  'user.noBooks': { th: 'ยังไม่มีหนังสือที่พร้อมแลก', en: 'No books available to trade' },
+  'user.notFound': { th: 'ไม่พบผู้ใช้นี้', en: 'User not found' },
+  'user.viewProfile': { th: 'ดูโปรไฟล์', en: 'View profile' },
+
   // Rotate lock
   'rotate.msg': { th: 'กรุณาหมุนโทรศัพท์เป็นแนวตั้ง', en: 'Please rotate your phone upright' },
 
