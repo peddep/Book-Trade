@@ -16,6 +16,7 @@ interface User {
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pending, setPending] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   const { lang, setLang, t } = useI18n();
@@ -23,6 +24,19 @@ export default function Navbar() {
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user));
   }, [pathname]);
+
+  // Count incoming trade requests still awaiting my response, and keep it fresh.
+  useEffect(() => {
+    if (!user) { setPending(0); return; }
+    const check = () =>
+      fetch('/api/trades')
+        .then(r => (r.ok ? r.json() : { trades: [] }))
+        .then(d => setPending((d.trades ?? []).filter((tr: any) => tr.owner_id === user.id && tr.status === 'pending').length))
+        .catch(() => {});
+    check();
+    const id = setInterval(check, 20000);
+    return () => clearInterval(id);
+  }, [user, pathname]);
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -52,7 +66,7 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 rounded-full p-1 hover:opacity-80"
+                className="relative flex items-center gap-2 rounded-full p-1 hover:opacity-80"
                 aria-label="Menu"
               >
                 <div
@@ -61,6 +75,11 @@ export default function Navbar() {
                 >
                   {user.name[0].toUpperCase()}
                 </div>
+                {pending > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: '#ef4444' }}>
+                    {pending}
+                  </span>
+                )}
               </button>
               {menuOpen && (
                 <div
@@ -75,7 +94,12 @@ export default function Navbar() {
                   <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]" style={{ color: '#7c3aed' }}>✨ {t('tabs.trade')}</Link>
                   <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.room')}</Link>
                   <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.books')}</Link>
-                  <Link href="/trades" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('nav.trades')}</Link>
+                  <Link href="/trades" className="flex items-center justify-between px-4 py-2 text-sm hover:bg-[#f5f3ff]">
+                    <span>{t('nav.trades')}</span>
+                    {pending > 0 && (
+                      <span className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: '#ef4444' }}>{pending}</span>
+                    )}
+                  </Link>
                   <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#f5f3ff]">
                     {t('nav.signOut')}
                   </button>

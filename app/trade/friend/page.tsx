@@ -32,6 +32,16 @@ export default function FriendTradePage() {
   const [loading, setLoading] = useState(true);
   const [tradeBook, setTradeBook] = useState<Book | null>(null);
   const [success, setSuccess] = useState('');
+  const [pending, setPending] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (!d.user) return;
+      fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).then(data =>
+        setPending((data.trades ?? []).filter((tr: any) => tr.owner_id === d.user.id && tr.status === 'pending').length)
+      );
+    });
+  }, []);
 
   const fetchBooks = useCallback(async () => {
     setLoading(true);
@@ -60,9 +70,23 @@ export default function FriendTradePage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-6">
         <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
-        <div className="mt-2 mb-6">
-          <h1 className="text-3xl font-bold text-[#2e1065] mb-1">🔍 {t('hub.browse')}</h1>
-          <p className="text-[#6b7280] text-sm">{t('books.subtitle')}</p>
+        <div className="mt-2 mb-6 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold text-[#2e1065] mb-1">🔍 {t('hub.browse')}</h1>
+            <p className="text-[#6b7280] text-sm">{t('books.subtitle')}</p>
+          </div>
+          <Link
+            href="/trades"
+            className="relative flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm text-white flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+          >
+            🔔 {t('nav.trades')}
+            {pending > 0 && (
+              <span className="min-w-[20px] h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center" style={{ background: '#ffffff', color: '#ef4444' }}>
+                {pending}
+              </span>
+            )}
+          </Link>
         </div>
 
         {success && (
