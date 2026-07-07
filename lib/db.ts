@@ -53,6 +53,21 @@ export async function ensureUserColumns() {
   userColumnsEnsured = true;
 }
 
+// Adds the IRL-meetup confirmation columns to older trade tables.
+// Each side records 'happened' / 'not' once the meet-up time is up.
+let tradeColumnsEnsured = false;
+export async function ensureTradeColumns() {
+  if (tradeColumnsEnsured) return;
+  for (const col of ['requester_confirm TEXT', 'owner_confirm TEXT']) {
+    try {
+      await getDb().execute(`ALTER TABLE trades ADD COLUMN ${col}`);
+    } catch {
+      // column already exists
+    }
+  }
+  tradeColumnsEnsured = true;
+}
+
 export async function initDb() {
   const db = getDb();
   await db.batch(

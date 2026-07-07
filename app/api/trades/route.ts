@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, ensureBookColumns } from '@/lib/db';
+import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { priceDiffOk } from '@/lib/hub';
 
@@ -9,13 +9,15 @@ export async function GET() {
 
   const db = getDb();
   await ensureBookColumns();
+  await ensureUserColumns();
+  await ensureTradeColumns();
   const result = await db.execute({
     sql: `
       SELECT t.*,
         rb.title as offered_title, rb.title_en as offered_title_en, rb.author as offered_author, rb.condition as offered_condition, rb.cover_color as offered_color, rb.cover_url as offered_cover_url,
         wb.title as wanted_title, wb.title_en as wanted_title_en, wb.author as wanted_author, wb.condition as wanted_condition, wb.cover_color as wanted_color, wb.cover_url as wanted_cover_url,
-        ru.name as requester_name, ru.avatar_color as requester_avatar,
-        ou.name as owner_name, ou.avatar_color as owner_avatar
+        ru.name as requester_name, ru.avatar_color as requester_avatar, ru.availability as requester_availability,
+        ou.name as owner_name, ou.avatar_color as owner_avatar, ou.availability as owner_availability
       FROM trades t
       JOIN books rb ON t.offered_book_id = rb.id
       JOIN books wb ON t.wanted_book_id = wb.id

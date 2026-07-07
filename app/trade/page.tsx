@@ -56,12 +56,13 @@ export default function TradeHubPage() {
 
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-[#2e1065]">{t('hub.title')}</h1>
-          <span
-            className="text-xs font-bold px-3 py-1.5 rounded-full"
-            style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#ffffff' }}
+          <Link
+            href="/trade/irl"
+            className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full transition-transform hover:scale-105"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#ffffff' }}
           >
-            ⭐ {t('hub.premium')}
-          </span>
+            🤝 {t('hub.irl')}
+          </Link>
         </div>
 
         {/* Total trades counter (Pokémon HOME style) */}
