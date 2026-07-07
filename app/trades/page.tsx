@@ -113,7 +113,8 @@ export default function TradesPage() {
     <>
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-4">
+        <Link href="/trade/friend" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
+        <div className="mt-2 mb-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065]">{t('trades.title')}</h1>
           <p className="text-[#6b7280] text-sm mt-1">{t('trades.subtitle')}</p>
         </div>
