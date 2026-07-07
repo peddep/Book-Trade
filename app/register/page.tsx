@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
 
-const GRADES = ['6', '7', '8', '9', '10', '11', '12'];
+const GRADES = ['ม.1', 'ม.2', 'ม.3', 'ม.4', 'ม.5', 'ม.6'];
 const DAYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
 const SLOTS = [
   { key: 'p4', label: 'reg.slotP4' },
@@ -109,7 +109,7 @@ export default function RegisterPage() {
                 style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: grade ? '#2e1065' : '#9ca3af', outline: 'none' }}
               >
                 <option value="">{t('reg.selectGrade')}</option>
-                {GRADES.map(g => <option key={g} value={g}>{t('common.grade')} {g}</option>)}
+                {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
             {/* Where trades happen + weekly availability */}
