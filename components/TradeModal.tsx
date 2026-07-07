@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BookThumb from '@/components/BookThumb';
+import BookShelf, { type ShelfBook } from '@/components/BookShelf';
 import { useI18n } from '@/lib/i18n';
 
 interface Book {
@@ -21,7 +22,7 @@ interface Props {
 
 export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
   const { t, bookTitle } = useI18n();
-  const [myBooks, setMyBooks] = useState<Book[]>([]);
+  const [myBooks, setMyBooks] = useState<ShelfBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
   useEffect(() => {
     fetch('/api/books?mine=1')
       .then(r => r.json())
-      .then(d => setMyBooks(d.books.filter((b: any) => b.available)));
+      .then(d => setMyBooks((d.books ?? []).filter((b: ShelfBook) => b.available)));
   }, []);
 
   async function submit() {
@@ -53,7 +54,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
-      <div className="w-full max-w-md rounded-2xl p-6 flex flex-col gap-4" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+      <div className="w-full max-w-lg rounded-2xl p-6 flex flex-col gap-4" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
         <div className="flex justify-between items-start">
           <h2 className="text-lg font-bold text-[#2e1065]">{t('modal.title')}</h2>
           <button onClick={onClose} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
@@ -72,26 +73,13 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
           {myBooks.length === 0 ? (
             <p className="text-sm text-[#6b7280]">{t('modal.noBooks')}</p>
           ) : (
-            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-              {myBooks.map(b => (
-                <button
-                  key={b.id}
-                  onClick={() => setSelectedBook(b.id)}
-                  className="flex items-center gap-3 p-3 rounded-xl transition-colors text-left"
-                  style={{
-                    background: selectedBook === b.id ? '#ede9fe' : '#ffffff',
-                    border: `1px solid ${selectedBook === b.id ? '#8b5cf6' : '#e9d5ff'}`
-                  }}
-                >
-                  <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
-                  <div>
-                    <p className="text-sm font-semibold text-[#2e1065]">{bookTitle(b.title, b.title_en)}</p>
-                    <p className="text-xs text-[#6b7280]">{b.author}</p>
-                  </div>
-                  {selectedBook === b.id && <span className="ml-auto text-purple-400">✓</span>}
-                </button>
-              ))}
-            </div>
+            <BookShelf
+              books={myBooks}
+              selectMode
+              selectedId={selectedBook}
+              onSelect={setSelectedBook}
+              maxHeight="45vh"
+            />
           )}
         </div>
 
