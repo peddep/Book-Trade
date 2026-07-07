@@ -96,23 +96,21 @@ export default function TradesPage() {
     <>
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-[#2e1065]">{t('trades.title')}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">{t('trades.subtitle')}</p>
-          </div>
-          <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-            {(['all', 'incoming', 'outgoing'] as const).map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
-                style={filter === f ? { background: '#6366f1', color: 'white' } : { color: '#6b7280' }}
-              >
-                {t(`trades.${f}`)}
-              </button>
-            ))}
-          </div>
+        <div className="mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065]">{t('trades.title')}</h1>
+          <p className="text-[#6b7280] text-sm mt-1">{t('trades.subtitle')}</p>
+        </div>
+        <div className="flex gap-1 p-1 rounded-xl mb-6 w-full sm:w-fit" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+          {(['all', 'incoming', 'outgoing'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+              style={filter === f ? { background: '#6366f1', color: 'white' } : { color: '#6b7280' }}
+            >
+              {t(`trades.${f}`)}
+            </button>
+          ))}
         </div>
 
         {loading ? (
