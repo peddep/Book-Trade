@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
+import BookShelf from '@/components/BookShelf';
 import TradeModal from '@/components/TradeModal';
 import { useI18n } from '@/lib/i18n';
 
@@ -12,12 +13,15 @@ const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE',
 interface Book {
   id: number;
   title: string;
+  title_en?: string | null;
   author: string;
   subject?: string;
   grade_level?: string;
   condition: string;
   description?: string;
   cover_color: string;
+  cover_url?: string | null;
+  price?: number | null;
   available: number;
   owner_name: string;
   owner_avatar_color: string;
@@ -124,11 +128,23 @@ export default function FriendTradePage() {
             <p className="text-[#9ca3af] text-sm mt-1">{t('books.noneFoundHint')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {books.map(book => (
-              <BookCard key={book.id} book={book} onTrade={() => setTradeBook(book)} />
-            ))}
-          </div>
+          <>
+            {/* Phone: 3-column thumbnail shelf, tap a book to offer a trade */}
+            <div className="sm:hidden">
+              <BookShelf
+                books={books}
+                selectMode
+                onSelect={id => { const b = books.find(x => x.id === id); if (b) setTradeBook(b); }}
+                maxHeight="none"
+              />
+            </div>
+            {/* Larger screens: detailed cards */}
+            <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {books.map(book => (
+                <BookCard key={book.id} book={book} onTrade={() => setTradeBook(book)} />
+              ))}
+            </div>
+          </>
         )}
       </main>
 
