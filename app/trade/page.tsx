@@ -51,7 +51,7 @@ export default function TradeHubPage() {
   return (
     <>
       <Navbar />
-      <main className="w-full px-4 sm:px-6 lg:px-10 py-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <TopTabs />
 
         <div className="flex items-center justify-between mb-4">
