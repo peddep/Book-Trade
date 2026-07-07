@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
 
 const GRADES = ['1', '2', '3', '4', '5', '6'];
+const CLASSES = Array.from({ length: 16 }, (_, i) => String(i + 1));
 const DAYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
 const SLOTS = [
   { key: 'p4', label: 'reg.slotP4' },
@@ -20,6 +21,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [grade, setGrade] = useState('');
+  const [classNo, setClassNo] = useState('');
   const [availability, setAvailability] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, grade, availability }),
+        body: JSON.stringify({ name, email, password, grade, class_no: classNo, availability }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -100,17 +102,31 @@ export default function RegisterPage() {
                 placeholder={t('reg.passwordHint')}
               />
             </div>
-            <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.gradeOptional')}</label>
-              <select
-                value={grade}
-                onChange={e => setGrade(e.target.value)}
-                className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: grade ? '#2e1065' : '#9ca3af', outline: 'none' }}
-              >
-                <option value="">{t('reg.selectGrade')}</option>
-                {GRADES.map(g => <option key={g} value={g}>{gradeLabel(g)}</option>)}
-              </select>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.gradeOptional')}</label>
+                <select
+                  value={grade}
+                  onChange={e => setGrade(e.target.value)}
+                  className="w-full p-2.5 rounded-xl text-sm"
+                  style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: grade ? '#2e1065' : '#9ca3af', outline: 'none' }}
+                >
+                  <option value="">{t('reg.selectGrade')}</option>
+                  {GRADES.map(g => <option key={g} value={g}>{gradeLabel(g)}</option>)}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.classOptional')}</label>
+                <select
+                  value={classNo}
+                  onChange={e => setClassNo(e.target.value)}
+                  className="w-full p-2.5 rounded-xl text-sm"
+                  style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: classNo ? '#2e1065' : '#9ca3af', outline: 'none' }}
+                >
+                  <option value="">{t('reg.selectClass')}</option>
+                  {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
             </div>
             {/* Where trades happen + weekly availability */}
             <div className="p-3 rounded-xl" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>

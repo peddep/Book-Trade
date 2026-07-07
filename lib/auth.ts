@@ -6,6 +6,7 @@ export interface SessionUser {
   name: string;
   email: string;
   grade: string | null;
+  class_no?: string | null;
   avatar_color: string;
 }
 

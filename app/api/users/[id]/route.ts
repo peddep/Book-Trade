@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, ensureBookColumns } from '@/lib/db';
+import { getDb, ensureBookColumns, ensureUserColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 // Public profile of a user + their available books (requires being logged in).
@@ -10,8 +10,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const db = getDb();
   await ensureBookColumns();
+  await ensureUserColumns();
 
-  const u = await db.execute({ sql: 'SELECT id, name, grade, avatar_color FROM users WHERE id = ?', args: [id] });
+  const u = await db.execute({ sql: 'SELECT id, name, grade, class_no, avatar_color FROM users WHERE id = ?', args: [id] });
   const user = u.rows[0];
   if (!user) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 

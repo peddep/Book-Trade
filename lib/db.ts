@@ -45,10 +45,12 @@ export const ensureCoverColumn = ensureBookColumns;
 let userColumnsEnsured = false;
 export async function ensureUserColumns() {
   if (userColumnsEnsured) return;
-  try {
-    await getDb().execute('ALTER TABLE users ADD COLUMN availability TEXT');
-  } catch {
-    // column already exists
+  for (const col of ['availability TEXT', 'class_no TEXT']) {
+    try {
+      await getDb().execute(`ALTER TABLE users ADD COLUMN ${col}`);
+    } catch {
+      // column already exists
+    }
   }
   userColumnsEnsured = true;
 }
@@ -80,6 +82,7 @@ export async function initDb() {
         grade TEXT,
         avatar_color TEXT DEFAULT '#6366f1',
         availability TEXT,
+        class_no TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE IF NOT EXISTS books (

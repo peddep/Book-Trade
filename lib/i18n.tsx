@@ -77,6 +77,8 @@ const STRINGS: Dict = {
   'reg.yourName': { th: 'ชื่อของคุณ', en: 'Your Name' },
   'reg.gradeOptional': { th: 'ชั้นปี (ไม่บังคับ)', en: 'Grade (optional)' },
   'reg.selectGrade': { th: 'เลือกชั้นปีของคุณ', en: 'Select your grade' },
+  'reg.classOptional': { th: 'ห้อง (ไม่บังคับ)', en: 'Class (optional)' },
+  'reg.selectClass': { th: 'เลือกห้อง', en: 'Select class' },
   'reg.libraryTitle': { th: '📍 จุดนัดแลกเปลี่ยน', en: '📍 Where trades happen' },
   'reg.libraryBody': { th: 'การแลกเปลี่ยนหนังสือทั้งหมดจะเกิดขึ้นที่ห้องสมุดของโรงเรียน มาเจอกันเพื่อแลกหนังสือตามช่วงเวลาที่คุณสะดวก', en: 'All book trades take place at the school library. Meet up to swap books during the times that work for you.' },
   'reg.availabilityTitle': { th: 'คุณสะดวกแลกเปลี่ยนตอนไหน?', en: 'When can you trade?' },
@@ -371,8 +373,9 @@ interface I18nContextType {
   // Language-aware book title: shows the English title when viewing in English
   // and one exists, otherwise the primary (Thai) title.
   bookTitle: (title: string, titleEn?: string | null) => string;
-  // Language-aware grade label: "ม.4" in Thai, "M.4" in English.
-  gradeLabel: (grade?: string | null) => string;
+  // Language-aware grade label: "ม.4" in Thai, "M.4" in English. With a class
+  // number it becomes "ม.4/7" (or "M.4/7").
+  gradeLabel: (grade?: string | null, classNo?: string | null) => string;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
@@ -416,12 +419,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   );
 
   const gradeLabel = useCallback(
-    (grade?: string | null) => {
+    (grade?: string | null, classNo?: string | null) => {
+      const cls = classNo ? String(classNo).replace(/[^0-9]/g, '') : '';
       if (!grade) return '';
       // Accept stored canonical digits or older "ม.x" values.
       const n = String(grade).replace(/[^0-9]/g, '');
-      if (!n) return String(grade);
-      return `${lang === 'en' ? 'M.' : 'ม.'}${n}`;
+      const base = n ? `${lang === 'en' ? 'M.' : 'ม.'}${n}` : String(grade);
+      return cls ? `${base}/${cls}` : base;
     },
     [lang]
   );

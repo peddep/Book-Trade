@@ -12,6 +12,7 @@ interface User {
   name: string;
   email: string;
   grade: string | null;
+  class_no?: string | null;
   avatar_color: string;
 }
 
@@ -21,7 +22,7 @@ export default function RoomPage() {
   const [tradesMade, setTradesMade] = useState(0);
   const [booksListed, setBooksListed] = useState(0);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: '', grade: '', avatar_color: '#6366f1' });
+  const [form, setForm] = useState({ name: '', grade: '', class_no: '', avatar_color: '#6366f1' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function RoomPage() {
 
   function openEdit() {
     if (!user) return;
-    setForm({ name: user.name, grade: user.grade ?? '', avatar_color: user.avatar_color });
+    setForm({ name: user.name, grade: user.grade ?? '', class_no: user.class_no ?? '', avatar_color: user.avatar_color });
     setFormError('');
     setEditing(true);
   }
@@ -108,7 +109,7 @@ export default function RoomPage() {
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-[#2e1065] truncate">{user.name}</h1>
             <p className="text-[#6b7280] text-sm truncate">{user.email}</p>
-            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{gradeLabel(user.grade)}</p>}
+            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{gradeLabel(user.grade, user.class_no)}</p>}
           </div>
           <button onClick={openEdit} className="ml-auto flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold"
             style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
@@ -222,9 +223,24 @@ export default function RoomPage() {
               <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }} />
 
-              <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('profile2.gradeOptional')}</label>
-              <input value={form.grade} onChange={e => setForm(f => ({ ...f, grade: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }} />
+              <div className="flex gap-2 mb-3">
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('profile2.gradeOptional')}</label>
+                  <select value={form.grade} onChange={e => setForm(f => ({ ...f, grade: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                    <option value="">{t('reg.selectGrade')}</option>
+                    {['1', '2', '3', '4', '5', '6'].map(g => <option key={g} value={g}>{gradeLabel(g)}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.classOptional')}</label>
+                  <select value={form.class_no} onChange={e => setForm(f => ({ ...f, class_no: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                    <option value="">{t('reg.selectClass')}</option>
+                    {Array.from({ length: 16 }, (_, i) => String(i + 1)).map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
 
               <label className="block text-xs font-semibold text-[#6b7280] mb-2">{t('profile2.avatarColor')}</label>
               <div className="flex flex-wrap gap-2 mb-4">

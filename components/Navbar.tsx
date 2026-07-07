@@ -10,6 +10,7 @@ interface User {
   name: string;
   email: string;
   grade: string | null;
+  class_no?: string | null;
   avatar_color: string;
 }
 
@@ -89,7 +90,7 @@ export default function Navbar() {
                 >
                   <div className="px-4 py-2 border-b" style={{ borderColor: '#e9d5ff' }}>
                     <p className="font-semibold text-sm">{user.name}</p>
-                    {user.grade && <p className="text-xs text-[#6b7280]">{gradeLabel(user.grade)}</p>}
+                    {user.grade && <p className="text-xs text-[#6b7280]">{gradeLabel(user.grade, user.class_no)}</p>}
                   </div>
                   <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]" style={{ color: '#7c3aed' }}>✨ {t('tabs.trade')}</Link>
                   <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.room')}</Link>

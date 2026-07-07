@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getDb, ensureUserColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin, signSession } from '@/lib/auth';
 
 export async function GET() {
@@ -17,6 +17,10 @@ export async function PATCH(req: NextRequest) {
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const grade = typeof body.grade === 'string' ? body.grade.trim() : '';
   const avatarColor = typeof body.avatar_color === 'string' ? body.avatar_color.trim() : '';
+  // class_no: use the provided value when present, otherwise keep the current one.
+  const classNo = 'class_no' in body
+    ? (body.class_no ? String(body.class_no).trim() : null)
+    : (user.class_no ?? null);
 
   if (!name) return NextResponse.json({ error: 'name_required' }, { status: 400 });
 
@@ -25,13 +29,15 @@ export async function PATCH(req: NextRequest) {
     name,
     email: user.email,
     grade: grade || null,
+    class_no: classNo,
     avatar_color: /^#[0-9a-fA-F]{6}$/.test(avatarColor) ? avatarColor : user.avatar_color,
   };
 
   const db = getDb();
+  await ensureUserColumns();
   await db.execute({
-    sql: 'UPDATE users SET name = ?, grade = ?, avatar_color = ? WHERE id = ?',
-    args: [nextUser.name, nextUser.grade, nextUser.avatar_color, user.id],
+    sql: 'UPDATE users SET name = ?, grade = ?, class_no = ?, avatar_color = ? WHERE id = ?',
+    args: [nextUser.name, nextUser.grade, nextUser.class_no, nextUser.avatar_color, user.id],
   });
 
   // Re-issue the cookie so the session reflects the new profile.

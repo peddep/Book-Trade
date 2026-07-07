@@ -24,6 +24,7 @@ await db.batch(
       grade TEXT,
       avatar_color TEXT DEFAULT '#6366f1',
       availability TEXT,
+      class_no TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     )`,
     `CREATE TABLE IF NOT EXISTS books (
