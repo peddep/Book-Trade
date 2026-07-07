@@ -371,6 +371,8 @@ interface I18nContextType {
   // Language-aware book title: shows the English title when viewing in English
   // and one exists, otherwise the primary (Thai) title.
   bookTitle: (title: string, titleEn?: string | null) => string;
+  // Language-aware grade label: "ม.4" in Thai, "M.4" in English.
+  gradeLabel: (grade?: string | null) => string;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
@@ -413,7 +415,18 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     [lang]
   );
 
-  return <I18nContext.Provider value={{ lang, setLang, t, bookTitle }}>{children}</I18nContext.Provider>;
+  const gradeLabel = useCallback(
+    (grade?: string | null) => {
+      if (!grade) return '';
+      // Accept stored canonical digits or older "ม.x" values.
+      const n = String(grade).replace(/[^0-9]/g, '');
+      if (!n) return String(grade);
+      return `${lang === 'en' ? 'M.' : 'ม.'}${n}`;
+    },
+    [lang]
+  );
+
+  return <I18nContext.Provider value={{ lang, setLang, t, bookTitle, gradeLabel }}>{children}</I18nContext.Provider>;
 }
 
 export function useI18n(): I18nContextType {

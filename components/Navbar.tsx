@@ -19,7 +19,7 @@ export default function Navbar() {
   const [pending, setPending] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
-  const { lang, setLang, t } = useI18n();
+  const { lang, setLang, t, gradeLabel } = useI18n();
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user));
@@ -89,7 +89,7 @@ export default function Navbar() {
                 >
                   <div className="px-4 py-2 border-b" style={{ borderColor: '#e9d5ff' }}>
                     <p className="font-semibold text-sm">{user.name}</p>
-                    {user.grade && <p className="text-xs text-[#6b7280]">{t('common.grade')} {user.grade}</p>}
+                    {user.grade && <p className="text-xs text-[#6b7280]">{gradeLabel(user.grade)}</p>}
                   </div>
                   <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]" style={{ color: '#7c3aed' }}>✨ {t('tabs.trade')}</Link>
                   <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.room')}</Link>

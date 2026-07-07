@@ -16,7 +16,7 @@ interface User {
 }
 
 export default function RoomPage() {
-  const { t, lang, setLang } = useI18n();
+  const { t, lang, setLang, gradeLabel } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [tradesMade, setTradesMade] = useState(0);
   const [booksListed, setBooksListed] = useState(0);
@@ -108,7 +108,7 @@ export default function RoomPage() {
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-[#2e1065] truncate">{user.name}</h1>
             <p className="text-[#6b7280] text-sm truncate">{user.email}</p>
-            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{t('common.grade')} {user.grade}</p>}
+            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{gradeLabel(user.grade)}</p>}
           </div>
           <button onClick={openEdit} className="ml-auto flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold"
             style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>

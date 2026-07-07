@@ -35,7 +35,7 @@ interface Book {
 
 export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { t } = useI18n();
+  const { t, gradeLabel } = useI18n();
   const router = useRouter();
   const [user, setUser] = useState<PublicUser | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
@@ -87,7 +87,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-[#2e1065] truncate">{user.name}</h1>
-            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{t('common.grade')} {user.grade}</p>}
+            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{gradeLabel(user.grade)}</p>}
           </div>
           <div className="ml-auto text-right">
             <p className="text-2xl font-bold text-[#2e1065]">{books.length}</p>
