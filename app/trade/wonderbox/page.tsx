@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import BookThumb from '@/components/BookThumb';
 import BookShelf, { type ShelfBook } from '@/components/BookShelf';
 import { useI18n } from '@/lib/i18n';
 
@@ -27,7 +26,7 @@ export default function WonderBoxPage() {
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [slots, setSlots] = useState(10);
   const [busy, setBusy] = useState(false);
-  const [receivedMsg, setReceivedMsg] = useState<Deposit[]>([]);
+  const [revealed, setRevealed] = useState<Deposit | null>(null);
   const [error, setError] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -78,15 +77,17 @@ export default function WonderBoxPage() {
     load();
   }
 
-  async function receiveAll() {
-    setBusy(true);
-    const res = await fetch('/api/wonderbox', { method: 'PATCH' });
+  async function openGift(d: Deposit) {
+    setRevealed(d);               // show the reveal modal right away
+    const res = await fetch('/api/wonderbox', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: d.id }),
+    });
     if (res.ok) {
-      const d = await res.json();
-      setReceivedMsg(d.received ?? []);
-      setDeposits(d.deposits ?? []);
+      const data = await res.json();
+      setDeposits(data.deposits ?? []);
     }
-    setBusy(false);
   }
 
   const matchedCount = deposits.filter(d => d.status === 'matched').length;
@@ -105,19 +106,9 @@ export default function WonderBoxPage() {
         </div>
         <p className="text-sm text-[#6b7280] mb-6">{t('wb.desc')}</p>
 
-        {receivedMsg.length > 0 && (
-          <div className="mb-6 p-4 rounded-2xl" style={{ background: '#dcfce7', border: '1px solid #10b981' }}>
-            <p className="font-bold mb-2" style={{ color: '#10b981' }}>🎉 {t('wb.youGot')}</p>
-            {receivedMsg.map(r => (
-              <div key={r.id} className="flex items-center gap-3 py-1.5">
-                <BookThumb coverUrl={r.received_cover_url} coverColor={r.received_color ?? '#e9d5ff'} />
-                <div>
-                  <p className="text-sm font-semibold text-[#2e1065]">{bookTitle(r.received_title ?? '', r.received_title_en)}</p>
-                  {r.received_from && <p className="text-xs text-[#6b7280]">{t('wb.from', { name: r.received_from })}</p>}
-                </div>
-              </div>
-            ))}
-            <p className="text-xs mt-2" style={{ color: '#059669' }}>{t('wb.meetHint')}</p>
+        {matchedCount > 0 && (
+          <div className="mb-6 p-4 rounded-2xl animate-pulse" style={{ background: '#dcfce7', border: '1px solid #10b981' }}>
+            <p className="font-bold text-sm" style={{ color: '#059669' }}>{t('wb.notify', { n: matchedCount })}</p>
           </div>
         )}
 
@@ -142,11 +133,12 @@ export default function WonderBoxPage() {
             const matched = d.status === 'matched';
             if (matched) {
               return (
-                <div key={`dep-${d.id}`} className="w-full rounded-r-md rounded-l-sm flex flex-col items-center justify-center gap-1 p-2"
-                  style={{ aspectRatio: '2 / 3', background: '#ede9fe', border: '1px solid #8b5cf6' }}>
-                  <span className="text-3xl">🎁</span>
-                  <p className="text-[11px] text-center font-semibold" style={{ color: '#7c3aed' }}>{t('wb.matched')}</p>
-                </div>
+                <button key={`dep-${d.id}`} onClick={() => openGift(d)}
+                  className="w-full rounded-r-md rounded-l-sm flex flex-col items-center justify-center gap-1 p-2 transition-transform hover:scale-105"
+                  style={{ aspectRatio: '2 / 3', background: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', border: '1px solid #8b5cf6', cursor: 'pointer' }}>
+                  <span className="text-3xl animate-bounce">🎁</span>
+                  <p className="text-[11px] text-center font-semibold" style={{ color: '#7c3aed' }}>{t('wb.tapToOpen')}</p>
+                </button>
               );
             }
             // Waiting: a book-shaped cover filling the slot.
@@ -186,13 +178,6 @@ export default function WonderBoxPage() {
         {deposits.length === 0 && !pickerOpen && <p className="text-center text-sm text-[#9ca3af] mb-6">{t('wb.empty')}</p>}
         {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
 
-        {matchedCount > 0 && (
-          <button onClick={receiveAll} disabled={busy} className="px-5 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
-            🎁 {t('wb.receiveAll')} ({matchedCount})
-          </button>
-        )}
-
         {/* Book picker — pops up on top (looks like Your Books, selecting deposits) */}
         {pickerOpen && (
           <div
@@ -221,6 +206,46 @@ export default function WonderBoxPage() {
                   maxHeight="65vh"
                 />
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Gift reveal — pops up with the book the user received */}
+        {revealed && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(46, 16, 101, 0.45)' }}
+            onClick={() => setRevealed(null)}
+          >
+            <div
+              className="w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center"
+              style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <p className="font-bold text-lg mb-4" style={{ color: '#059669' }}>{t('wb.opened')}</p>
+              <div className="flex justify-center mb-4">
+                <div className="relative rounded-r-md rounded-l-sm overflow-hidden"
+                  style={{ width: 130, aspectRatio: '2 / 3', background: revealed.received_color ?? '#e9d5ff', boxShadow: '0 8px 20px rgba(0,0,0,0.35)' }}>
+                  {revealed.received_cover_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={revealed.received_cover_url} alt={bookTitle(revealed.received_title ?? '', revealed.received_title_en)} className="absolute inset-0 w-full h-full object-cover"
+                      onError={e => { e.currentTarget.style.display = 'none'; }} />
+                  ) : (
+                    <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2 text-center">
+                      <span className="text-3xl">📖</span>
+                      <span className="text-[11px] font-semibold leading-tight" style={{ color: 'rgba(255,255,255,0.95)' }}>{bookTitle(revealed.received_title ?? '', revealed.received_title_en)}</span>
+                    </span>
+                  )}
+                  <span className="absolute left-0 top-0 bottom-0 w-2" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0))' }} />
+                </div>
+              </div>
+              <p className="text-base font-bold text-[#2e1065]">{bookTitle(revealed.received_title ?? '', revealed.received_title_en)}</p>
+              {revealed.received_from && <p className="text-sm text-[#6b7280] mt-1">{t('wb.from', { name: revealed.received_from })}</p>}
+              <p className="text-xs mt-3" style={{ color: '#059669' }}>{t('wb.meetHint')}</p>
+              <button onClick={() => setRevealed(null)} className="mt-5 w-full py-2.5 rounded-xl font-semibold text-sm text-white"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                {t('wb.close')}
+              </button>
             </div>
           </div>
         )}

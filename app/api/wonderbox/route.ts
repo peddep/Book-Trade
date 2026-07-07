@@ -73,18 +73,30 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ deposits: await myBox(user.id), slots: PLAN.wonderBoxSlots }, { status: 201 });
 }
 
-// Receive all matched trades (reveals the books you got).
-export async function PATCH() {
+// Receive matched trades. With a body { id } receives just that gift; otherwise
+// receives all. Returns the revealed book(s).
+export async function PATCH(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await ensureHubTables();
   const db = getDb();
-  const matched = await myBox(user.id);
-  const received = matched.filter((d: any) => d.status === 'matched');
-  await db.execute({
-    sql: "UPDATE wonder_box SET status = 'received' WHERE user_id = ? AND status = 'matched'",
-    args: [user.id],
-  });
+  const body = await req.json().catch(() => ({}));
+  const one = body?.id != null ? Number(body.id) : null;
+
+  const before = await myBox(user.id);
+  const received = before.filter((d: any) => d.status === 'matched' && (one == null || Number(d.id) === one));
+
+  if (one != null) {
+    await db.execute({
+      sql: "UPDATE wonder_box SET status = 'received' WHERE id = ? AND user_id = ? AND status = 'matched'",
+      args: [one, user.id],
+    });
+  } else {
+    await db.execute({
+      sql: "UPDATE wonder_box SET status = 'received' WHERE user_id = ? AND status = 'matched'",
+      args: [user.id],
+    });
+  }
   return NextResponse.json({ received, deposits: await myBox(user.id), slots: PLAN.wonderBoxSlots });
 }
 

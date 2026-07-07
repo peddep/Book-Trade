@@ -233,6 +233,10 @@ const STRINGS: Dict = {
   'wb.full': { th: 'กล่องเต็มแล้ว (สูงสุด {total} เล่ม)', en: 'Box is full (max {total} books)' },
   'wb.meetHint': { th: 'ดูรายละเอียดนัดรับหนังสือได้ที่ "การแลกเปลี่ยนของฉัน"', en: 'See meet-up details in "My Trades"' },
   'wb.chooseBook': { th: 'เลือกหนังสือที่จะฝาก', en: 'Choose a book to deposit' },
+  'wb.notify': { th: '🎁 คุณได้รับหนังสือจากการแลกเปลี่ยน {n} เล่ม! แตะกล่องของขวัญเพื่อเปิด', en: '🎁 You got {n} book(s) from a trade! Tap a gift box to open.' },
+  'wb.tapToOpen': { th: 'แตะเพื่อเปิด', en: 'Tap to open' },
+  'wb.opened': { th: '🎉 คุณได้รับ', en: '🎉 You received' },
+  'wb.close': { th: 'ปิด', en: 'Close' },
 
   // GTS
   'gts.desc': { th: 'ฝากหนังสือพร้อมระบุเล่มที่ต้องการ เมื่อมีคนมีเล่มที่ตรงมาแลก การเทรดจะเกิดขึ้นทันที', en: 'Deposit a book and specify what you want in return. When someone fulfills it with a matching book, the trade happens instantly.' },
