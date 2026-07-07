@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getDb } from '@/lib/db';
+import { getDb, ensureUserColumns } from '@/lib/db';
 import { signSession } from '@/lib/auth';
 
 const AVATAR_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, grade } = await req.json();
+  const { name, email, password, grade, availability } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  // Availability is a list of "row-col" slot keys (e.g. "noon-0"); store as JSON.
+  const availabilityJson = Array.isArray(availability) ? JSON.stringify(availability) : null;
+
   try {
     const db = getDb();
+    await ensureUserColumns();
     const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
     if (existing.rows.length > 0) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
@@ -23,8 +27,8 @@ export async function POST(req: NextRequest) {
     const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
     const result = await db.execute({
-      sql: 'INSERT INTO users (name, email, password_hash, grade, avatar_color) VALUES (?, ?, ?, ?, ?)',
-      args: [name, email, hash, grade ?? null, color],
+      sql: 'INSERT INTO users (name, email, password_hash, grade, avatar_color, availability) VALUES (?, ?, ?, ?, ?, ?)',
+      args: [name, email, hash, grade ?? null, color, availabilityJson],
     });
 
     const user = { id: Number(result.lastInsertRowid), name, email, grade: grade ?? null, avatar_color: color };

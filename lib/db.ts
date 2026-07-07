@@ -41,6 +41,18 @@ export async function ensureBookColumns() {
 // Back-compat alias.
 export const ensureCoverColumn = ensureBookColumns;
 
+// Adds the availability column (weekly trade-time grid) to older user tables.
+let userColumnsEnsured = false;
+export async function ensureUserColumns() {
+  if (userColumnsEnsured) return;
+  try {
+    await getDb().execute('ALTER TABLE users ADD COLUMN availability TEXT');
+  } catch {
+    // column already exists
+  }
+  userColumnsEnsured = true;
+}
+
 export async function initDb() {
   const db = getDb();
   await db.batch(
@@ -52,6 +64,7 @@ export async function initDb() {
         password_hash TEXT NOT NULL,
         grade TEXT,
         avatar_color TEXT DEFAULT '#6366f1',
+        availability TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE IF NOT EXISTS books (

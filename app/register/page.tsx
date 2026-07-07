@@ -7,6 +7,11 @@ import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
 
 const GRADES = ['6', '7', '8', '9', '10', '11', '12'];
+const DAYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
+const SLOTS = [
+  { key: 'noon', label: 'reg.slotNoon' },
+  { key: 'after', label: 'reg.slotAfter' },
+];
 
 export default function RegisterPage() {
   const { t } = useI18n();
@@ -14,6 +19,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [grade, setGrade] = useState('');
+  const [availability, setAvailability] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -26,7 +32,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, grade }),
+        body: JSON.stringify({ name, email, password, grade, availability }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -41,11 +47,15 @@ export default function RegisterPage() {
     }
   }
 
+  function toggleSlot(key: string) {
+    setAvailability(prev => (prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]));
+  }
+
   return (
     <>
       <Navbar />
       <main className="min-h-screen flex items-center justify-center px-4 py-16">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">📚</div>
             <h1 className="text-2xl font-bold text-[#2e1065]">{t('reg.join')}</h1>
@@ -101,6 +111,58 @@ export default function RegisterPage() {
                 {GRADES.map(g => <option key={g} value={g}>{t('common.grade')} {g}</option>)}
               </select>
             </div>
+            {/* Where trades happen + weekly availability */}
+            <div className="p-3 rounded-xl" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
+              <p className="text-sm font-bold text-[#2e1065] mb-1">{t('reg.libraryTitle')}</p>
+              <p className="text-xs text-[#6b7280] leading-relaxed">{t('reg.libraryBody')}</p>
+            </div>
+
+            <div>
+              <label className="text-sm text-[#4b5563] mb-1 block">{t('reg.availabilityTitle')}</label>
+              <p className="text-xs text-[#9ca3af] mb-2">{t('reg.availabilityHint')}</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-center border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="p-1"></th>
+                      {DAYS.map(d => (
+                        <th key={d} className="p-1 text-xs font-semibold text-[#7c3aed]">{t(d)}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SLOTS.map(slot => (
+                      <tr key={slot.key}>
+                        <td className="p-1 text-[11px] text-left font-semibold text-[#4b5563] whitespace-nowrap pr-2">{t(slot.label)}</td>
+                        {DAYS.map((_, col) => {
+                          const key = `${slot.key}-${col}`;
+                          const on = availability.includes(key);
+                          return (
+                            <td key={key} className="p-0.5">
+                              <button
+                                type="button"
+                                onClick={() => toggleSlot(key)}
+                                aria-pressed={on}
+                                className="w-full rounded-lg flex items-center justify-center text-sm font-bold transition-colors"
+                                style={{
+                                  height: 34,
+                                  background: on ? '#7c3aed' : '#ffffff',
+                                  color: on ? '#ffffff' : '#c4b5fd',
+                                  border: `1px solid ${on ? '#7c3aed' : '#e9d5ff'}`,
+                                }}
+                              >
+                                {on ? '✓' : ''}
+                              </button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {error && <p className="text-sm text-red-400">{error}</p>}
             <button
               type="submit"
