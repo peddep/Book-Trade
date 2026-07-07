@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { ensureHubTables } from '@/lib/hub';
+
+// A book is "busy" when it's committed to Wonder Box, GTS, an open room, or a
+// pending direct offer — such books should not be offered again elsewhere.
+const BUSY_EXPR = `(
+  EXISTS(SELECT 1 FROM wonder_box wb WHERE wb.book_id = b.id AND wb.status IN ('waiting','matched'))
+  OR EXISTS(SELECT 1 FROM gts_deposits g WHERE g.book_id = b.id AND g.status = 'open')
+  OR EXISTS(SELECT 1 FROM room_members rm JOIN rooms r ON rm.room_id = r.id WHERE rm.book_id = b.id AND r.status = 'open')
+  OR EXISTS(SELECT 1 FROM trades t WHERE t.status = 'pending' AND t.offered_book_id = b.id)
+)`;
 
 const COVER_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
@@ -19,14 +29,18 @@ function sanitizeCover(cover: unknown): string | null {
 export async function GET(req: NextRequest) {
   const db = getDb();
   await ensureBookColumns();
+  await ensureHubTables();
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q') ?? '';
   const subject = searchParams.get('subject') ?? '';
   const myBooks = searchParams.get('mine') === '1';
+  // When set, hide books already committed to another trade avenue.
+  const excludeBusy = searchParams.get('exclude_busy') === '1';
   const user = await getCurrentUser();
 
   let sql = `
-    SELECT b.*, u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade
+    SELECT b.*, u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade,
+      ${BUSY_EXPR} AS busy
     FROM books b
     JOIN users u ON b.owner_id = u.id
     WHERE 1=1
@@ -37,11 +51,16 @@ export async function GET(req: NextRequest) {
     sql += ' AND b.owner_id = ?';
     args.push(user.id);
   } else {
-    sql += ' AND b.available = 1';
+    // The public browse list never shows books committed elsewhere.
+    sql += ` AND b.available = 1 AND NOT ${BUSY_EXPR}`;
     if (user) {
       sql += ' AND b.owner_id != ?';
       args.push(user.id);
     }
+  }
+
+  if (excludeBusy) {
+    sql += ` AND NOT ${BUSY_EXPR}`;
   }
 
   if (query) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { priceDiffOk } from '@/lib/hub';
+import { priceDiffOk, isBookBusy, ensureHubTables } from '@/lib/hub';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
   }
 
   const db = getDb();
+  await ensureHubTables();
   const offered = await db.execute({ sql: 'SELECT * FROM books WHERE id = ? AND owner_id = ?', args: [offered_book_id, user.id] });
   const offeredBook = offered.rows[0] as any;
   if (!offeredBook) return NextResponse.json({ error: 'You do not own this book' }, { status: 400 });
@@ -52,6 +53,11 @@ export async function POST(req: NextRequest) {
 
   if (Number(wantedBook.owner_id) === user.id) {
     return NextResponse.json({ error: 'Cannot trade with yourself' }, { status: 400 });
+  }
+
+  // Neither book may already be committed to another trade avenue (e.g. Wonder Box).
+  if (await isBookBusy(Number(offered_book_id)) || await isBookBusy(Number(wanted_book_id))) {
+    return NextResponse.json({ error: 'book_busy' }, { status: 400 });
   }
 
   if (!priceDiffOk(offeredBook.price, wantedBook.price)) {

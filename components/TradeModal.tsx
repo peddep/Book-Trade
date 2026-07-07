@@ -28,7 +28,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/books?mine=1')
+    fetch('/api/books?mine=1&exclude_busy=1')
       .then(r => r.json())
       .then(d => setMyBooks((d.books ?? []).filter((b: ShelfBook) => b.available)));
   }, []);

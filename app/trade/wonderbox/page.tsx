@@ -47,7 +47,7 @@ export default function WonderBoxPage() {
     setError('');
     setPickerOpen(true);           // open immediately
     setPicking(true);
-    fetch('/api/books?mine=1')     // load books in the background
+    fetch('/api/books?mine=1&exclude_busy=1')     // load books in the background
       .then(r => r.json())
       .then(d => setMyBooks((d.books ?? []).filter((b: ShelfBook) => b.available)))
       .finally(() => setPicking(false));

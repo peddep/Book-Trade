@@ -29,7 +29,7 @@ export default function BookPicker({ excludeIds = [], selected, onSelect, filter
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetch('/api/books?mine=1')
+    fetch('/api/books?mine=1&exclude_busy=1')
       .then(r => r.json())
       .then(d => {
         setBooks((d.books ?? []).filter((b: PickerBook) => b.available));
