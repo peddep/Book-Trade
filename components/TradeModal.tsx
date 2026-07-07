@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import BookThumb from '@/components/BookThumb';
 import BookShelf, { type ShelfBook } from '@/components/BookShelf';
 import { useI18n } from '@/lib/i18n';
 
@@ -60,11 +59,22 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
           <button onClick={onClose} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
         </div>
 
-        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#ffffff' }}>
-          <BookThumb coverUrl={targetBook.cover_url} coverColor={targetBook.cover_color} size={40} />
-          <div>
+        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#f5f3ff', border: '1px solid #e9d5ff' }}>
+          {/* Book-shaped cover of the book being requested */}
+          <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0" style={{ width: 56, aspectRatio: '2 / 3', background: targetBook.cover_color, boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }}>
+            {targetBook.cover_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={targetBook.cover_url} alt={bookTitle(targetBook.title, targetBook.title_en)} className="absolute inset-0 w-full h-full object-cover"
+                onError={e => { e.currentTarget.style.display = 'none'; }} />
+            ) : (
+              <span className="absolute inset-0 flex items-center justify-center text-2xl">📖</span>
+            )}
+            <span className="absolute left-0 top-0 bottom-0 w-1.5" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0))' }} />
+          </div>
+          <div className="min-w-0">
             <p className="text-xs text-[#6b7280]">{t('modal.youWant')}</p>
             <p className="font-semibold text-[#2e1065] text-sm">{bookTitle(targetBook.title, targetBook.title_en)}</p>
+            <p className="text-xs text-[#6b7280] truncate">{targetBook.author}</p>
           </div>
         </div>
 
