@@ -10,6 +10,29 @@ import { useI18n } from '@/lib/i18n';
 const DAY_KEYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
 const SLOT_KEYS: Record<string, string> = { p4: 'reg.slotP4', p5: 'reg.slotP5', after: 'reg.slotAfter' };
 const SLOT_ORDER = ['p4', 'p5', 'after'];
+// Clock time each slot starts at (school schedule).
+const SLOT_TIME: Record<string, [number, number]> = { p4: [11, 40], p5: [12, 30], after: [15, 30] };
+
+// The soonest upcoming date+time both users share, based on their weekly grids.
+function nextMeeting(shared: string[]): { date: Date; slot: string } | null {
+  const now = new Date();
+  let best: { date: Date; slot: string } | null = null;
+  for (const key of shared) {
+    const [slot, dayStr] = key.split('-');
+    const targetDow = Number(dayStr) + 1; // grid day 0 = Monday; JS Sunday = 0
+    const [hh, mm] = SLOT_TIME[slot] ?? [12, 0];
+    for (let add = 0; add <= 7; add++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() + add);
+      d.setHours(hh, mm, 0, 0);
+      if (d.getDay() === targetDow && d.getTime() > now.getTime()) {
+        if (!best || d < best.date) best = { date: d, slot };
+        break;
+      }
+    }
+  }
+  return best;
+}
 
 interface Trade {
   id: number;
@@ -69,7 +92,7 @@ function overlap(a?: string | null, b?: string | null): string[] {
 }
 
 export default function IrlTradePage() {
-  const { t, bookTitle } = useI18n();
+  const { t, bookTitle, lang } = useI18n();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -161,6 +184,10 @@ export default function IrlTradePage() {
               const myConfirm = isRequester ? trade.requester_confirm : trade.owner_confirm;
               const otherConfirm = isRequester ? trade.owner_confirm : trade.requester_confirm;
               const shared = overlap(trade.requester_availability, trade.owner_availability);
+              const meeting = nextMeeting(shared);
+              const meetingText = meeting
+                ? `${meeting.date.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { weekday: 'long', day: 'numeric', month: 'short' })} · ${meeting.date.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })} (${t(SLOT_KEYS[meeting.slot])})`
+                : null;
 
               return (
                 <div key={trade.id} className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
@@ -195,18 +222,27 @@ export default function IrlTradePage() {
                   {/* Stage-specific body */}
                   {tab === 'upcoming' && (
                     <div className="p-3 rounded-xl" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
-                      <p className="text-sm font-semibold text-[#2e1065] mb-2">{t('irl.meetAt')}</p>
-                      <p className="text-xs font-semibold text-[#6b7280] mb-1">{t('irl.when')}</p>
-                      {shared.length > 0 ? (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          {shared.map(k => (
-                            <span key={k} className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#ede9fe', color: '#7c3aed' }}>
-                              {slotLabel(k)}
-                            </span>
-                          ))}
+                      {/* Decided meeting date & time (from both users' registered availability) */}
+                      {meetingText ? (
+                        <div className="mb-3 p-3 rounded-xl" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                          <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>📅 {t('irl.meetOn')}</p>
+                          <p className="text-base font-bold text-white leading-tight mt-0.5">{meetingText}</p>
                         </div>
                       ) : (
                         <p className="text-xs text-[#9ca3af] mb-3">{t('irl.noOverlap')}</p>
+                      )}
+                      <p className="text-sm font-semibold text-[#2e1065] mb-2">{t('irl.meetAt')}</p>
+                      {shared.length > 1 && (
+                        <>
+                          <p className="text-xs font-semibold text-[#6b7280] mb-1">{t('irl.otherTimes')}</p>
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {shared.map(k => (
+                              <span key={k} className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                                {slotLabel(k)}
+                              </span>
+                            ))}
+                          </div>
+                        </>
                       )}
                       <p className="text-xs font-semibold text-[#6b7280] mb-1">{t('irl.bring')}</p>
                       <div className="flex items-center gap-2">
@@ -219,6 +255,9 @@ export default function IrlTradePage() {
 
                   {tab === 'confirm' && (
                     <div>
+                      {meetingText && (
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#7c3aed' }}>📅 {meetingText}</p>
+                      )}
                       <p className="text-sm font-semibold text-[#2e1065] mb-1">{t('irl.didItHappen')}</p>
                       <p className="text-xs text-[#9ca3af] mb-3">{t('irl.bothConfirm')}</p>
                       {myConfirm ? (

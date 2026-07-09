@@ -90,6 +90,8 @@ const STRINGS: Dict = {
   'irl.tabHistory': { th: 'ประวัติ', en: 'History' },
   'irl.meetAt': { th: '📍 เจอกันที่ห้องสมุดโรงเรียน', en: '📍 Meet at the school library' },
   'irl.when': { th: 'เวลาที่ว่างตรงกัน', en: 'Times you both are free' },
+  'irl.meetOn': { th: 'นัดเจอกันวันที่', en: 'Meet on' },
+  'irl.otherTimes': { th: 'เวลาอื่นที่ว่างตรงกัน', en: 'Other times you both are free' },
   'irl.noOverlap': { th: 'ไม่มีเวลาตรงกัน — นัดหมายกันเอง', en: 'No shared time — arrange one together' },
   'irl.bring': { th: 'สิ่งที่ต้องนำมา', en: 'What to bring' },
   'irl.give': { th: 'คุณให้', en: 'You give' },
