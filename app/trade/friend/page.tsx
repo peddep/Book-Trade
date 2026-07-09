@@ -8,7 +8,7 @@ import BookShelf from '@/components/BookShelf';
 import TradeModal from '@/components/TradeModal';
 import { useI18n } from '@/lib/i18n';
 
-const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
+import { SUBJECTS } from '@/lib/subjects';
 
 interface Book {
   id: number;

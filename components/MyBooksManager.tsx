@@ -7,7 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import { catalogTitleParts } from '@/lib/books-catalog';
 import { fileToCoverDataUrl } from '@/lib/image';
 
-const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
+import { SUBJECTS } from '@/lib/subjects';
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
 
 type SortKey = 'recent' | 'price' | 'alpha';

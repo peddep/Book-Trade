@@ -1,0 +1,33 @@
+// Shared list of book categories: school subjects + reading genres.
+// Each value maps to an i18n key `subj.<value>`.
+export const SUBJECTS = [
+  // School subjects
+  'Math',
+  'Science',
+  'English',
+  'Thai',
+  'Social Studies',
+  'History',
+  'Art',
+  'Music',
+  'PE',
+  'Computer Science',
+  // Reading genres
+  'Novel',
+  'Fantasy',
+  'Sci-Fi',
+  'Mystery',
+  'Horror',
+  'Romance',
+  'Comics',
+  'Light Novel',
+  'Short Stories',
+  'Poetry',
+  'Biography',
+  'Self-Improvement',
+  'Psychology',
+  'Business',
+  'Travel',
+  'Cooking',
+  'Other',
+];

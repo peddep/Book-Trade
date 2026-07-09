@@ -9,7 +9,7 @@ import TitleInput from '@/components/TitleInput';
 import { useI18n } from '@/lib/i18n';
 import { titlesMatch } from '@/lib/books-catalog';
 
-const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science', 'Other'];
+import { SUBJECTS } from '@/lib/subjects';
 
 interface MyDeposit {
   id: number;
