@@ -18,6 +18,7 @@ const SLOTS = [
 export default function RegisterPage() {
   const { t, gradeLabel } = useI18n();
   const [name, setName] = useState('');
+  const [realName, setRealName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [grade, setGrade] = useState('');
@@ -36,7 +37,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, grade, class_no: classNo, contact, availability }),
+        body: JSON.stringify({ name, email, password, grade, class_no: classNo, contact, real_name: realName, availability }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -76,6 +77,19 @@ export default function RegisterPage() {
                 className="w-full p-2.5 rounded-xl text-sm"
                 style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder="bookworm123"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.realName')}</label>
+              <input
+                type="text"
+                value={realName}
+                onChange={e => setRealName(e.target.value)}
+                required
+                maxLength={120}
+                className="w-full p-2.5 rounded-xl text-sm"
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                placeholder={t('reg.realNamePlaceholder')}
               />
             </div>
             <div>

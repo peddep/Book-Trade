@@ -26,6 +26,7 @@ await db.batch(
       availability TEXT,
       class_no TEXT,
       contact TEXT,
+      real_name TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     )`,
     `CREATE TABLE IF NOT EXISTS books (
