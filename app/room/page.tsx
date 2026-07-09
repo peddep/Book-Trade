@@ -15,6 +15,7 @@ interface User {
   grade: string | null;
   class_no?: string | null;
   avatar_color: string;
+  is_admin?: boolean;
 }
 
 export default function RoomPage() {
@@ -198,6 +199,12 @@ export default function RoomPage() {
               ))}
             </div>
           </div>
+          {user.is_admin && (
+            <Link href="/admin" className="block w-full py-2.5 mb-3 rounded-xl font-semibold text-sm text-center"
+              style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
+              {t('room2.admin')}
+            </Link>
+          )}
           <Link href="/donate" className="block w-full py-2.5 mb-3 rounded-xl font-semibold text-sm text-center text-white"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
             {t('room2.donate')}
