@@ -84,11 +84,11 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {book.subject && (
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
-              {t(`subj.${book.subject}`)}
+          {book.subject && book.subject.split(',').filter(Boolean).map(tag => (
+            <span key={tag} className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
+              {t(`subj.${tag}`)}
             </span>
-          )}
+          ))}
           {book.grade_level && (
             <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#6b7280' }}>
               {t('card.gr')} {book.grade_level}

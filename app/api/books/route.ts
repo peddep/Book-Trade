@@ -68,8 +68,9 @@ export async function GET(req: NextRequest) {
     args.push(`%${query}%`, `%${query}%`);
   }
   if (subject) {
-    sql += ' AND b.subject = ?';
-    args.push(subject);
+    // subject holds a comma-separated tag list; match the tag anywhere in it.
+    sql += " AND (',' || b.subject || ',') LIKE ?";
+    args.push(`%,${subject},%`);
   }
 
   sql += ' ORDER BY b.created_at DESC';
