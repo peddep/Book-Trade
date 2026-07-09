@@ -105,7 +105,7 @@ const STRINGS: Dict = {
   // Register
   'reg.join': { th: 'สมัคร BookTrade', en: 'Join BookTrade' },
   'reg.subtitle': { th: 'เริ่มแลกเปลี่ยนหนังสือกับเพื่อน ๆ', en: 'Start trading books with your classmates' },
-  'reg.yourName': { th: 'ชื่อของคุณ', en: 'Your Name' },
+  'reg.yourName': { th: 'ชื่อผู้ใช้', en: 'Username' },
   'reg.gradeOptional': { th: 'ชั้นปี (ไม่บังคับ)', en: 'Grade (optional)' },
   'reg.selectGrade': { th: 'เลือกชั้นปีของคุณ', en: 'Select your grade' },
   'reg.classOptional': { th: 'ห้อง (ไม่บังคับ)', en: 'Class (optional)' },
