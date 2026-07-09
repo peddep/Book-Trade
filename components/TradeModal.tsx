@@ -9,6 +9,9 @@ interface Book {
   title: string;
   title_en?: string | null;
   author: string;
+  subject?: string;
+  condition?: string;
+  price?: number | null;
   cover_color: string;
   cover_url?: string | null;
 }
@@ -75,6 +78,20 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             <p className="text-xs text-[#6b7280]">{t('modal.youWant')}</p>
             <p className="font-semibold text-[#2e1065] text-sm">{bookTitle(targetBook.title, targetBook.title_en)}</p>
             <p className="text-xs text-[#6b7280] truncate">{targetBook.author}</p>
+            {(targetBook.subject || targetBook.price != null) && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {targetBook.price != null && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#fef9c3', color: '#b45309' }}>
+                    ฿{targetBook.price}
+                  </span>
+                )}
+                {targetBook.subject && targetBook.subject.split(',').filter(Boolean).map(tag => (
+                  <span key={tag} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
+                    {t(`subj.${tag}`)}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
