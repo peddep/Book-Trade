@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import BookCard from '@/components/BookCard';
+import BookShelf from '@/components/BookShelf';
 import TradeModal from '@/components/TradeModal';
 import { useI18n } from '@/lib/i18n';
 
@@ -112,11 +113,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
         {books.length === 0 ? (
           <p className="text-[#6b7280] text-sm py-10 text-center">{t('user.noBooks')}</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {books.map(book => (
-              <BookCard key={book.id} book={book} onTrade={isMe ? undefined : () => setTradeBook(book)} />
-            ))}
-          </div>
+          <>
+            {/* Phone: 3-column thumbnail shelf, tap a book to offer a trade */}
+            <div className="sm:hidden">
+              <BookShelf
+                books={books}
+                selectMode
+                onSelect={id => { if (isMe) return; const b = books.find(x => x.id === id); if (b) setTradeBook(b); }}
+                maxHeight="none"
+              />
+            </div>
+            {/* Larger screens: detailed cards */}
+            <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {books.map(book => (
+                <BookCard key={book.id} book={book} onTrade={isMe ? undefined : () => setTradeBook(book)} />
+              ))}
+            </div>
+          </>
         )}
       </main>
 
