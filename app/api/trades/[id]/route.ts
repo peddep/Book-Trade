@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { announceTrade } from '@/lib/hub';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -42,8 +43,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
       });
     } else if (rConfirm === 'happened' && oConfirm === 'happened') {
-      // Both confirmed → the trade is complete.
+      // Both confirmed → the trade is complete; announce it in the community chat.
       await db.execute({ sql: "UPDATE trades SET status = 'completed', updated_at = datetime('now') WHERE id = ?", args: [id] });
+      await announceTrade(Number(id));
     }
 
     return NextResponse.json({ ok: true });

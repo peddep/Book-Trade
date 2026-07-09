@@ -56,10 +56,41 @@ export async function ensureHubTables() {
         received_book_id INTEGER,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
+      // Community chat. user_id is null for system trade announcements.
+      `CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        kind TEXT NOT NULL DEFAULT 'chat',
+        body TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
     ],
     'write'
   );
   ensured = true;
+}
+
+// Posts a system announcement to the community chat when a trade completes.
+export async function announceTrade(tradeId: number) {
+  const db = getDb();
+  const res = await db.execute({
+    sql: `SELECT ru.name AS requester_name, ou.name AS owner_name,
+                 ob.title AS offered_title, wb.title AS wanted_title
+          FROM trades t
+          JOIN users ru ON t.requester_id = ru.id
+          JOIN users ou ON t.owner_id = ou.id
+          JOIN books ob ON t.offered_book_id = ob.id
+          JOIN books wb ON t.wanted_book_id = wb.id
+          WHERE t.id = ?`,
+    args: [tradeId],
+  });
+  const r = res.rows[0] as any;
+  if (!r) return;
+  const body = `${r.requester_name} ⇄ ${r.owner_name} · ${r.offered_title} ⇄ ${r.wanted_title}`;
+  await db.execute({
+    sql: "INSERT INTO messages (user_id, kind, body) VALUES (NULL, 'announcement', ?)",
+    args: [body],
+  });
 }
 
 // A book is "busy" when it's already committed to some trade avenue.
