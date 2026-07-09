@@ -87,7 +87,7 @@ export default function RegisterPage() {
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
                 style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-                placeholder="your@school.edu"
+                placeholder="somchai@student.nssc.ac.th"
               />
             </div>
             <div>
