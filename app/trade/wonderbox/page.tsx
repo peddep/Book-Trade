@@ -24,7 +24,7 @@ interface Deposit {
 export default function WonderBoxPage() {
   const { t, bookTitle } = useI18n();
   const [deposits, setDeposits] = useState<Deposit[]>([]);
-  const [slots, setSlots] = useState(10);
+  const [slots, setSlots] = useState(1);
   const [busy, setBusy] = useState(false);
   const [revealed, setRevealed] = useState<Deposit | null>(null);
   const [error, setError] = useState('');
@@ -37,7 +37,7 @@ export default function WonderBoxPage() {
     if (res.ok) {
       const d = await res.json();
       setDeposits(d.deposits ?? []);
-      setSlots(d.slots ?? 10);
+      setSlots(d.slots ?? 1);
     }
   }, []);
 

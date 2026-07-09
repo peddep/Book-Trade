@@ -3,7 +3,7 @@ import { getDb, ensureBookColumns } from './db';
 // Premium Plan limits (this app runs everyone on the Premium Plan).
 export const PLAN = {
   name: 'Premium',
-  wonderBoxSlots: 10,
+  wonderBoxSlots: 1,
   gtsSlots: 3,
   roomMax: 20,
 };
