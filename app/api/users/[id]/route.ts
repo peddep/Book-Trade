@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   await ensureBookColumns();
   await ensureUserColumns();
 
-  const u = await db.execute({ sql: 'SELECT id, name, grade, class_no, avatar_color FROM users WHERE id = ?', args: [id] });
+  const u = await db.execute({ sql: 'SELECT id, name, grade, class_no, contact, avatar_color FROM users WHERE id = ?', args: [id] });
   const user = u.rows[0];
   if (!user) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 

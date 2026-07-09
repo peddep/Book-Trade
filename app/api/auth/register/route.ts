@@ -6,7 +6,7 @@ import { signSession } from '@/lib/auth';
 const AVATAR_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, grade, class_no, availability } = await req.json();
+  const { name, email, password, grade, class_no, contact, availability } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
   // Availability is a list of "row-col" slot keys (e.g. "noon-0"); store as JSON.
   const availabilityJson = Array.isArray(availability) ? JSON.stringify(availability) : null;
   const classNo = class_no ? String(class_no) : null;
+  const contactStr = typeof contact === 'string' && contact.trim() ? contact.trim().slice(0, 100) : null;
 
   try {
     const db = getDb();
@@ -28,8 +29,8 @@ export async function POST(req: NextRequest) {
     const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
     const result = await db.execute({
-      sql: 'INSERT INTO users (name, email, password_hash, grade, class_no, avatar_color, availability) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      args: [name, email, hash, grade ?? null, classNo, color, availabilityJson],
+      sql: 'INSERT INTO users (name, email, password_hash, grade, class_no, contact, avatar_color, availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      args: [name, email, hash, grade ?? null, classNo, contactStr, color, availabilityJson],
     });
 
     const user = { id: Number(result.lastInsertRowid), name, email, grade: grade ?? null, class_no: classNo, avatar_color: color };

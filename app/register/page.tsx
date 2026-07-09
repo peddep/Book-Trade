@@ -22,6 +22,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [grade, setGrade] = useState('');
   const [classNo, setClassNo] = useState('');
+  const [contact, setContact] = useState('');
   const [availability, setAvailability] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, grade, class_no: classNo, availability }),
+        body: JSON.stringify({ name, email, password, grade, class_no: classNo, contact, availability }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -127,6 +128,18 @@ export default function RegisterPage() {
                   {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
+            </div>
+            <div>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.contactOptional')}</label>
+              <input
+                type="text"
+                value={contact}
+                onChange={e => setContact(e.target.value)}
+                maxLength={100}
+                className="w-full p-2.5 rounded-xl text-sm"
+                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                placeholder={t('reg.contactHint')}
+              />
             </div>
             {/* Where trades happen + weekly availability */}
             <div className="p-3 rounded-xl" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>

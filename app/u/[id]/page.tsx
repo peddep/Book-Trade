@@ -13,6 +13,7 @@ interface PublicUser {
   name: string;
   grade: string | null;
   class_no?: string | null;
+  contact?: string | null;
   avatar_color: string;
 }
 
@@ -89,6 +90,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-[#2e1065] truncate">{user.name}</h1>
             {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{gradeLabel(user.grade, user.class_no)}</p>}
+            {user.contact && (
+              <p className="text-sm mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', color: '#6b7280' }}>
+                📱 <span className="font-semibold text-[#2e1065]">{user.contact}</span>
+              </p>
+            )}
           </div>
           <div className="ml-auto text-right">
             <p className="text-2xl font-bold text-[#2e1065]">{books.length}</p>

@@ -39,6 +39,11 @@ export async function PATCH(req: NextRequest) {
     sql: 'UPDATE users SET name = ?, grade = ?, class_no = ?, avatar_color = ? WHERE id = ?',
     args: [nextUser.name, nextUser.grade, nextUser.class_no, nextUser.avatar_color, user.id],
   });
+  // Contact lives only in the DB (not in the session cookie).
+  if ('contact' in body) {
+    const contact = typeof body.contact === 'string' && body.contact.trim() ? body.contact.trim().slice(0, 100) : null;
+    await db.execute({ sql: 'UPDATE users SET contact = ? WHERE id = ?', args: [contact, user.id] });
+  }
 
   // Re-issue the cookie so the session reflects the new profile.
   const res = NextResponse.json({ user: { ...nextUser, is_admin: isAdmin(nextUser) } });
