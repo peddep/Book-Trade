@@ -295,6 +295,7 @@ const STRINGS: Dict = {
   'chat.empty': { th: 'ยังไม่มีข้อความ เริ่มพูดคุยกันเลย!', en: 'No messages yet. Say hi!' },
   'chat.announce': { th: 'แลกเปลี่ยนสำเร็จ', en: 'Trade completed' },
   'chat.you': { th: 'คุณ', en: 'You' },
+  'shelf.inWonderbox': { th: 'ในกล่อง', en: 'In box' },
   'adm.title': { th: 'ข้อมูลเว็บไซต์ (แอดมิน)', en: 'Site Data (Admin)' },
   'adm.users': { th: 'ผู้ใช้', en: 'Users' },
   'adm.books': { th: 'หนังสือ', en: 'Books' },

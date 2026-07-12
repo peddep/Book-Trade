@@ -12,6 +12,7 @@ export interface ShelfBook {
   cover_url?: string | null;
   price?: number | null;
   available: number;
+  in_wonderbox?: number;
 }
 
 interface Props {
@@ -74,6 +75,13 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   {b.price != null && (
                     <span className="absolute bottom-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fbbf24' }}>
                       {b.price > 0 ? `฿${b.price}` : t('card.free')}
+                    </span>
+                  )}
+                  {/* In the Wonder Box: purple ✨ ribbon */}
+                  {!!b.in_wonderbox && (
+                    <span className="absolute top-1 left-1 z-10 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#ffffff', boxShadow: '0 1px 5px rgba(76,29,149,0.5)' }}>
+                      ✨ {t('shelf.inWonderbox')}
                     </span>
                   )}
                 </button>

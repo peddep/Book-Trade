@@ -40,7 +40,8 @@ export async function GET(req: NextRequest) {
 
   let sql = `
     SELECT b.*, u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade,
-      ${BUSY_EXPR} AS busy
+      ${BUSY_EXPR} AS busy,
+      EXISTS(SELECT 1 FROM wonder_box wb2 WHERE wb2.book_id = b.id AND wb2.status IN ('waiting','matched')) AS in_wonderbox
     FROM books b
     JOIN users u ON b.owner_id = u.id
     WHERE 1=1
