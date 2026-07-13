@@ -129,6 +129,8 @@ const STRINGS: Dict = {
   'irl.meetOn': { th: 'นัดเจอกันวันที่', en: 'Meet on' },
   'irl.otherTimes': { th: 'เวลาอื่นที่ว่างตรงกัน', en: 'Other times you both are free' },
   'irl.noOverlap': { th: 'ไม่มีเวลาตรงกัน — นัดหมายกันเอง', en: 'No shared time — arrange one together' },
+  'irl.reachOut': { th: 'ทักไปนัดเวลาได้ที่ {contact}', en: 'Message {contact} to arrange a time.' },
+  'irl.reachProfile': { th: 'ทัก {name} ที่โรงเรียนเพื่อนัดเวลา', en: 'Find {name} at school to arrange a time.' },
   'irl.bring': { th: 'สิ่งที่ต้องนำมา', en: 'What to bring' },
   'irl.give': { th: 'คุณให้', en: 'You give' },
   'irl.get': { th: 'คุณได้รับ', en: 'You get' },

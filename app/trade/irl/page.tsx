@@ -44,9 +44,11 @@ interface Trade {
   requester_name: string;
   requester_avatar: string;
   requester_availability?: string | null;
+  requester_contact?: string | null;
   owner_name: string;
   owner_avatar: string;
   owner_availability?: string | null;
+  owner_contact?: string | null;
   offered_title: string;
   offered_title_en?: string | null;
   offered_color: string;
@@ -183,6 +185,7 @@ export default function IrlTradePage() {
               const otherId = isRequester ? trade.owner_id : trade.requester_id;
               const myConfirm = isRequester ? trade.requester_confirm : trade.owner_confirm;
               const otherConfirm = isRequester ? trade.owner_confirm : trade.requester_confirm;
+              const otherContact = isRequester ? trade.owner_contact : trade.requester_contact;
               const shared = overlap(trade.requester_availability, trade.owner_availability);
               const meeting = nextMeeting(shared);
               const meetingText = meeting
@@ -191,14 +194,21 @@ export default function IrlTradePage() {
 
               return (
                 <div key={trade.id} className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-                  {/* Who */}
-                  <Link href={`/u/${otherId}`} className="inline-flex items-center gap-2 mb-4 px-2 py-1 rounded-full hover:opacity-80" style={{ background: '#f5f3ff', border: '1px solid #e9d5ff' }}>
-                    <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: otherAvatar }}>
-                      {otherName[0].toUpperCase()}
-                    </span>
-                    <span className="text-sm text-[#6b7280]">{t('irl.with')}</span>
-                    <span className="text-sm font-semibold text-[#2e1065]">{otherName}</span>
-                  </Link>
+                  {/* Who + how to reach them */}
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <Link href={`/u/${otherId}`} className="inline-flex items-center gap-2 px-2 py-1 rounded-full hover:opacity-80" style={{ background: '#f5f3ff', border: '1px solid #e9d5ff' }}>
+                      <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: otherAvatar }}>
+                        {otherName[0].toUpperCase()}
+                      </span>
+                      <span className="text-sm text-[#6b7280]">{t('irl.with')}</span>
+                      <span className="text-sm font-semibold text-[#2e1065]">{otherName}</span>
+                    </Link>
+                    {otherContact && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
+                        📱 {otherContact}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Books: give / get */}
                   <div className="flex items-center gap-3 mb-4">
@@ -229,7 +239,12 @@ export default function IrlTradePage() {
                           <p className="text-base font-bold text-white leading-tight mt-0.5">{meetingText}</p>
                         </div>
                       ) : (
-                        <p className="text-xs text-[#9ca3af] mb-3">{t('irl.noOverlap')}</p>
+                        <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
+                          <p className="text-xs font-semibold" style={{ color: '#b45309' }}>{t('irl.noOverlap')}</p>
+                          <p className="text-xs mt-1" style={{ color: '#b45309' }}>
+                            {otherContact ? t('irl.reachOut', { contact: otherContact }) : t('irl.reachProfile', { name: otherName })}
+                          </p>
+                        </div>
                       )}
                       <p className="text-sm font-semibold text-[#2e1065] mb-2">{t('irl.meetAt')}</p>
                       {shared.length > 1 && (
