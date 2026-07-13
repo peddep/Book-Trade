@@ -14,17 +14,47 @@ const OPTIONS = [
   { href: '/trade/friend', icon: '🔍', key: 'browse', color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' },
 ];
 
+// Red count bubble pinned to a corner of a button/banner.
+function Badge({ n }: { n: number }) {
+  if (n <= 0) return null;
+  return (
+    <span className="absolute -top-1.5 -right-1.5 z-10 min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center text-[11px] font-bold text-white animate-pulse"
+      style={{ background: '#ef4444', boxShadow: '0 1px 5px rgba(239,68,68,0.6)' }}>
+      {n}
+    </span>
+  );
+}
+
 export default function TradeHubPage() {
   const { t } = useI18n();
   const [totalTrades, setTotalTrades] = useState<number | null>(null);
+  const [awaitingConfirm, setAwaitingConfirm] = useState(0);
+  const [gifts, setGifts] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (!d.user) router.push('/login');
-    });
-    fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).then(d =>
-      setTotalTrades((d.trades ?? []).filter((x: any) => x.status === 'accepted').length)
+    let userId: number | null = null;
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.user) { router.push('/login'); return null; }
+        userId = d.user.id;
+        return fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] }));
+      })
+      .then(d => {
+        if (!d) return;
+        const all = d.trades ?? [];
+        setTotalTrades(all.filter((x: any) => x.status === 'accepted' || x.status === 'completed').length);
+        // Accepted trades where I haven't confirmed the meet-up yet.
+        setAwaitingConfirm(all.filter((x: any) => {
+          if (x.status !== 'accepted') return false;
+          const mine = x.requester_id === userId ? x.requester_confirm : x.owner_confirm;
+          return mine !== 'happened';
+        }).length);
+      });
+    // Gift boxes waiting to be opened in the Wonder Box.
+    fetch('/api/wonderbox').then(r => (r.ok ? r.json() : { deposits: [] })).then(d =>
+      setGifts((d.deposits ?? []).filter((x: any) => x.status === 'matched').length)
     );
   }, [router]);
 
@@ -34,18 +64,21 @@ export default function TradeHubPage() {
     <div className="flex flex-col gap-3">
       <ChatBox />
       {OPTIONS.map(o => (
-        <Link
-          key={o.key}
-          href={o.href}
-          className="flex items-center gap-4 px-6 py-5 rounded-full transition-transform hover:scale-[1.02]"
-          style={{ background: o.color, boxShadow: '0 4px 14px rgba(0,0,0,0.35)' }}
-        >
-          <span className="text-3xl w-10 text-center flex-shrink-0">{o.icon}</span>
-          <span className="flex-1">
-            <span className="block font-bold text-[#2e1065] text-lg leading-tight">{t(`hub.${o.key}`)}</span>
-            <span className="block text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.75)' }}>{t(`hub.${o.key}Desc`)}</span>
-          </span>
-        </Link>
+        <div key={o.key} className="relative">
+          <Badge n={o.key === 'wonderbox' ? gifts : 0} />
+          <Link
+            href={o.href}
+            className="flex items-center gap-4 px-6 py-5 rounded-full transition-transform hover:scale-[1.02]"
+            style={{ background: o.color, boxShadow: '0 4px 14px rgba(0,0,0,0.35)' }}
+          >
+            <span className="text-3xl w-10 text-center flex-shrink-0">{o.icon}</span>
+            <span className="flex-1">
+              <span className="block font-bold text-[#2e1065] text-lg leading-tight">{t(`hub.${o.key}`)}</span>
+              <span className="block text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.75)' }}>{t(`hub.${o.key}Desc`)}</span>
+            </span>
+            {o.key === 'wonderbox' && gifts > 0 && <span className="text-2xl flex-shrink-0">🎁</span>}
+          </Link>
+        </div>
       ))}
     </div>
   );
@@ -58,13 +91,16 @@ export default function TradeHubPage() {
 
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-[#2e1065]">{t('hub.title')}</h1>
-          <Link
-            href="/trade/irl"
-            className="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full transition-transform hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#ffffff' }}
-          >
-            🤝 {t('hub.irl')}
-          </Link>
+          <span className="relative inline-block">
+            <Badge n={awaitingConfirm} />
+            <Link
+              href="/trade/irl"
+              className="inline-block text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full transition-transform hover:scale-105"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#ffffff' }}
+            >
+              🤝 {t('hub.irl')}
+            </Link>
+          </span>
         </div>
 
         {/* Total trades counter (Pokémon HOME style) */}
