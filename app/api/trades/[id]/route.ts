@@ -45,6 +45,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     } else if (rConfirm === 'happened' && oConfirm === 'happened') {
       // Both confirmed → the trade is complete; announce it in the community chat.
       await db.execute({ sql: "UPDATE trades SET status = 'completed', updated_at = datetime('now') WHERE id = ?", args: [id] });
+      // The physical books changed hands, so swap owners in the app too and
+      // put both books back on the market on their new owners' shelves.
+      await db.execute({
+        sql: 'UPDATE books SET owner_id = ?, available = 1 WHERE id = ?',
+        args: [Number(trade.owner_id), Number(trade.offered_book_id)],
+      });
+      await db.execute({
+        sql: 'UPDATE books SET owner_id = ?, available = 1 WHERE id = ?',
+        args: [Number(trade.requester_id), Number(trade.wanted_book_id)],
+      });
       await announceTrade(Number(id));
     }
 
