@@ -88,6 +88,7 @@ export default function LoginPage() {
                 {t('login.joinLink')}
               </Link>
             </p>
+            <p className="text-center text-xs text-[#9ca3af]">{t('login.forgot')}</p>
           </form>
         </div>
       </main>

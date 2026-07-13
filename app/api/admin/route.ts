@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { ensureHubTables } from '@/lib/hub';
@@ -54,4 +56,25 @@ export async function GET() {
     wonderbox: wonderbox.rows,
     messages: messages.rows,
   });
+}
+
+// Admin actions. Currently: reset a user's password to a temporary one that
+// the admin hands to the student in person.
+export async function POST(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user || !isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const body = await req.json().catch(() => ({}));
+  if (body.action === 'reset_password' && body.user_id) {
+    const db = getDb();
+    const target = await db.execute({ sql: 'SELECT id, name FROM users WHERE id = ?', args: [Number(body.user_id)] });
+    if (!target.rows.length) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+
+    const tempPassword = crypto.randomBytes(4).toString('hex'); // 8 chars
+    const hash = await bcrypt.hash(tempPassword, 10);
+    await db.execute({ sql: 'UPDATE users SET password_hash = ? WHERE id = ?', args: [hash, Number(body.user_id)] });
+    return NextResponse.json({ ok: true, name: target.rows[0].name, password: tempPassword });
+  }
+
+  return NextResponse.json({ error: 'unknown_action' }, { status: 400 });
 }

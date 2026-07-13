@@ -224,6 +224,12 @@ export default function WonderBoxPage() {
             .wb-float {
               animation: wb-float-move 4s ease-in-out infinite;
             }
+            /* Hold still while the student is aiming/tapping */
+            .wb-float:hover,
+            .wb-float:active,
+            .wb-float:focus-within {
+              animation-play-state: paused;
+            }
             @keyframes wb-float-move {
               0%, 100% { transform: translateY(0); }
               50% { transform: translateY(-8px); }

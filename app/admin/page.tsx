@@ -35,7 +35,21 @@ export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null);
   const [denied, setDenied] = useState(false);
   const [tab, setTab] = useState<Tab>('users');
+  const [tempPw, setTempPw] = useState<{ name: string; password: string } | null>(null);
   const router = useRouter();
+
+  async function resetPassword(userId: unknown, name: unknown) {
+    if (!confirm(`${t('adm.reset')}: ${String(name)}?`)) return;
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset_password', user_id: userId }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setTempPw({ name: d.name, password: d.password });
+    }
+  }
 
   useEffect(() => {
     fetch('/api/admin').then(async r => {
@@ -95,6 +109,16 @@ export default function AdminPage() {
           ))}
         </div>
 
+        {/* Temporary password banner after a reset */}
+        {tempPw && (
+          <div className="mb-4 p-4 rounded-2xl flex items-center justify-between gap-3" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
+            <p className="text-sm font-semibold" style={{ color: '#b45309' }}>
+              {t('adm.tempPw', { name: tempPw.name })} <code className="px-2 py-0.5 rounded font-mono" style={{ background: '#ffffff' }}>{tempPw.password}</code>
+            </p>
+            <button onClick={() => setTempPw(null)} className="text-lg" style={{ color: '#b45309' }}>✕</button>
+          </div>
+        )}
+
         {/* Data table */}
         <div className="rounded-2xl overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
           <table className="w-full text-left text-xs">
@@ -103,6 +127,7 @@ export default function AdminPage() {
                 {cols.map(c => (
                   <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap" style={{ color: '#7c3aed' }}>{c}</th>
                 ))}
+                {tab === 'users' && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
@@ -113,10 +138,19 @@ export default function AdminPage() {
                       <span className="line-clamp-2 break-words">{r[c] == null ? '—' : String(r[c])}</span>
                     </td>
                   ))}
+                  {tab === 'users' && (
+                    <td className="px-3 py-2 align-top whitespace-nowrap">
+                      <button onClick={() => resetPassword(r.id, r.name)}
+                        className="px-2 py-1 rounded-lg font-semibold"
+                        style={{ background: '#fee2e2', color: '#ef4444' }}>
+                        🔑 {t('adm.reset')}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={cols.length} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
+                <tr><td colSpan={cols.length + (tab === 'users' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
               )}
             </tbody>
           </table>

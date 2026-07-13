@@ -12,6 +12,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  // When ALLOWED_EMAIL_DOMAIN is set (e.g. student.nssc.ac.th), only school
+  // emails may register.
+  const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;
+  if (allowedDomain && !String(email).toLowerCase().endsWith('@' + allowedDomain.toLowerCase())) {
+    return NextResponse.json({ error: 'email_domain', domain: allowedDomain }, { status: 400 });
+  }
+
   // Availability is a list of "row-col" slot keys (e.g. "noon-0"); store as JSON.
   const availabilityJson = Array.isArray(availability) ? JSON.stringify(availability) : null;
   const classNo = class_no ? String(class_no) : null;

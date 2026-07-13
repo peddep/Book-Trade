@@ -24,7 +24,7 @@ export default function RoomPage() {
   const [tradesMade, setTradesMade] = useState(0);
   const [booksListed, setBooksListed] = useState(0);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: '', grade: '', class_no: '', avatar_color: '#6366f1' });
+  const [form, setForm] = useState({ name: '', grade: '', class_no: '', avatar_color: '#6366f1', new_password: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const router = useRouter();
@@ -33,13 +33,14 @@ export default function RoomPage() {
 
   function openEdit() {
     if (!user) return;
-    setForm({ name: user.name, grade: user.grade ?? '', class_no: user.class_no ?? '', avatar_color: user.avatar_color });
+    setForm({ name: user.name, grade: user.grade ?? '', class_no: user.class_no ?? '', avatar_color: user.avatar_color, new_password: '' });
     setFormError('');
     setEditing(true);
   }
 
   async function saveProfile() {
     if (!form.name.trim()) { setFormError(t('profile2.nameRequired')); return; }
+    if (form.new_password && form.new_password.length < 6) { setFormError(t('reg.passwordHint')); return; }
     setSaving(true);
     const res = await fetch('/api/auth/me', {
       method: 'PATCH',
@@ -253,6 +254,11 @@ export default function RoomPage() {
                   </select>
                 </div>
               </div>
+
+              <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('profile2.newPassword')}</label>
+              <input type="password" value={form.new_password} minLength={6} autoComplete="new-password"
+                onChange={e => setForm(f => ({ ...f, new_password: e.target.value }))}
+                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }} />
 
               <label className="block text-xs font-semibold text-[#6b7280] mb-2">{t('profile2.avatarColor')}</label>
               <div className="flex flex-wrap gap-2 mb-4">

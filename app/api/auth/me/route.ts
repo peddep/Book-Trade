@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import { getDb, ensureUserColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin, signSession } from '@/lib/auth';
 
@@ -43,6 +44,12 @@ export async function PATCH(req: NextRequest) {
   if ('contact' in body) {
     const contact = typeof body.contact === 'string' && body.contact.trim() ? body.contact.trim().slice(0, 100) : null;
     await db.execute({ sql: 'UPDATE users SET contact = ? WHERE id = ?', args: [contact, user.id] });
+  }
+  // Optional password change.
+  if (typeof body.new_password === 'string' && body.new_password) {
+    if (body.new_password.length < 6) return NextResponse.json({ error: 'password_short' }, { status: 400 });
+    const hash = await bcrypt.hash(body.new_password, 10);
+    await db.execute({ sql: 'UPDATE users SET password_hash = ? WHERE id = ?', args: [hash, user.id] });
   }
 
   // Re-issue the cookie so the session reflects the new profile.

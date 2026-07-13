@@ -44,7 +44,7 @@ export default function RegisterPage() {
         router.push('/trade');
         return;
       }
-      setError(data.error ?? t('reg.failed', { status: res.status }));
+      setError(data.error === 'email_domain' ? t('reg.emailDomain', { domain: data.domain }) : (data.error ?? t('reg.failed', { status: res.status })));
     } catch {
       setError(t('common.unreachable'));
     } finally {

@@ -19,8 +19,10 @@ export default function ChatBox() {
   const [me, setMe] = useState<number | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [unread, setUnread] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const lastIdRef = useRef(0);
+  const atBottomRef = useRef(true);
 
   const load = useCallback(async () => {
     const res = await fetch('/api/chat');
@@ -36,14 +38,32 @@ export default function ChatBox() {
     return () => clearInterval(iv);
   }, [load]);
 
-  // Auto-scroll to the bottom when new messages arrive.
+  // Auto-scroll on new messages only when already at the bottom; otherwise
+  // show an unread pill instead of yanking the reader down.
   useEffect(() => {
     const last = messages[messages.length - 1]?.id ?? 0;
     if (last !== lastIdRef.current) {
+      const first = lastIdRef.current === 0;
       lastIdRef.current = last;
-      listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+      if (first || atBottomRef.current) {
+        listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: first ? 'auto' : 'smooth' });
+      } else {
+        setUnread(true);
+      }
     }
   }, [messages]);
+
+  function onScroll() {
+    const el = listRef.current;
+    if (!el) return;
+    atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    if (atBottomRef.current) setUnread(false);
+  }
+
+  function jumpToLatest() {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    setUnread(false);
+  }
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -61,13 +81,20 @@ export default function ChatBox() {
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: '#ffffff', border: '1px solid #e9d5ff', height: 340 }}>
+    <div className="relative rounded-2xl overflow-hidden flex flex-col" style={{ background: '#ffffff', border: '1px solid #e9d5ff', height: 340 }}>
+      {unread && (
+        <button onClick={jumpToLatest}
+          className="absolute left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-lg animate-bounce"
+          style={{ bottom: 70, background: '#7c3aed' }}>
+          ⬇ {t('chat.new')}
+        </button>
+      )}
       <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
         <span className="text-base">💬</span>
         <p className="text-sm font-bold text-white">{t('chat.title')}</p>
       </div>
 
-      <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2" style={{ background: '#faf5ff' }}>
+      <div ref={listRef} onScroll={onScroll} className="relative flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2" style={{ background: '#faf5ff' }}>
         {messages.length === 0 ? (
           <p className="text-xs text-[#9ca3af] text-center my-auto">{t('chat.empty')}</p>
         ) : (
