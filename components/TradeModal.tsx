@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import BookShelf, { type ShelfBook } from '@/components/BookShelf';
 import { useI18n } from '@/lib/i18n';
+import { MAX_PRICE_DIFF, priceDiffOk } from '@/lib/price';
 
 interface Book {
   id: number;
@@ -96,18 +97,33 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-[#4b5563] mb-2">{t('modal.offerOne')}</p>
-          {myBooks.length === 0 ? (
-            <p className="text-sm text-[#6b7280]">{t('modal.noBooks')}</p>
-          ) : (
-            <BookShelf
-              books={myBooks}
-              selectMode
-              selectedId={selectedBook}
-              onSelect={setSelectedBook}
-              maxHeight="45vh"
-            />
-          )}
+          <p className="text-sm font-semibold text-[#4b5563] mb-1">{t('modal.offerOne')}</p>
+          {(() => {
+            const target = Number(targetBook.price) || 0;
+            const min = Math.max(0, target - MAX_PRICE_DIFF);
+            const max = target + MAX_PRICE_DIFF;
+            const blocked = new Set(myBooks.filter(b => !priceDiffOk(b.price, targetBook.price)).map(b => b.id));
+            return (
+              <>
+                <p className="text-xs mb-2" style={{ color: '#7c3aed' }}>{t('modal.priceRange', { min, max })}</p>
+                {myBooks.length === 0 ? (
+                  <p className="text-sm text-[#6b7280]">{t('modal.noBooks')}</p>
+                ) : blocked.size === myBooks.length ? (
+                  <p className="text-sm font-semibold" style={{ color: '#ef4444' }}>{t('modal.noneInRange')}</p>
+                ) : (
+                  <BookShelf
+                    books={myBooks}
+                    selectMode
+                    selectedId={selectedBook}
+                    onSelect={setSelectedBook}
+                    disabledIds={blocked}
+                    disabledLabel={t('modal.priceFar')}
+                    maxHeight="45vh"
+                  />
+                )}
+              </>
+            );
+          })()}
         </div>
 
         <div>

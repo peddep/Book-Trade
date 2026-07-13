@@ -8,12 +8,9 @@ export const PLAN = {
   roomMax: 20,
 };
 
-// Two books can only be traded when their prices are within this many baht.
-// A book with no price counts as 0.
-export const MAX_PRICE_DIFF = 100;
-export function priceDiffOk(a?: number | null, b?: number | null): boolean {
-  return Math.abs((Number(a) || 0) - (Number(b) || 0)) <= MAX_PRICE_DIFF;
-}
+// Price rule lives in lib/price.ts (client-safe); re-exported for server callers.
+import { priceDiffOk } from './price';
+export { MAX_PRICE_DIFF, priceDiffOk } from './price';
 
 let ensured = false;
 

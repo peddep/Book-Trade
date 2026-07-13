@@ -26,12 +26,16 @@ interface Props {
   selectMode?: boolean;
   selectedId?: number | null;
   onSelect?: (id: number) => void;
+  // Books that cannot be selected (greyed out, e.g. price too far apart).
+  disabledIds?: Set<number>;
+  // Short label shown on disabled covers explaining why.
+  disabledLabel?: string;
 }
 
 // A 3-column scrollable shelf. Each item looks like a book (portrait cover with
 // a spine). Tapping a cover reveals its title and edit actions below it — or, in
 // selectMode, simply selects the book.
-export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, onChangeCover, maxHeight = '28rem', selectMode = false, selectedId = null, onSelect }: Props) {
+export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, onChangeCover, maxHeight = '28rem', selectMode = false, selectedId = null, onSelect, disabledIds, disabledLabel }: Props) {
   const { t, bookTitle } = useI18n();
   const [openId, setOpenId] = useState<number | null>(null);
 
@@ -45,18 +49,22 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
         {books.map(b => {
           const open = openId === b.id;
           const selected = selectMode && selectedId === b.id;
+          const disabled = selectMode && !!disabledIds?.has(b.id);
           return (
             <div key={b.id} className="flex flex-col relative">
               {/* Book cover (relative wrapper so the star button isn't nested in a button) */}
               <div className="relative w-full">
                 <button
-                  onClick={() => (selectMode ? onSelect?.(b.id) : setOpenId(open ? null : b.id))}
+                  onClick={() => (disabled ? undefined : selectMode ? onSelect?.(b.id) : setOpenId(open ? null : b.id))}
+                  disabled={disabled}
                   className="relative block w-full rounded-r-md rounded-l-sm overflow-hidden transition-transform hover:-translate-y-0.5"
                   style={{
                     aspectRatio: '2 / 3',
                     background: b.cover_color,
                     boxShadow: (open || selected) ? '0 0 0 2px #8b5cf6, 0 6px 14px rgba(0,0,0,0.4)' : '0 4px 10px rgba(0,0,0,0.35)',
-                    opacity: b.available ? 1 : 0.55,
+                    opacity: disabled ? 0.35 : b.available ? 1 : 0.55,
+                    filter: disabled ? 'grayscale(0.8)' : undefined,
+                    cursor: disabled ? 'not-allowed' : 'pointer',
                   }}
                 >
                   {b.cover_url ? (
@@ -104,6 +112,12 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                 )}
                 {selected && (
                   <span className="absolute top-1 right-1 z-10 rounded-full flex items-center justify-center text-white text-[13px]" style={{ width: 22, height: 22, background: '#8b5cf6' }}>✓</span>
+                )}
+                {disabled && disabledLabel && (
+                  <span className="absolute inset-x-1 top-1/2 -translate-y-1/2 z-10 text-center text-[9px] font-bold px-1 py-0.5 rounded-md"
+                    style={{ background: 'rgba(239,68,68,0.9)', color: '#ffffff' }}>
+                    {disabledLabel}
+                  </span>
                 )}
               </div>
 
