@@ -2,6 +2,47 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables } from '@/lib/hub';
+import { catalogTitleParts } from '@/lib/books-catalog';
+import type { Client } from '@libsql/client';
+
+// Looks up the author for a title: harvested Thai catalog → books already on
+// the site → the built-in bilingual catalog → a quick Google Books query.
+// Returns '' when nothing matches (the admin can fill it in later).
+async function resolveAuthor(db: Client, title: string): Promise<string> {
+  try {
+    const r = await db.execute({
+      sql: "SELECT author FROM catalog_books WHERE title = ? AND author IS NOT NULL AND author != '' LIMIT 1",
+      args: [title],
+    });
+    if (r.rows[0]?.author) return String(r.rows[0].author);
+  } catch { /* catalog table may not exist yet */ }
+  try {
+    const r = await db.execute({
+      sql: "SELECT author FROM books WHERE title = ? AND author != '' LIMIT 1",
+      args: [title],
+    });
+    if (r.rows[0]?.author) return String(r.rows[0].author);
+  } catch { /* ignore */ }
+  const parts = catalogTitleParts(title);
+  if (parts?.author) return parts.author;
+  try {
+    const params = new URLSearchParams({
+      q: `intitle:"${title}"`,
+      maxResults: '1',
+      printType: 'books',
+      fields: 'items(volumeInfo(title,authors))',
+    });
+    const key = process.env.GOOGLE_BOOKS_API_KEY;
+    if (key) params.set('key', key);
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${params}`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const d = await res.json();
+      const a = d.items?.[0]?.volumeInfo?.authors?.[0];
+      if (typeof a === 'string' && a) return a;
+    }
+  } catch { /* offline / quota — leave blank */ }
+  return '';
+}
 
 // A book is "busy" when it's committed to Wonder Box, GTS, an open room, or a
 // pending direct offer — such books should not be offered again elsewhere.
@@ -84,7 +125,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { title, title_en, author, subject, grade_level, condition, description, cover_url, price } = await req.json();
-  if (!title || !author) return NextResponse.json({ error: 'Title and author required' }, { status: 400 });
+  if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 });
 
   // Price is required when adding a book.
   const priceNum = price !== undefined && price !== null && price !== '' && !isNaN(Number(price)) && Number(price) >= 0 ? Number(price) : null;
@@ -93,12 +134,15 @@ export async function POST(req: NextRequest) {
   const color = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)];
   const db = getDb();
   await ensureBookColumns();
+  // Author is filled automatically: from the form autofill if the title matched
+  // a suggestion, otherwise looked up here; the admin can correct it later.
+  const authorFinal = typeof author === 'string' && author.trim() ? author.trim() : await resolveAuthor(db, String(title));
   // Cover is the student's uploaded photo (or none).
   const coverUrl = sanitizeCover(cover_url);
   const titleEn = typeof title_en === 'string' && title_en.trim() ? title_en.trim() : null;
   const result = await db.execute({
     sql: 'INSERT INTO books (owner_id, title, title_en, price, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    args: [user.id, title, titleEn, priceNum, author, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
+    args: [user.id, title, titleEn, priceNum, authorFinal, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
   });
 
   const book = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [Number(result.lastInsertRowid)] });

@@ -44,6 +44,17 @@ export default function AdminPage() {
     if (r.ok) setData(await r.json());
   }
 
+  async function editAuthor(bookId: unknown, current: unknown) {
+    const author = prompt(t('adm.editAuthor'), typeof current === 'string' ? current : '');
+    if (author == null) return;
+    const res = await fetch(`/api/books/${bookId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author }),
+    });
+    if (res.ok) refresh();
+  }
+
   async function uploadCover(bookId: unknown, file: File | undefined) {
     if (!file) return;
     const cover = await fileToCoverDataUrl(file);
@@ -171,6 +182,11 @@ export default function AdminPage() {
                           <input type="file" accept="image/*" className="hidden"
                             onChange={e => uploadCover(r.id, e.target.files?.[0])} />
                         </label>
+                        <button onClick={() => editAuthor(r.id, r.author)}
+                          className="px-2 py-1 rounded-lg font-semibold"
+                          style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                          ✏️ {t('adm.editAuthor')}
+                        </button>
                       </div>
                     </td>
                   )}

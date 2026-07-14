@@ -183,19 +183,13 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleTh')} *</label>
-          <TitleInput value={form.title} onChange={setTitle} placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
+          <TitleInput value={form.title} onChange={setTitle} onAuthorFound={a => setForm(prev => ({ ...prev, author: a }))} placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
         </div>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleEn')}</label>
           <input value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })}
             className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fTitleEnPlaceholder')} />
-        </div>
-        <div>
-          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fAuthor')} *</label>
-          <input required value={form.author} onChange={e => setForm({ ...form, author: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-            placeholder={t('profile.fAuthorPlaceholder')} />
         </div>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fSubject')}</label>

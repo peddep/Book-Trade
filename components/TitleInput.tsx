@@ -8,6 +8,8 @@ const TITLE_SUGGESTIONS = titleSuggestions();
 interface Props {
   value: string;
   onChange: (title: string) => void;
+  // Called when the typed/picked title matches a suggestion that has an author.
+  onAuthorFound?: (author: string) => void;
   placeholder?: string;
   listId: string;
   required?: boolean;
@@ -15,7 +17,7 @@ interface Props {
 
 // Title input with the same autocomplete as the Add Book form: suggestions
 // from the built-in bilingual catalog plus live results from /api/book-search.
-export default function TitleInput({ value, onChange, placeholder, listId, required }: Props) {
+export default function TitleInput({ value, onChange, onAuthorFound, placeholder, listId, required }: Props) {
   const [remote, setRemote] = useState<{ title: string; author: string }[]>([]);
 
   useEffect(() => {
@@ -58,7 +60,11 @@ export default function TitleInput({ value, onChange, placeholder, listId, requi
         autoComplete="off"
         required={required}
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={e => {
+          onChange(e.target.value);
+          const hit = remote.find(b => b.title === e.target.value);
+          if (hit?.author) onAuthorFound?.(hit.author);
+        }}
         placeholder={placeholder}
         className="w-full p-2.5 rounded-xl text-sm"
         style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
