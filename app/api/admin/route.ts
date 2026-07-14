@@ -76,5 +76,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, name: target.rows[0].name, password: tempPassword });
   }
 
+  // Bulk-add titles to the suggestion catalog. One book per line, optionally
+  // "title | author" (or comma-separated). Duplicates are ignored.
+  if (body.action === 'add_catalog' && typeof body.lines === 'string') {
+    const db = getDb();
+    await db.execute(`CREATE TABLE IF NOT EXISTS catalog_books (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL UNIQUE,
+      author TEXT,
+      publisher TEXT,
+      source TEXT DEFAULT 'harvest',
+      created_at TEXT DEFAULT (datetime('now'))
+    )`);
+
+    let inserted = 0;
+    let skipped = 0;
+    const lines = body.lines.split('\n').map((l: string) => l.trim()).filter(Boolean).slice(0, 500);
+    for (const line of lines) {
+      const sep = line.includes('|') ? '|' : line.includes(',') ? ',' : null;
+      const [rawTitle, rawAuthor] = sep ? [line.slice(0, line.indexOf(sep)), line.slice(line.indexOf(sep) + 1)] : [line, ''];
+      const title = rawTitle.trim();
+      const author = rawAuthor.trim() || null;
+      if (!title || title.length < 2) { skipped++; continue; }
+      const r = await db.execute({
+        sql: "INSERT OR IGNORE INTO catalog_books (title, author, source) VALUES (?, ?, 'admin')",
+        args: [title, author],
+      });
+      if (Number(r.rowsAffected) > 0) inserted++; else skipped++;
+    }
+    return NextResponse.json({ ok: true, inserted, skipped });
+  }
+
   return NextResponse.json({ error: 'unknown_action' }, { status: 400 });
 }

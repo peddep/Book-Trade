@@ -37,7 +37,27 @@ export default function AdminPage() {
   const [denied, setDenied] = useState(false);
   const [tab, setTab] = useState<Tab>('users');
   const [tempPw, setTempPw] = useState<{ name: string; password: string } | null>(null);
+  const [catalogLines, setCatalogLines] = useState('');
+  const [catalogResult, setCatalogResult] = useState('');
+  const [catalogBusy, setCatalogBusy] = useState(false);
   const router = useRouter();
+
+  async function addToCatalog() {
+    if (!catalogLines.trim() || catalogBusy) return;
+    setCatalogBusy(true);
+    setCatalogResult('');
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_catalog', lines: catalogLines }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setCatalogResult(t('adm.catalogAdded', { n: d.inserted, skipped: d.skipped }));
+      setCatalogLines('');
+    }
+    setCatalogBusy(false);
+  }
 
   async function refresh() {
     const r = await fetch('/api/admin');
@@ -136,6 +156,30 @@ export default function AdminPage() {
             </button>
           ))}
         </div>
+
+        {/* Add titles to the suggestion catalog (e.g. school textbooks) */}
+        <details className="mb-6 rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+          <summary className="px-4 py-3 cursor-pointer text-sm font-bold text-[#2e1065]">📚 {t('adm.catalogTitle')}</summary>
+          <div className="px-4 pb-4">
+            <p className="text-xs text-[#6b7280] mb-2">{t('adm.catalogHint')}</p>
+            <textarea
+              value={catalogLines}
+              onChange={e => setCatalogLines(e.target.value)}
+              rows={6}
+              placeholder={'คณิตศาสตร์พื้นฐาน ม.4 เล่ม 1 | สสวท.\nภาษาไทย วรรณคดีวิจักษ์ ม.5\nAccess M.3 Student Book | Aksorn'}
+              className="w-full p-3 rounded-xl text-sm font-mono"
+              style={{ background: '#faf5ff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+            />
+            <div className="flex items-center gap-3 mt-2">
+              <button onClick={addToCatalog} disabled={catalogBusy || !catalogLines.trim()}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                {t('adm.catalogAdd')}
+              </button>
+              {catalogResult && <p className="text-sm font-semibold" style={{ color: '#10b981' }}>{catalogResult}</p>}
+            </div>
+          </div>
+        </details>
 
         {/* Temporary password banner after a reset */}
         {tempPw && (
