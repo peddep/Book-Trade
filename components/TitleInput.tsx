@@ -73,9 +73,12 @@ export default function TitleInput({ value, onChange, onAuthorFound, placeholder
       seen.add(k);
       options.push(s);
     }
-    // Live results from our DB + external APIs.
+    // Live results from our DB + external APIs — Thai-script titles only, so
+    // English-main titles never appear as suggestions.
+    const THAI_RE = /[฀-๿]/;
     for (const b of remote) {
       if (options.length >= 8) break;
+      if (!THAI_RE.test(b.title)) continue;
       const k = b.title.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
