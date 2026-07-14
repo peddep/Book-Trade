@@ -24,7 +24,7 @@ export async function GET() {
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
                 FROM users ORDER BY id`),
     db.execute(`SELECT b.id, b.title, b.title_en, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
-                  u.name AS owner_name
+                  b.cover_url, u.name AS owner_name
                 FROM books b JOIN users u ON b.owner_id = u.id ORDER BY b.id DESC LIMIT 200`),
     db.execute(`SELECT t.id, t.status, t.message, t.created_at, t.updated_at,
                   ru.name AS requester_name, ou.name AS owner_name,

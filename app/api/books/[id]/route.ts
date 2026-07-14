@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isAdmin } from '@/lib/auth';
 
 const MAX_COVER_LEN = 400_000;
 function sanitizeCover(cover: unknown): string | null {
@@ -34,7 +34,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const found = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [id] });
   const book = found.rows[0] as any;
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (Number(book.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // The owner can edit their book; the admin may too (e.g. adding a missing cover).
+  if (Number(book.owner_id) !== user.id && !isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
 

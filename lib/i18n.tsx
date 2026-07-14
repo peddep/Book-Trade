@@ -303,6 +303,8 @@ const STRINGS: Dict = {
   'profile2.newPassword': { th: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)', en: 'New password (leave blank to keep)' },
   'adm.reset': { th: 'รีเซ็ตรหัสผ่าน', en: 'Reset password' },
   'adm.tempPw': { th: 'รหัสผ่านชั่วคราวของ {name}:', en: 'Temporary password for {name}:' },
+  'adm.addCover': { th: 'เพิ่มปก', en: 'Add cover' },
+  'adm.changeCover': { th: 'เปลี่ยนปก', en: 'Change cover' },
   'shelf.inWonderbox': { th: 'ในกล่อง', en: 'In box' },
   'modal.priceRange': { th: 'แลกได้เฉพาะหนังสือราคา ฿{min}–฿{max} (ต่างกันไม่เกิน ฿100)', en: 'You can offer books priced ฿{min}–฿{max} (within ฿100).' },
   'modal.priceFar': { th: 'ราคาต่างเกิน', en: 'Price gap' },

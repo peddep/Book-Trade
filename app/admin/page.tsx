@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
+import { fileToCoverDataUrl } from '@/lib/image';
 
 type Row = Record<string, unknown>;
 
@@ -37,6 +38,22 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('users');
   const [tempPw, setTempPw] = useState<{ name: string; password: string } | null>(null);
   const router = useRouter();
+
+  async function refresh() {
+    const r = await fetch('/api/admin');
+    if (r.ok) setData(await r.json());
+  }
+
+  async function uploadCover(bookId: unknown, file: File | undefined) {
+    if (!file) return;
+    const cover = await fileToCoverDataUrl(file);
+    const res = await fetch(`/api/books/${bookId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cover_url: cover }),
+    });
+    if (res.ok) refresh();
+  }
 
   async function resetPassword(userId: unknown, name: unknown) {
     if (!confirm(`${t('adm.reset')}: ${String(name)}?`)) return;
@@ -127,6 +144,7 @@ export default function AdminPage() {
                 {cols.map(c => (
                   <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap" style={{ color: '#7c3aed' }}>{c}</th>
                 ))}
+                {tab === 'books' && <th className="px-3 py-2 font-semibold" style={{ color: '#7c3aed' }}>cover</th>}
                 {tab === 'users' && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
@@ -138,6 +156,24 @@ export default function AdminPage() {
                       <span className="line-clamp-2 break-words">{r[c] == null ? '—' : String(r[c])}</span>
                     </td>
                   ))}
+                  {tab === 'books' && (
+                    <td className="px-3 py-2 align-top whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {typeof r.cover_url === 'string' && r.cover_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={r.cover_url} alt="" className="rounded object-cover" style={{ width: 28, height: 42 }} />
+                        ) : (
+                          <span className="text-[#d1d5db]">—</span>
+                        )}
+                        <label className="px-2 py-1 rounded-lg font-semibold cursor-pointer"
+                          style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                          🖼 {r.cover_url ? t('adm.changeCover') : t('adm.addCover')}
+                          <input type="file" accept="image/*" className="hidden"
+                            onChange={e => uploadCover(r.id, e.target.files?.[0])} />
+                        </label>
+                      </div>
+                    </td>
+                  )}
                   {tab === 'users' && (
                     <td className="px-3 py-2 align-top whitespace-nowrap">
                       <button onClick={() => resetPassword(r.id, r.name)}
@@ -150,7 +186,7 @@ export default function AdminPage() {
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={cols.length + (tab === 'users' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
+                <tr><td colSpan={cols.length + (tab === 'users' || tab === 'books' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
               )}
             </tbody>
           </table>
