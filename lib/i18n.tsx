@@ -207,7 +207,7 @@ const STRINGS: Dict = {
   'sort.recent': { th: 'ล่าสุด', en: 'Recent' },
   'sort.price': { th: 'ราคา', en: 'Price' },
   'sort.alpha': { th: 'ตัวอักษร', en: 'A–Z' },
-  'profile.fTitleTh': { th: 'ชื่อหนังสือ (ภาษาไทย)', en: 'Title (Thai)' },
+  'profile.fTitleTh': { th: 'ชื่อหนังสือ', en: 'Title' },
   'profile.fTitleEn': { th: 'ชื่อหนังสือ (ภาษาอังกฤษ, ไม่บังคับ)', en: 'Title (English, optional)' },
   'profile.fTitleEnPlaceholder': { th: 'เช่น Harry Potter', en: 'e.g. Harry Potter' },
   'profile.fPrice': { th: 'ราคา (บาท)', en: 'Price (THB)' },

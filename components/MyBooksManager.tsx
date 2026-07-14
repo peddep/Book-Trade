@@ -139,15 +139,16 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     }
   }
 
-  // Thai/primary title box. When it matches a known book, auto-fill the author
-  // and (if empty) the English title from the catalog.
+  // Single title box (Thai-first). When the input matches a known book —
+  // including its English name — swap in the Thai main title and keep the
+  // English name + author behind the scenes.
   function setTitle(title: string) {
     const parts = catalogTitleParts(title);
     setForm(prev => ({
       ...prev,
-      title,
+      title: parts?.th ?? title,
       author: parts?.author ?? prev.author,
-      title_en: prev.title_en || parts?.en || '',
+      title_en: parts?.en ?? prev.title_en,
     }));
   }
 
@@ -184,12 +185,6 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleTh')} *</label>
           <TitleInput value={form.title} onChange={setTitle} onAuthorFound={a => setForm(prev => ({ ...prev, author: a }))} placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
-        </div>
-        <div>
-          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleEn')}</label>
-          <input value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-            placeholder={t('profile.fTitleEnPlaceholder')} />
         </div>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fSubject')}</label>

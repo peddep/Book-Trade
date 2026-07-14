@@ -208,15 +208,19 @@ export const BOOK_CATALOG: CatalogBook[] = [
   { author: 'Michael Ende', titles: ['The Neverending Story', 'จินตนาการไม่รู้จบ'] },
 ];
 
-// A flat list of suggestion options for the <datalist>. Each title variant is
-// its own option; the label shows the equivalent name(s) in the other language.
+const THAI_TITLE_RE = /[฀-๿]/;
+
+// Suggestion options for the <datalist>. Thai-first: the option value is the
+// Thai (main) title with the English name as the label — so typing the English
+// name surfaces the Thai title (browsers match datalist labels too). Books
+// without a Thai title are skipped entirely.
 export function titleSuggestions(): { value: string; label?: string }[] {
   const out: { value: string; label?: string }[] = [];
   for (const book of BOOK_CATALOG) {
-    for (const title of book.titles) {
-      const others = book.titles.filter(x => x !== title);
-      out.push({ value: title, label: others.length ? others.join(' / ') : undefined });
-    }
+    const th = book.titles.find(t => THAI_TITLE_RE.test(t));
+    if (!th) continue; // English-only mains are not suggested
+    const en = book.titles.find(t => !THAI_TITLE_RE.test(t));
+    out.push({ value: th, label: en ?? undefined });
   }
   return out;
 }
