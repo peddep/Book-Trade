@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables, isBanned } from '@/lib/hub';
+import { tooManyRecent } from '@/lib/ratelimit';
 import { catalogTitleParts } from '@/lib/books-catalog';
 import type { Client } from '@libsql/client';
 
@@ -62,7 +63,7 @@ const MAX_COVER_LEN = 400_000;
 // Accepts only inline image data URLs (uploaded photos), rejects anything else.
 function sanitizeCover(cover: unknown): string | null {
   if (typeof cover !== 'string' || !cover) return null;
-  if (!cover.startsWith('data:image/')) return null;
+  if (!cover.startsWith('data:image/') || cover.startsWith('data:image/svg')) return null;
   if (cover.length > MAX_COVER_LEN) return null;
   return cover;
 }
@@ -124,6 +125,10 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
+  // Anti-flood: at most 20 new books per minute.
+  if (await tooManyRecent('books', 'owner_id', user.id, 60, 20)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
 
   const { title, title_en, author, subject, grade_level, condition, description, cover_url, price } = await req.json();
   if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 });

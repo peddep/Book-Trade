@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables } from '@/lib/hub';
+import { tooManyRecent } from '@/lib/ratelimit';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +17,10 @@ export async function POST(req: NextRequest) {
   const targetId = Number(body.target_id);
   const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 500) : '';
   if (!type || !targetId) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
+  // Anti-abuse: at most 10 reports per minute.
+  if (await tooManyRecent('reports', 'reporter_id', user.id, 60, 10)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
 
   const db = getDb();
   // One open report per reporter+target keeps the queue clean.

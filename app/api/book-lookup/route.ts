@@ -18,7 +18,7 @@ async function fetchCoverAsDataUrl(url: string): Promise<string | null> {
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
     if (!res.ok) return null;
     const type = res.headers.get('content-type') ?? 'image/jpeg';
-    if (!type.startsWith('image/')) return null;
+    if (!type.startsWith('image/') || type.includes('svg')) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.length === 0 || buf.length > MAX_COVER_BYTES) return null;
     return `data:${type};base64,${buf.toString('base64')}`;

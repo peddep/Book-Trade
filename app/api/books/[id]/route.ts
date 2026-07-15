@@ -5,7 +5,7 @@ import { getCurrentUser, isAdmin } from '@/lib/auth';
 const MAX_COVER_LEN = 400_000;
 function sanitizeCover(cover: unknown): string | null {
   if (typeof cover !== 'string' || !cover) return null;
-  if (!cover.startsWith('data:image/')) return null;
+  if (!cover.startsWith('data:image/') || cover.startsWith('data:image/svg')) return null;
   if (cover.length > MAX_COVER_LEN) return null;
   return cover;
 }

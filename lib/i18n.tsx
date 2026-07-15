@@ -331,6 +331,7 @@ const STRINGS: Dict = {
   'report.cancel': { th: 'ยกเลิก', en: 'Cancel' },
   'report.thanks': { th: 'ขอบคุณ เราได้รับรายงานแล้ว', en: 'Thanks — your report was sent.' },
   'login.banned': { th: 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อแอดมิน', en: 'This account has been suspended. Please contact the admin.' },
+  'err.rateLimited': { th: 'ทำรายการเร็วเกินไป กรุณารอสักครู่แล้วลองใหม่', en: 'Too many actions — please wait a moment and try again.' },
   'shelf.inWonderbox': { th: 'ในกล่อง', en: 'In box' },
   'modal.priceRange': { th: 'แลกได้เฉพาะหนังสือราคา ฿{min}–฿{max} (ต่างกันไม่เกิน ฿100)', en: 'You can offer books priced ฿{min}–฿{max} (within ฿100).' },
   'modal.priceFar': { th: 'ราคาต่างเกิน', en: 'Price gap' },

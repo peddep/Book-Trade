@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getDb, ensureUserColumns } from '@/lib/db';
 import { signSession } from '@/lib/auth';
+import { ipRateLimit } from '@/lib/ratelimit';
 
 const AVATAR_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
 export async function POST(req: NextRequest) {
+  // Anti-abuse: at most 5 signups per 10 minutes from one IP.
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (ipRateLimit(`register:${ip}`, 5, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
+
   const { name, email, password, grade, class_no, contact, real_name, availability } = await req.json();
 
   if (!name || !email || !password) {

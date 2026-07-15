@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { priceDiffOk, isBookBusy, ensureHubTables, isBanned } from '@/lib/hub';
+import { tooManyRecent } from '@/lib/ratelimit';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -36,6 +37,10 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
+  // Anti-flood: at most 15 trade offers per minute.
+  if (await tooManyRecent('trades', 'requester_id', user.id, 60, 15)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
 
   const { offered_book_id, wanted_book_id, message } = await req.json();
   if (!offered_book_id || !wanted_book_id) {

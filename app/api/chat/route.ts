@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables, isBanned } from '@/lib/hub';
+import { tooManyRecent } from '@/lib/ratelimit';
 
 export const runtime = 'nodejs';
 
@@ -31,6 +32,11 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await ensureHubTables();
   if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
+
+  // Anti-flood: at most 5 messages per 10 seconds.
+  if (await tooManyRecent('messages', 'user_id', user.id, 10, 5)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
 
   const body = await req.json().catch(() => ({}));
   const text = typeof body.body === 'string' ? body.body.trim().slice(0, MAX_LEN) : '';
