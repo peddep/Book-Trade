@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import BookShelf from '@/components/BookShelf';
 import TitleInput from '@/components/TitleInput';
+import BarcodeScanner from '@/components/BarcodeScanner';
 import { useI18n } from '@/lib/i18n';
 import { catalogTitleParts } from '@/lib/books-catalog';
 import { fileToCoverDataUrl } from '@/lib/image';
@@ -42,6 +43,56 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   const [form, setForm] = useState(EMPTY);
   const [submitting, setSubmitting] = useState(false);
   const [sort, setSort] = useState<SortKey>('recent');
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState('');
+
+  // Barcode scanned → look the ISBN up and fill title/author/cover.
+  async function onIsbn(isbn: string) {
+    setScanning(false);
+    setScanMsg(t('scan.looking'));
+    try {
+      const res = await fetch(`/api/book-lookup?isbn=${isbn}`);
+      const d = await res.json();
+      if (d.found && d.title) {
+        setForm(prev => ({
+          ...prev,
+          title: d.title,
+          author: d.author ?? prev.author,
+          cover_url: d.coverUrl ?? prev.cover_url,
+        }));
+        setScanMsg(`✓ ${d.title}`);
+      } else {
+        setScanMsg(t('scan.notFound'));
+      }
+    } catch {
+      setScanMsg(t('scan.notFound'));
+    }
+  }
+
+  // When a title is chosen and no cover has been set, quietly try to fetch the
+  // official cover (and author) for that title from the book APIs.
+  useEffect(() => {
+    if (!showForm || editingId || !form.title.trim() || form.title.trim().length < 3 || form.cover_url) return;
+    const title = form.title.trim();
+    const id = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/book-lookup?title=${encodeURIComponent(title)}`);
+        const d = await res.json();
+        if (!d.found) return;
+        setForm(prev => {
+          // The student may have typed on or added their own photo meanwhile.
+          if (prev.title.trim() !== title || prev.cover_url) return prev;
+          return {
+            ...prev,
+            cover_url: d.coverUrl ?? prev.cover_url,
+            author: prev.author || (d.author ?? ''),
+          };
+        });
+      } catch { /* best-effort */ }
+    }, 900);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.title, form.cover_url, showForm, editingId]);
 
   // Sorted view of the books for display.
   const sortedBooks = [...books].sort((a, b) => {
@@ -180,7 +231,17 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
 
   const bookForm = showForm && (
     <form onSubmit={submitBook} className="p-4 rounded-2xl flex flex-col gap-3 mb-4" style={{ background: compact ? '#ffffff' : '#ffffff', border: '1px solid #e9d5ff' }}>
-      <h3 className="font-bold text-[#2e1065]">{editingId ? t('profile.editBookTitle') : t('profile.addBookTitle')}</h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-bold text-[#2e1065]">{editingId ? t('profile.editBookTitle') : t('profile.addBookTitle')}</h3>
+        {!editingId && (
+          <button type="button" onClick={() => { setScanMsg(''); setScanning(true); }}
+            className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+            📷 {t('scan.button')}
+          </button>
+        )}
+      </div>
+      {scanMsg && <p className="text-xs font-semibold" style={{ color: scanMsg.startsWith('✓') ? '#10b981' : '#7c3aed' }}>{scanMsg}</p>}
       <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleTh')} *</label>
@@ -328,6 +389,8 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     </div>
   );
 
+  const scanner = scanning && <BarcodeScanner onDetected={onIsbn} onClose={() => setScanning(false)} />;
+
   if (compact) {
     return (
       <div>
@@ -338,6 +401,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         {bookForm}
         {sortControl}
         {shelf}
+        {scanner}
       </div>
     );
   }
@@ -351,6 +415,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       {bookForm}
       {sortControl}
       <div className="max-w-md">{shelf}</div>
+      {scanner}
     </div>
   );
 }
