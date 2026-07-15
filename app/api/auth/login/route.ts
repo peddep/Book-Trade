@@ -18,6 +18,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
+  if (Number(user.banned) === 1) {
+    return NextResponse.json({ error: 'banned' }, { status: 403 });
+  }
+
   const sessionUser = { id: Number(user.id), name: user.name, email: user.email, grade: user.grade, class_no: user.class_no ?? null, avatar_color: user.avatar_color };
   const token = signSession(sessionUser);
 

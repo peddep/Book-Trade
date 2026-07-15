@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { ensureHubTables } from '@/lib/hub';
+import { ensureHubTables, isBanned } from '@/lib/hub';
 import { catalogTitleParts } from '@/lib/books-catalog';
 import type { Client } from '@libsql/client';
 
@@ -123,6 +123,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const { title, title_en, author, subject, grade_level, condition, description, cover_url, price } = await req.json();
   if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 });

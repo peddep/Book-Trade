@@ -61,10 +61,30 @@ export async function ensureHubTables() {
         body TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
+      // Reports of books or users, reviewed by the admin.
+      `CREATE TABLE IF NOT EXISTS reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        reporter_id INTEGER NOT NULL,
+        target_type TEXT NOT NULL,
+        target_id INTEGER NOT NULL,
+        reason TEXT,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
     ],
     'write'
   );
   ensured = true;
+}
+
+// True when a user is banned. Cheap single-row lookup used by write endpoints.
+export async function isBanned(userId: number): Promise<boolean> {
+  try {
+    const r = await getDb().execute({ sql: 'SELECT banned FROM users WHERE id = ?', args: [userId] });
+    return Number(r.rows[0]?.banned) === 1;
+  } catch {
+    return false; // column may not exist yet on very old databases
+  }
 }
 
 // Posts a system announcement to the community chat when a trade completes.

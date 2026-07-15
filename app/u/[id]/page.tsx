@@ -7,6 +7,7 @@ import Loading from '@/components/Loading';
 import BookCard from '@/components/BookCard';
 import BookShelf from '@/components/BookShelf';
 import TradeModal from '@/components/TradeModal';
+import ReportButton from '@/components/ReportButton';
 import { useI18n } from '@/lib/i18n';
 
 interface PublicUser {
@@ -100,6 +101,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           <div className="ml-auto text-right">
             <p className="text-2xl font-bold text-[#2e1065]">{books.length}</p>
             <p className="text-xs text-[#6b7280]">{t('profile.booksListed')}</p>
+            {!isMe && <div className="mt-2"><ReportButton targetType="user" targetId={user.id} variant="text" /></div>}
           </div>
         </div>
 

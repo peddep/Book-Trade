@@ -18,8 +18,8 @@ export async function GET() {
   await ensureHubTables();
   const db = getDb();
 
-  const [users, books, trades, wonderbox, messages] = await Promise.all([
-    db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, created_at,
+  const [users, books, trades, wonderbox, messages, reports] = await Promise.all([
+    db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
                 FROM users ORDER BY id`),
@@ -40,6 +40,14 @@ export async function GET() {
                 ORDER BY wb.id DESC LIMIT 100`),
     db.execute(`SELECT m.id, m.kind, m.body, m.created_at, u.name AS user_name
                 FROM messages m LEFT JOIN users u ON m.user_id = u.id ORDER BY m.id DESC LIMIT 100`),
+    db.execute(`SELECT r.id, r.target_type, r.target_id, r.reason, r.status, r.created_at,
+                  ru.name AS reporter_name,
+                  CASE WHEN r.target_type = 'book' THEN bk.title ELSE tu.name END AS target_label
+                FROM reports r
+                JOIN users ru ON r.reporter_id = ru.id
+                LEFT JOIN books bk ON r.target_type = 'book' AND r.target_id = bk.id
+                LEFT JOIN users tu ON r.target_type = 'user' AND r.target_id = tu.id
+                ORDER BY (r.status = 'open') DESC, r.id DESC LIMIT 200`),
   ]);
 
   return NextResponse.json({
@@ -49,12 +57,14 @@ export async function GET() {
       trades: (await db.execute('SELECT COUNT(*) AS n FROM trades')).rows[0].n,
       completed: (await db.execute("SELECT COUNT(*) AS n FROM trades WHERE status = 'completed'")).rows[0].n,
       messages: (await db.execute('SELECT COUNT(*) AS n FROM messages')).rows[0].n,
+      openReports: (await db.execute("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'")).rows[0].n,
     },
     users: users.rows,
     books: books.rows,
     trades: trades.rows,
     wonderbox: wonderbox.rows,
     messages: messages.rows,
+    reports: reports.rows,
   });
 }
 
@@ -65,6 +75,32 @@ export async function POST(req: NextRequest) {
   if (!user || !isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
+
+  // Delete a book listing (and any pending trades / wonder-box deposits it's in).
+  if (body.action === 'delete_book' && body.book_id) {
+    const db = getDb();
+    const id = Number(body.book_id);
+    await db.execute({ sql: "DELETE FROM trades WHERE (offered_book_id = ? OR wanted_book_id = ?) AND status IN ('pending','accepted')", args: [id, id] });
+    await db.execute({ sql: 'DELETE FROM wonder_box WHERE book_id = ?', args: [id] });
+    await db.execute({ sql: 'DELETE FROM books WHERE id = ?', args: [id] });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Ban / unban a user. A banned user can't log in or post; the admin can't ban themselves.
+  if ((body.action === 'ban_user' || body.action === 'unban_user') && body.user_id) {
+    const id = Number(body.user_id);
+    if (id === user.id) return NextResponse.json({ error: 'cannot_ban_self' }, { status: 400 });
+    await ensureUserColumns();
+    await getDb().execute({ sql: 'UPDATE users SET banned = ? WHERE id = ?', args: [body.action === 'ban_user' ? 1 : 0, id] });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Mark a report as resolved.
+  if (body.action === 'resolve_report' && body.report_id) {
+    await getDb().execute({ sql: "UPDATE reports SET status = 'resolved' WHERE id = ?", args: [Number(body.report_id)] });
+    return NextResponse.json({ ok: true });
+  }
+
   if (body.action === 'reset_password' && body.user_id) {
     const db = getDb();
     const target = await db.execute({ sql: 'SELECT id, name FROM users WHERE id = ?', args: [Number(body.user_id)] });

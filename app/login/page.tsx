@@ -29,7 +29,9 @@ export default function LoginPage() {
         router.push('/trade');
         return;
       }
-      const msg = data.error === 'Invalid credentials' ? t('login.invalid') : t('login.failed', { status: res.status });
+      const msg = data.error === 'banned' ? t('login.banned')
+        : data.error === 'Invalid credentials' ? t('login.invalid')
+        : t('login.failed', { status: res.status });
       setError(msg);
     } catch {
       setError(t('common.unreachable'));

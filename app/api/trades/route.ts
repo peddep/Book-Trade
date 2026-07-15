@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { priceDiffOk, isBookBusy, ensureHubTables } from '@/lib/hub';
+import { priceDiffOk, isBookBusy, ensureHubTables, isBanned } from '@/lib/hub';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -35,6 +35,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const { offered_book_id, wanted_book_id, message } = await req.json();
   if (!offered_book_id || !wanted_book_id) {

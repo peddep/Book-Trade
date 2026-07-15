@@ -45,7 +45,7 @@ export const ensureCoverColumn = ensureBookColumns;
 let userColumnsEnsured = false;
 export async function ensureUserColumns() {
   if (userColumnsEnsured) return;
-  for (const col of ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT']) {
+  for (const col of ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT', 'banned INTEGER DEFAULT 0']) {
     try {
       await getDb().execute(`ALTER TABLE users ADD COLUMN ${col}`);
     } catch {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { ensureHubTables, getFreeOwnedBook, runWonderBoxMatcher, PLAN } from '@/lib/hub';
+import { ensureHubTables, getFreeOwnedBook, runWonderBoxMatcher, PLAN, isBanned } from '@/lib/hub';
 
 export const runtime = 'nodejs';
 
@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await ensureHubTables();
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const { book_id } = await req.json();
   const db = getDb();

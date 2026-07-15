@@ -1,6 +1,7 @@
 'use client';
 
 import { useI18n } from '@/lib/i18n';
+import ReportButton from '@/components/ReportButton';
 
 interface Book {
   id: number;
@@ -146,15 +147,18 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
               </button>
             </>
           ) : (
-            book.available && onTrade && (
-              <button
-                onClick={onTrade}
-                className="flex-1 py-2 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-              >
-                {t('card.offerTrade')}
-              </button>
-            )
+            <>
+              {book.available && onTrade && (
+                <button
+                  onClick={onTrade}
+                  className="flex-1 py-2 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                >
+                  {t('card.offerTrade')}
+                </button>
+              )}
+              <span className="flex items-center px-1"><ReportButton targetType="book" targetId={book.id} /></span>
+            </>
           )}
         </div>
       </div>

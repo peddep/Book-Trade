@@ -11,20 +11,22 @@ import { fileToCoverDataUrl } from '@/lib/image';
 type Row = Record<string, unknown>;
 
 interface AdminData {
-  stats: { users: number; books: number; trades: number; completed: number; messages: number };
+  stats: { users: number; books: number; trades: number; completed: number; messages: number; openReports: number };
   users: Row[];
   books: Row[];
   trades: Row[];
   wonderbox: Row[];
   messages: Row[];
+  reports: Row[];
 }
 
-const TABS = ['users', 'books', 'trades', 'wonderbox', 'messages'] as const;
+const TABS = ['reports', 'users', 'books', 'trades', 'wonderbox', 'messages'] as const;
 type Tab = (typeof TABS)[number];
 
 // Columns shown per table (order matters).
 const COLUMNS: Record<Tab, string[]> = {
-  users: ['id', 'name', 'real_name', 'email', 'grade', 'class_no', 'contact', 'books_count', 'trades_completed', 'availability', 'created_at'],
+  reports: ['id', 'status', 'target_type', 'target_label', 'reason', 'reporter_name', 'created_at'],
+  users: ['id', 'name', 'real_name', 'email', 'grade', 'class_no', 'contact', 'banned', 'books_count', 'trades_completed', 'created_at'],
   books: ['id', 'title', 'title_en', 'author', 'subject', 'condition', 'price', 'available', 'owner_name', 'created_at'],
   trades: ['id', 'status', 'requester_name', 'offered_title', 'owner_name', 'wanted_title', 'message', 'created_at', 'updated_at'],
   wonderbox: ['id', 'user_name', 'title', 'status', 'created_at'],
@@ -35,7 +37,7 @@ export default function AdminPage() {
   const { t } = useI18n();
   const [data, setData] = useState<AdminData | null>(null);
   const [denied, setDenied] = useState(false);
-  const [tab, setTab] = useState<Tab>('users');
+  const [tab, setTab] = useState<Tab>('reports');
   const [tempPw, setTempPw] = useState<{ name: string; password: string } | null>(null);
   const [catalogLines, setCatalogLines] = useState('');
   const [catalogResult, setCatalogResult] = useState('');
@@ -62,6 +64,16 @@ export default function AdminPage() {
   async function refresh() {
     const r = await fetch('/api/admin');
     if (r.ok) setData(await r.json());
+  }
+
+  async function adminAction(payload: Record<string, unknown>, confirmMsg?: string) {
+    if (confirmMsg && !confirm(confirmMsg)) return;
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) refresh();
   }
 
   async function editAuthor(bookId: unknown, current: unknown) {
@@ -119,11 +131,11 @@ export default function AdminPage() {
   if (!data) return (<><Navbar /><Loading /></>);
 
   const stats = [
+    { label: t('adm.openReports'), value: data.stats.openReports ?? 0 },
     { label: t('adm.users'), value: data.stats.users },
     { label: t('adm.books'), value: data.stats.books },
     { label: t('adm.trades'), value: data.stats.trades },
     { label: t('adm.completed'), value: data.stats.completed },
-    { label: t('adm.messages'), value: data.stats.messages },
   ];
 
   const rows = data[tab] ?? [];
@@ -200,7 +212,7 @@ export default function AdminPage() {
                   <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap" style={{ color: '#7c3aed' }}>{c}</th>
                 ))}
                 {tab === 'books' && <th className="px-3 py-2 font-semibold" style={{ color: '#7c3aed' }}>cover</th>}
-                {tab === 'users' && <th className="px-3 py-2"></th>}
+                {(tab === 'users' || tab === 'reports') && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
@@ -231,22 +243,65 @@ export default function AdminPage() {
                           style={{ background: '#ede9fe', color: '#7c3aed' }}>
                           ✏️ {t('adm.editAuthor')}
                         </button>
+                        <button onClick={() => adminAction({ action: 'delete_book', book_id: r.id }, `${t('adm.deleteBook')}: ${String(r.title)}?`)}
+                          className="px-2 py-1 rounded-lg font-semibold"
+                          style={{ background: '#fee2e2', color: '#ef4444' }}>
+                          🗑 {t('adm.deleteBook')}
+                        </button>
                       </div>
                     </td>
                   )}
                   {tab === 'users' && (
                     <td className="px-3 py-2 align-top whitespace-nowrap">
-                      <button onClick={() => resetPassword(r.id, r.name)}
-                        className="px-2 py-1 rounded-lg font-semibold"
-                        style={{ background: '#fee2e2', color: '#ef4444' }}>
-                        🔑 {t('adm.reset')}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => resetPassword(r.id, r.name)}
+                          className="px-2 py-1 rounded-lg font-semibold"
+                          style={{ background: '#fee2e2', color: '#ef4444' }}>
+                          🔑 {t('adm.reset')}
+                        </button>
+                        {Number(r.banned) === 1 ? (
+                          <button onClick={() => adminAction({ action: 'unban_user', user_id: r.id })}
+                            className="px-2 py-1 rounded-lg font-semibold"
+                            style={{ background: '#dcfce7', color: '#10b981' }}>
+                            ✓ {t('adm.unban')}
+                          </button>
+                        ) : (
+                          <button onClick={() => adminAction({ action: 'ban_user', user_id: r.id }, `${t('adm.ban')}: ${String(r.name)}?`)}
+                            className="px-2 py-1 rounded-lg font-semibold"
+                            style={{ background: '#fee2e2', color: '#ef4444' }}>
+                            🚫 {t('adm.ban')}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  {tab === 'reports' && (
+                    <td className="px-3 py-2 align-top whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {r.target_type === 'book' ? (
+                          <button onClick={() => adminAction({ action: 'delete_book', book_id: r.target_id }, `${t('adm.deleteBook')}?`)}
+                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#fee2e2', color: '#ef4444' }}>
+                            🗑 {t('adm.deleteBook')}
+                          </button>
+                        ) : (
+                          <button onClick={() => adminAction({ action: 'ban_user', user_id: r.target_id }, `${t('adm.ban')}?`)}
+                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#fee2e2', color: '#ef4444' }}>
+                            🚫 {t('adm.ban')}
+                          </button>
+                        )}
+                        {r.status === 'open' && (
+                          <button onClick={() => adminAction({ action: 'resolve_report', report_id: r.id })}
+                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#dcfce7', color: '#10b981' }}>
+                            ✓ {t('adm.resolve')}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={cols.length + (tab === 'users' || tab === 'books' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
+                <tr><td colSpan={cols.length + (tab === 'users' || tab === 'books' || tab === 'reports' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
               )}
             </tbody>
           </table>

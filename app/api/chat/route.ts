@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { ensureHubTables } from '@/lib/hub';
+import { ensureHubTables, isBanned } from '@/lib/hub';
 
 export const runtime = 'nodejs';
 
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await ensureHubTables();
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const text = typeof body.body === 'string' ? body.body.trim().slice(0, MAX_LEN) : '';
