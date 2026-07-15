@@ -61,6 +61,14 @@ export async function ensureHubTables() {
         body TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
+      // A student's wishlist: titles they want. Notified when one appears.
+      `CREATE TABLE IF NOT EXISTS wishlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        title_en TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
       // Reports of books or users, reviewed by the admin.
       `CREATE TABLE IF NOT EXISTS reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

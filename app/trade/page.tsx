@@ -30,6 +30,7 @@ export default function TradeHubPage() {
   const [totalTrades, setTotalTrades] = useState<number | null>(null);
   const [awaitingConfirm, setAwaitingConfirm] = useState(0);
   const [gifts, setGifts] = useState(0);
+  const [wishMatches, setWishMatches] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -56,6 +57,10 @@ export default function TradeHubPage() {
     fetch('/api/wonderbox').then(r => (r.ok ? r.json() : { deposits: [] })).then(d =>
       setGifts((d.deposits ?? []).filter((x: any) => x.status === 'matched').length)
     );
+    // Wishlist books currently available.
+    fetch('/api/wishlist').then(r => (r.ok ? r.json() : { matches: [] })).then(d =>
+      setWishMatches((d.matches ?? []).length)
+    );
   }, [router]);
 
   const counter = String(totalTrades ?? 0).padStart(10, '0');
@@ -80,6 +85,21 @@ export default function TradeHubPage() {
           </Link>
         </div>
       ))}
+      {/* Wishlist */}
+      <div className="relative">
+        <Badge n={wishMatches} />
+        <Link href="/wishlist"
+          className="flex items-center gap-4 px-6 py-5 rounded-full transition-transform hover:scale-[1.02]"
+          style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', boxShadow: '0 4px 14px rgba(0,0,0,0.35)' }}>
+          <span className="text-3xl w-10 text-center flex-shrink-0">⭐</span>
+          <span className="flex-1">
+            <span className="block font-bold text-[#2e1065] text-lg leading-tight">{t('hub.wishlist')}</span>
+            <span className="block text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>
+              {wishMatches > 0 ? t('hub.wishlistMatches', { n: wishMatches }) : t('hub.wishlistDesc')}
+            </span>
+          </span>
+        </Link>
+      </div>
     </div>
   );
 
