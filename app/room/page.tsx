@@ -200,6 +200,14 @@ export default function RoomPage() {
               ))}
             </div>
           </div>
+          <div className="flex gap-2 mb-3">
+            <Link href="/rules" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}>
+              {t('room2.rules')}
+            </Link>
+            <Link href="/privacy" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}>
+              {t('room2.privacy')}
+            </Link>
+          </div>
           {user.is_admin && (
             <Link href="/admin" className="block w-full py-2.5 mb-3 rounded-xl font-semibold text-sm text-center"
               style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>

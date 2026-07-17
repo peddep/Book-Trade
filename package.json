@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:init": "node --env-file=.env.local scripts/init-db.mjs",
-    "harvest:thai": "node --env-file=.env.local scripts/harvest-thai-books.mjs"
+    "harvest:thai": "node --env-file=.env.local scripts/harvest-thai-books.mjs",
+    "test": "node --test scripts/test-flow.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

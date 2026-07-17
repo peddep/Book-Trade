@@ -226,6 +226,12 @@ export default function RegisterPage() {
                 {t('login.signIn')}
               </Link>
             </p>
+            <p className="text-center text-xs text-[#9ca3af]">
+              {t('reg.agree')}{' '}
+              <Link href="/rules" className="underline hover:text-[#7c3aed]">{t('rules.title')}</Link>
+              {' '}·{' '}
+              <Link href="/privacy" className="underline hover:text-[#7c3aed]">{t('priv.title')}</Link>
+            </p>
           </form>
         </div>
       </main>

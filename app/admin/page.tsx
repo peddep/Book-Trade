@@ -146,7 +146,13 @@ export default function AdminPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-8">
         <Link href="/room" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mt-2 mb-5">🛠️ {t('adm.title')}</h1>
+        <div className="flex items-center justify-between gap-3 mt-2 mb-5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065]">🛠️ {t('adm.title')}</h1>
+          <a href="/api/admin?export=1" className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex-shrink-0"
+            style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
+            {t('adm.export')}
+          </a>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">

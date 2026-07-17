@@ -8,7 +8,7 @@ import { ensureHubTables } from '@/lib/hub';
 export const runtime = 'nodejs';
 
 // Site data overview for the admin (users, books, trades, activity).
-export async function GET() {
+export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user || !isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -17,6 +17,31 @@ export async function GET() {
   await ensureTradeColumns();
   await ensureHubTables();
   const db = getDb();
+
+  // Full backup: every row of every table (minus password hashes), as a
+  // downloadable JSON file.
+  if (new URL(req.url).searchParams.get('export') === '1') {
+    const tables = ['users', 'books', 'trades', 'wonder_box', 'messages', 'wishlist', 'reports', 'catalog_books'];
+    const dump: Record<string, unknown[]> = {};
+    for (const tbl of tables) {
+      try {
+        const cols = tbl === 'users'
+          ? 'id, name, real_name, email, grade, class_no, contact, availability, banned, created_at'
+          : '*';
+        const r = await db.execute(`SELECT ${cols} FROM ${tbl}`);
+        dump[tbl] = r.rows;
+      } catch {
+        dump[tbl] = [];
+      }
+    }
+    const body = JSON.stringify({ exportedAt: new Date().toISOString(), ...dump }, null, 2);
+    return new NextResponse(body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="booktrade-backup-${new Date().toISOString().slice(0, 10)}.json"`,
+      },
+    });
+  }
 
   const [users, books, trades, wonderbox, messages, reports] = await Promise.all([
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
