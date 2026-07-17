@@ -9,9 +9,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = getDb();
-  await ensureBookColumns();
-  await ensureUserColumns();
-  await ensureTradeColumns();
+  await Promise.all([ensureBookColumns(), ensureUserColumns(), ensureTradeColumns()]);
   const result = await db.execute({
     sql: `
       SELECT t.*,

@@ -19,8 +19,7 @@ const MATCH = `(
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  await ensureBookColumns();
-  await ensureHubTables();
+  await Promise.all([ensureBookColumns(), ensureHubTables()]);
   const db = getDb();
 
   const wishes = await db.execute({ sql: 'SELECT id, title, title_en FROM wishlist WHERE user_id = ? ORDER BY id DESC', args: [user.id] });

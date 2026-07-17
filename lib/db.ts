@@ -14,26 +14,37 @@ export function getDb(): Client {
   return client;
 }
 
-// Adds newer books columns (cover_url, title_en) to databases created before
-// those features existed. Idempotent.
+// Adds any missing columns to a table with a single PRAGMA check up front, so
+// warm-and-cold requests don't pay a round-trip per column. Returns the names
+// of columns that were actually added. Each `def` is "name TYPE ...".
+async function addMissingColumns(table: string, defs: string[]): Promise<string[]> {
+  const info = await getDb().execute(`PRAGMA table_info(${table})`);
+  const existing = new Set(info.rows.map(r => String(r.name)));
+  const added: string[] = [];
+  for (const def of defs) {
+    const name = def.split(' ')[0];
+    if (existing.has(name)) continue;
+    try {
+      await getDb().execute(`ALTER TABLE ${table} ADD COLUMN ${def}`);
+      added.push(name);
+    } catch {
+      // raced with another request; column now exists
+    }
+  }
+  return added;
+}
+
+// Adds newer books columns (cover_url, title_en, price) to older databases.
 let bookColumnsEnsured = false;
 export async function ensureBookColumns() {
   if (bookColumnsEnsured) return;
-  for (const col of ['cover_url TEXT', 'title_en TEXT', 'price REAL']) {
+  const added = await addMissingColumns('books', ['cover_url TEXT', 'title_en TEXT', 'price REAL']);
+  // Backfill random prices only when the price column was just created — no
+  // point re-scanning the whole table on every cold start once it's done.
+  if (added.includes('price')) {
     try {
-      await getDb().execute(`ALTER TABLE books ADD COLUMN ${col}`);
-    } catch {
-      // column already exists
-    }
-  }
-  // Backfill: give any book without a price a random one (50–300 baht,
-  // rounded to the nearest 10) so no listing is left blank.
-  try {
-    await getDb().execute(
-      'UPDATE books SET price = (50 + ABS(RANDOM() % 26) * 10) WHERE price IS NULL OR price <= 0'
-    );
-  } catch {
-    // ignore if the column isn't ready yet
+      await getDb().execute('UPDATE books SET price = (50 + ABS(RANDOM() % 26) * 10) WHERE price IS NULL OR price <= 0');
+    } catch { /* ignore */ }
   }
   bookColumnsEnsured = true;
 }
@@ -41,32 +52,19 @@ export async function ensureBookColumns() {
 // Back-compat alias.
 export const ensureCoverColumn = ensureBookColumns;
 
-// Adds the availability column (weekly trade-time grid) to older user tables.
+// Adds the availability / class / contact / banned columns to older user tables.
 let userColumnsEnsured = false;
 export async function ensureUserColumns() {
   if (userColumnsEnsured) return;
-  for (const col of ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT', 'banned INTEGER DEFAULT 0']) {
-    try {
-      await getDb().execute(`ALTER TABLE users ADD COLUMN ${col}`);
-    } catch {
-      // column already exists
-    }
-  }
+  await addMissingColumns('users', ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT', 'banned INTEGER DEFAULT 0']);
   userColumnsEnsured = true;
 }
 
 // Adds the IRL-meetup confirmation columns to older trade tables.
-// Each side records 'happened' / 'not' once the meet-up time is up.
 let tradeColumnsEnsured = false;
 export async function ensureTradeColumns() {
   if (tradeColumnsEnsured) return;
-  for (const col of ['requester_confirm TEXT', 'owner_confirm TEXT']) {
-    try {
-      await getDb().execute(`ALTER TABLE trades ADD COLUMN ${col}`);
-    } catch {
-      // column already exists
-    }
-  }
+  await addMissingColumns('trades', ['requester_confirm TEXT', 'owner_confirm TEXT']);
   tradeColumnsEnsured = true;
 }
 

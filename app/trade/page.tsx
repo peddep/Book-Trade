@@ -34,25 +34,21 @@ export default function TradeHubPage() {
   const router = useRouter();
 
   useEffect(() => {
-    let userId: number | null = null;
-    fetch('/api/auth/me')
-      .then(r => r.json())
-      .then(d => {
-        if (!d.user) { router.push('/login'); return null; }
-        userId = d.user.id;
-        return fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] }));
-      })
-      .then(d => {
-        if (!d) return;
-        const all = d.trades ?? [];
-        setTotalTrades(all.filter((x: any) => x.status === 'accepted' || x.status === 'completed').length);
-        // Accepted trades where I haven't confirmed the meet-up yet.
-        setAwaitingConfirm(all.filter((x: any) => {
-          if (x.status !== 'accepted') return false;
-          const mine = x.requester_id === userId ? x.requester_confirm : x.owner_confirm;
-          return mine !== 'happened';
-        }).length);
-      });
+    // Fire all requests at once instead of waterfalling them.
+    Promise.all([
+      fetch('/api/auth/me').then(r => r.json()).catch(() => ({ user: null })),
+      fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })),
+    ]).then(([me, tr]) => {
+      if (!me.user) { router.push('/login'); return; }
+      const userId = me.user.id;
+      const all = tr.trades ?? [];
+      setTotalTrades(all.filter((x: any) => x.status === 'accepted' || x.status === 'completed').length);
+      setAwaitingConfirm(all.filter((x: any) => {
+        if (x.status !== 'accepted') return false;
+        const mine = x.requester_id === userId ? x.requester_confirm : x.owner_confirm;
+        return mine !== 'happened';
+      }).length);
+    });
     // Gift boxes waiting to be opened in the Wonder Box.
     fetch('/api/wonderbox').then(r => (r.ok ? r.json() : { deposits: [] })).then(d =>
       setGifts((d.deposits ?? []).filter((x: any) => x.status === 'matched').length)

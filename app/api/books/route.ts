@@ -70,8 +70,7 @@ function sanitizeCover(cover: unknown): string | null {
 
 export async function GET(req: NextRequest) {
   const db = getDb();
-  await ensureBookColumns();
-  await ensureHubTables();
+  await Promise.all([ensureBookColumns(), ensureHubTables()]);
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q') ?? '';
   const subject = searchParams.get('subject') ?? '';
