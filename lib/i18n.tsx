@@ -310,6 +310,8 @@ const STRINGS: Dict = {
   'adm.catalogHint': { th: 'พิมพ์หนึ่งเล่มต่อบรรทัด รูปแบบ: ชื่อหนังสือ | ผู้แต่ง (ผู้แต่งไม่บังคับ) เหมาะกับหนังสือเรียนที่ไม่มีใน API', en: 'One book per line: title | author (author optional). Great for school textbooks missing from the APIs.' },
   'adm.catalogAdd': { th: 'เพิ่มเข้าคลัง', en: 'Add to catalog' },
   'adm.catalogAdded': { th: 'เพิ่มแล้ว {n} เล่ม (ข้าม {skipped} รายการซ้ำ/ว่าง)', en: 'Added {n} titles ({skipped} duplicates/blank skipped)' },
+  'adm.catalog': { th: 'คลังหนังสือ', en: 'Catalog' },
+  'adm.catalogSearch': { th: 'ค้นหาในคลังหนังสือที่เก็บมา…', en: 'Search the harvested catalog…' },
   'scan.button': { th: 'สแกนบาร์โค้ด', en: 'Scan barcode' },
   'scan.title': { th: 'สแกนบาร์โค้ดหลังปกหนังสือ', en: 'Scan the barcode on the back cover' },
   'scan.hint': { th: 'เล็งกล้องไปที่บาร์โค้ด (ISBN) ให้อยู่ในกรอบ', en: 'Point the camera at the ISBN barcode inside the frame.' },

@@ -11,16 +11,17 @@ import { fileToCoverDataUrl } from '@/lib/image';
 type Row = Record<string, unknown>;
 
 interface AdminData {
-  stats: { users: number; books: number; trades: number; completed: number; messages: number; openReports: number };
+  stats: { users: number; books: number; trades: number; completed: number; messages: number; openReports: number; catalog: number };
   users: Row[];
   books: Row[];
   trades: Row[];
   wonderbox: Row[];
   messages: Row[];
   reports: Row[];
+  catalog: Row[];
 }
 
-const TABS = ['reports', 'users', 'books', 'trades', 'wonderbox', 'messages'] as const;
+const TABS = ['reports', 'users', 'books', 'catalog', 'trades', 'wonderbox', 'messages'] as const;
 type Tab = (typeof TABS)[number];
 
 // Columns shown per table (order matters).
@@ -28,6 +29,7 @@ const COLUMNS: Record<Tab, string[]> = {
   reports: ['id', 'status', 'target_type', 'target_label', 'reason', 'reporter_name', 'created_at'],
   users: ['id', 'name', 'real_name', 'email', 'grade', 'class_no', 'contact', 'banned', 'books_count', 'trades_completed', 'created_at'],
   books: ['id', 'title', 'title_en', 'author', 'subject', 'condition', 'price', 'available', 'owner_name', 'created_at'],
+  catalog: ['id', 'title', 'author', 'publisher', 'source', 'created_at'],
   trades: ['id', 'status', 'requester_name', 'offered_title', 'owner_name', 'wanted_title', 'message', 'created_at', 'updated_at'],
   wonderbox: ['id', 'user_name', 'title', 'status', 'created_at'],
   messages: ['id', 'kind', 'user_name', 'body', 'created_at'],
@@ -42,7 +44,19 @@ export default function AdminPage() {
   const [catalogLines, setCatalogLines] = useState('');
   const [catalogResult, setCatalogResult] = useState('');
   const [catalogBusy, setCatalogBusy] = useState(false);
+  const [catalogQ, setCatalogQ] = useState('');
   const router = useRouter();
+
+  // Reload catalog rows when the search box changes (debounced).
+  useEffect(() => {
+    if (!data) return;
+    const id = setTimeout(async () => {
+      const r = await fetch(`/api/admin?catalog_q=${encodeURIComponent(catalogQ)}`);
+      if (r.ok) { const d = await r.json(); setData(prev => prev ? { ...prev, catalog: d.catalog } : prev); }
+    }, 350);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogQ]);
 
   async function addToCatalog() {
     if (!catalogLines.trim() || catalogBusy) return;
@@ -134,8 +148,8 @@ export default function AdminPage() {
     { label: t('adm.openReports'), value: data.stats.openReports ?? 0 },
     { label: t('adm.users'), value: data.stats.users },
     { label: t('adm.books'), value: data.stats.books },
+    { label: t('adm.catalog'), value: data.stats.catalog ?? 0 },
     { label: t('adm.trades'), value: data.stats.trades },
-    { label: t('adm.completed'), value: data.stats.completed },
   ];
 
   const rows = data[tab] ?? [];
@@ -207,6 +221,17 @@ export default function AdminPage() {
             </p>
             <button onClick={() => setTempPw(null)} className="text-lg" style={{ color: '#b45309' }}>✕</button>
           </div>
+        )}
+
+        {/* Catalog search */}
+        {tab === 'catalog' && (
+          <input
+            value={catalogQ}
+            onChange={e => setCatalogQ(e.target.value)}
+            placeholder={t('adm.catalogSearch')}
+            className="w-full mb-3 px-3 py-2 rounded-xl text-sm"
+            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+          />
         )}
 
         {/* Data table */}

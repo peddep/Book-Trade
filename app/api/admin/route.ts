@@ -43,7 +43,9 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const [users, books, trades, wonderbox, messages, reports] = await Promise.all([
+  // Harvested / admin-added suggestion catalog (may be large — show newest 500).
+  const catalogSearch = new URL(req.url).searchParams.get('catalog_q')?.trim() ?? '';
+  const [users, books, trades, wonderbox, messages, reports, catalog] = await Promise.all([
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
@@ -73,6 +75,12 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN books bk ON r.target_type = 'book' AND r.target_id = bk.id
                 LEFT JOIN users tu ON r.target_type = 'user' AND r.target_id = tu.id
                 ORDER BY (r.status = 'open') DESC, r.id DESC LIMIT 200`),
+    db.execute({
+      sql: catalogSearch
+        ? 'SELECT id, title, author, publisher, source, created_at FROM catalog_books WHERE title LIKE ? OR author LIKE ? ORDER BY id DESC LIMIT 500'
+        : 'SELECT id, title, author, publisher, source, created_at FROM catalog_books ORDER BY id DESC LIMIT 500',
+      args: catalogSearch ? [`%${catalogSearch}%`, `%${catalogSearch}%`] : [],
+    }).catch(() => ({ rows: [] })),
   ]);
 
   return NextResponse.json({
@@ -83,6 +91,7 @@ export async function GET(req: NextRequest) {
       completed: (await db.execute("SELECT COUNT(*) AS n FROM trades WHERE status = 'completed'")).rows[0].n,
       messages: (await db.execute('SELECT COUNT(*) AS n FROM messages')).rows[0].n,
       openReports: (await db.execute("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'")).rows[0].n,
+      catalog: (await db.execute('SELECT COUNT(*) AS n FROM catalog_books').catch(() => ({ rows: [{ n: 0 }] }))).rows[0].n,
     },
     users: users.rows,
     books: books.rows,
@@ -90,6 +99,7 @@ export async function GET(req: NextRequest) {
     wonderbox: wonderbox.rows,
     messages: messages.rows,
     reports: reports.rows,
+    catalog: catalog.rows,
   });
 }
 
