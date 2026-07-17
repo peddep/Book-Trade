@@ -21,6 +21,7 @@ export default function RegisterPage() {
   const [realName, setRealName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [grade, setGrade] = useState('');
   const [classNo, setClassNo] = useState('');
   const [contact, setContact] = useState('');
@@ -31,6 +32,10 @@ export default function RegisterPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setError(t('reg.passwordMismatch'));
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -120,6 +125,23 @@ export default function RegisterPage() {
                 style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
                 placeholder={t('reg.passwordHint')}
               />
+            </div>
+            <div>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.confirmPassword')}</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+                className="w-full p-2.5 rounded-xl text-sm"
+                style={{ background: '#ffffff', border: `1px solid ${confirmPassword && confirmPassword !== password ? '#ef4444' : '#e9d5ff'}`, color: '#2e1065', outline: 'none' }}
+                placeholder={t('reg.confirmPasswordHint')}
+              />
+              {confirmPassword && confirmPassword !== password && (
+                <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{t('reg.passwordMismatch')}</p>
+              )}
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
