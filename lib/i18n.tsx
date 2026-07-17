@@ -306,6 +306,8 @@ const STRINGS: Dict = {
   'adm.addCover': { th: 'เพิ่มปก', en: 'Add cover' },
   'adm.changeCover': { th: 'เปลี่ยนปก', en: 'Change cover' },
   'adm.editAuthor': { th: 'แก้ผู้แต่ง', en: 'Edit author' },
+  'adm.editBook': { th: 'แก้ไข', en: 'Edit' },
+  'adm.bookAvailable': { th: 'พร้อมแลกเปลี่ยน', en: 'Available for trade' },
   'adm.catalogTitle': { th: 'เพิ่มชื่อหนังสือเข้าคลังแนะนำ', en: 'Add titles to the suggestion catalog' },
   'adm.catalogHint': { th: 'พิมพ์หนึ่งเล่มต่อบรรทัด รูปแบบ: ชื่อหนังสือ | ผู้แต่ง (ผู้แต่งไม่บังคับ) เหมาะกับหนังสือเรียนที่ไม่มีใน API', en: 'One book per line: title | author (author optional). Great for school textbooks missing from the APIs.' },
   'adm.catalogAdd': { th: 'เพิ่มเข้าคลัง', en: 'Add to catalog' },

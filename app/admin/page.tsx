@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [catalogResult, setCatalogResult] = useState('');
   const [catalogBusy, setCatalogBusy] = useState(false);
   const [catalogQ, setCatalogQ] = useState('');
+  const [editBook, setEditBook] = useState<Record<string, any> | null>(null);
   const router = useRouter();
 
   // Reload catalog rows when the search box changes (debounced).
@@ -80,23 +81,32 @@ export default function AdminPage() {
     if (r.ok) setData(await r.json());
   }
 
+  async function saveBookEdit() {
+    if (!editBook) return;
+    await fetch(`/api/books/${editBook.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: editBook.title,
+        title_en: editBook.title_en,
+        author: editBook.author,
+        subject: editBook.subject,
+        condition: editBook.condition,
+        description: editBook.description,
+        price: editBook.price === '' || editBook.price == null ? '' : Number(editBook.price),
+        available: editBook.available ? 1 : 0,
+      }),
+    });
+    setEditBook(null);
+    refresh();
+  }
+
   async function adminAction(payload: Record<string, unknown>, confirmMsg?: string) {
     if (confirmMsg && !confirm(confirmMsg)) return;
     const res = await fetch('/api/admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    });
-    if (res.ok) refresh();
-  }
-
-  async function editAuthor(bookId: unknown, current: unknown) {
-    const author = prompt(t('adm.editAuthor'), typeof current === 'string' ? current : '');
-    if (author == null) return;
-    const res = await fetch(`/api/books/${bookId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author }),
     });
     if (res.ok) refresh();
   }
@@ -269,10 +279,10 @@ export default function AdminPage() {
                           <input type="file" accept="image/*" className="hidden"
                             onChange={e => uploadCover(r.id, e.target.files?.[0])} />
                         </label>
-                        <button onClick={() => editAuthor(r.id, r.author)}
+                        <button onClick={() => setEditBook({ ...r })}
                           className="px-2 py-1 rounded-lg font-semibold"
                           style={{ background: '#ede9fe', color: '#7c3aed' }}>
-                          ✏️ {t('adm.editAuthor')}
+                          ✏️ {t('adm.editBook')}
                         </button>
                         <button onClick={() => adminAction({ action: 'delete_book', book_id: r.id }, `${t('adm.deleteBook')}: ${String(r.title)}?`)}
                           className="px-2 py-1 rounded-lg font-semibold"
@@ -337,6 +347,56 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Full book editor (admin can change any field) */}
+        {editBook && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46,16,101,0.4)' }} onClick={() => setEditBook(null)}>
+            <div className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #f3e8ff' }}>
+                <p className="font-bold text-[#2e1065]">✏️ {t('adm.editBook')} #{String(editBook.id)}</p>
+                <button onClick={() => setEditBook(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b7280] text-xl" style={{ background: '#f3f4f6' }}>✕</button>
+              </div>
+              <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto">
+                {[
+                  { k: 'title', label: t('profile.fTitleTh') },
+                  { k: 'title_en', label: t('profile.fTitleEn') },
+                  { k: 'author', label: t('profile.fAuthor') },
+                  { k: 'subject', label: t('profile.fSubject') },
+                  { k: 'price', label: t('profile.fPrice'), type: 'number' },
+                ].map(f => (
+                  <div key={f.k}>
+                    <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{f.label}</label>
+                    <input
+                      type={f.type ?? 'text'}
+                      value={editBook[f.k] ?? ''}
+                      onChange={e => setEditBook(b => b && ({ ...b, [f.k]: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', outline: 'none' }} />
+                  </div>
+                ))}
+                <div>
+                  <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fCondition')}</label>
+                  <select value={editBook.condition ?? 'Good'} onChange={e => setEditBook(b => b && ({ ...b, condition: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                    {['Like New', 'Good', 'Fair', 'Poor'].map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fDescription')}</label>
+                  <textarea rows={2} value={editBook.description ?? ''} onChange={e => setEditBook(b => b && ({ ...b, description: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065] resize-none" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', outline: 'none' }} />
+                </div>
+                <label className="flex items-center gap-2 text-sm text-[#2e1065]">
+                  <input type="checkbox" checked={!!Number(editBook.available)} onChange={e => setEditBook(b => b && ({ ...b, available: e.target.checked ? 1 : 0 }))} />
+                  {t('adm.bookAvailable')}
+                </label>
+              </div>
+              <div className="flex gap-2 px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid #f3e8ff' }}>
+                <button onClick={() => setEditBook(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>{t('profile2.cancel')}</button>
+                <button onClick={saveBookEdit} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>{t('profile2.save')}</button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );
