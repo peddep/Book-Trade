@@ -20,6 +20,6 @@ export async function GET(req: NextRequest) {
     state = await getHarvestState();
   }
 
-  const result = await harvestBatch(state.nextIndex, 3);
+  const result = await harvestBatch(state.nextIndex, 5);
   return NextResponse.json({ ok: true, ...result });
 }
