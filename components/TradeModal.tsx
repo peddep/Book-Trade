@@ -60,13 +60,16 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
-      <div className="w-full max-w-lg rounded-2xl p-6 flex flex-col gap-4" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-        <div className="flex justify-between items-start">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl flex flex-col overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+        {/* Sticky header with the close button */}
+        <div className="flex justify-between items-center px-6 pt-5 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #f3e8ff' }}>
           <h2 className="text-lg font-bold text-[#2e1065]">{t('modal.title')}</h2>
-          <button onClick={onClose} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
+          <button onClick={onClose} aria-label={t('modal.cancel')} className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b7280] hover:text-[#2e1065] text-xl flex-shrink-0" style={{ background: '#f3f4f6' }}>✕</button>
         </div>
 
+        {/* Scrollable body */}
+        <div className="flex flex-col gap-4 px-6 py-4 overflow-y-auto flex-1">
         <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#f5f3ff', border: '1px solid #e9d5ff' }}>
           {/* Book-shaped cover of the book being requested */}
           <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0" style={{ width: 56, aspectRatio: '2 / 3', background: targetBook.cover_color, boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }}>
@@ -122,7 +125,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
                     onSelect={setSelectedBook}
                     disabledIds={blocked}
                     disabledLabel={t('modal.priceFar')}
-                    maxHeight="45vh"
+                    maxHeight="none"
                   />
                 )}
               </>
@@ -143,11 +146,13 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
+        </div>
 
-        <div className="flex gap-2">
+        {/* Sticky footer with the actions */}
+        <div className="flex gap-2 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid #f3e8ff' }}>
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-xl font-semibold text-sm"
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm"
             style={{ background: '#e9d5ff', color: '#6b7280' }}
           >
             {t('modal.cancel')}
@@ -155,7 +160,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
           <button
             onClick={submit}
             disabled={!selectedBook || loading}
-            className="flex-1 py-2 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
             {loading ? t('modal.sending') : t('modal.send')}
