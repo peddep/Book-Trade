@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
+
+const DRAFT_KEY = 'register-draft';
 
 const GRADES = ['1', '2', '3', '4', '5', '6'];
 const CLASSES = Array.from({ length: 16 }, (_, i) => String(i + 1));
@@ -29,6 +31,31 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const firstSave = useRef(true);
+
+  // Restore a saved draft (e.g. after visiting the Rules / Privacy pages).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        setName(d.name ?? ''); setRealName(d.realName ?? ''); setEmail(d.email ?? '');
+        setPassword(d.password ?? ''); setConfirmPassword(d.confirmPassword ?? '');
+        setGrade(d.grade ?? ''); setClassNo(d.classNo ?? ''); setContact(d.contact ?? '');
+        setAvailability(Array.isArray(d.availability) ? d.availability : []);
+      }
+    } catch { /* ignore corrupt draft */ }
+  }, []);
+
+  // Keep the draft in sync so the info survives navigating away and back.
+  // Skip the very first run (initial empty mount) so it never clobbers a saved
+  // draft before the restore above has applied.
+  useEffect(() => {
+    if (firstSave.current) { firstSave.current = false; return; }
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ name, realName, email, password, confirmPassword, grade, classNo, contact, availability }));
+    } catch { /* storage full / unavailable */ }
+  }, [name, realName, email, password, confirmPassword, grade, classNo, contact, availability]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +73,7 @@ export default function RegisterPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
         router.push('/trade');
         return;
       }

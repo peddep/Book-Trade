@@ -1,11 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
 
 export default function RulesPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'] as const;
   const rules = ['meet', 'noCash', 'noSchoolBooks', 'honest', 'decline', 'respect', 'report'] as const;
 
@@ -13,7 +14,7 @@ export default function RulesPage() {
     <>
       <Navbar />
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
+        <button onClick={() => router.back()} className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</button>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mt-2 mb-1">📋 {t('rules.title')}</h1>
         <p className="text-sm text-[#6b7280] mb-6">{t('rules.intro')}</p>
 
