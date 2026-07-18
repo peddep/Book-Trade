@@ -31,7 +31,8 @@ export default function AdminHarvestCard() {
     stopRef.current = false;
     let first = true;
     try {
-      for (let i = 0; i < 60 && !stopRef.current; i++) {
+      // Loop until a full cycle finishes or the API rate-limits us.
+      for (let i = 0; i < 400 && !stopRef.current; i++) {
         const res = await fetch('/api/admin/harvest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

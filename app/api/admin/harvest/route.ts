@@ -27,6 +27,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ...state, done: true, rateLimited: false, inserted: 0 });
   }
 
-  const result = await harvestBatch(state.nextIndex, 2);
+  const result = await harvestBatch(state.nextIndex, 3);
   return NextResponse.json(result);
 }

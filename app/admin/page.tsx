@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
+import AdminHarvestCard from '@/components/AdminHarvestCard';
 import { useI18n } from '@/lib/i18n';
 import { fileToCoverDataUrl } from '@/lib/image';
 
@@ -198,6 +199,9 @@ export default function AdminPage() {
             </button>
           ))}
         </div>
+
+        {/* Auto-harvest Thai books until done or rate-limited */}
+        <AdminHarvestCard />
 
         {/* Add titles to the suggestion catalog (e.g. school textbooks) */}
         <details className="mb-6 rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
