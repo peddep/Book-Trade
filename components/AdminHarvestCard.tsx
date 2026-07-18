@@ -8,6 +8,7 @@ interface HarvestState {
   totalQueries: number;
   catalogCount: number;
   done: boolean;
+  running?: boolean;
   rateLimited?: boolean;
 }
 
@@ -16,49 +17,58 @@ export default function AdminHarvestCard() {
   const [state, setState] = useState<HarvestState | null>(null);
   const [running, setRunning] = useState(false);
   const [message, setMessage] = useState('');
-  const stopRef = useRef(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  async function poll() {
+    try {
+      const r = await fetch('/api/admin/harvest');
+      if (!r.ok) return;
+      const d: HarvestState = await r.json();
+      setState(d);
+      setRunning(!!d.running);
+      if (!d.running) {
+        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+        if (d.done) setMessage(t('admin.done', { count: d.catalogCount }));
+      }
+    } catch { /* keep polling */ }
+  }
+
+  // On mount: read state, and if a run is already going (started elsewhere or
+  // before the page was reopened), resume showing its live progress.
   useEffect(() => {
-    fetch('/api/admin/harvest')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => d && setState(d))
-      .catch(() => {});
+    poll().then(() => {
+      if (pollRef.current) return;
+      // start polling only if it's running
+      setState(s => {
+        if (s?.running && !pollRef.current) pollRef.current = setInterval(poll, 3000);
+        return s;
+      });
+    });
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Start the self-continuing server harvest, then just poll for progress.
   async function run(reset: boolean) {
-    setRunning(true);
     setMessage('');
-    stopRef.current = false;
-    let first = true;
+    setRunning(true);
     try {
-      // Loop until a full cycle finishes or the API rate-limits us.
-      for (let i = 0; i < 400 && !stopRef.current; i++) {
-        const res = await fetch('/api/admin/harvest', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(first && reset ? { reset: true } : {}),
-        });
-        first = false;
-        if (!res.ok) {
-          setMessage(t('admin.error'));
-          break;
-        }
-        const d: HarvestState = await res.json();
-        setState(d);
-        if (d.rateLimited) {
-          setMessage(t('admin.rateLimited'));
-          break;
-        }
-        if (d.done) {
-          setMessage(t('admin.done', { count: d.catalogCount }));
-          break;
-        }
-      }
-    } catch {
-      setMessage(t('admin.error'));
-    } finally {
-      setRunning(false);
-    }
+      await fetch('/api/admin/harvest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reset ? { reset: true } : {}),
+      });
+    } catch { /* the poll will reflect state */ }
+    if (!pollRef.current) pollRef.current = setInterval(poll, 3000);
+    poll();
+  }
+
+  async function stop() {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    setRunning(false);
+    await fetch('/api/admin/harvest', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stop: true }),
+    }).catch(() => {});
   }
 
   if (!state) return null;
@@ -85,7 +95,7 @@ export default function AdminHarvestCard() {
           </button>
           {running && (
             <button
-              onClick={() => { stopRef.current = true; }}
+              onClick={stop}
               className="px-4 py-2 rounded-xl font-semibold text-sm"
               style={{ background: '#e9d5ff', color: '#6b7280' }}
             >
@@ -103,6 +113,7 @@ export default function AdminHarvestCard() {
           <p className="text-xs text-[#6b7280] mt-1.5">
             {t('admin.progress', { current: Math.min(state.nextIndex, state.totalQueries), total: state.totalQueries, count: state.catalogCount })}
           </p>
+          {running && <p className="text-xs mt-1" style={{ color: '#7c3aed' }}>{t('admin.keepsRunning')}</p>}
         </div>
       )}
 

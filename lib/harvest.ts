@@ -117,6 +117,26 @@ export async function resetHarvestState() {
   await getDb().execute({ sql: "INSERT OR REPLACE INTO app_state (key, value) VALUES ('harvest_next', '0')", args: [] });
 }
 
+// ── Run lock for the self-continuing (server-side) harvest chain ──
+async function readState(key: string): Promise<number> {
+  try {
+    const r = await getDb().execute({ sql: 'SELECT value FROM app_state WHERE key = ?', args: [key] });
+    return r.rows.length ? Number(r.rows[0].value) : 0;
+  } catch { return 0; }
+}
+async function writeState(key: string, value: string) {
+  await ensureTables();
+  await getDb().execute({ sql: 'INSERT OR REPLACE INTO app_state (key, value) VALUES (?, ?)', args: [key, value] });
+}
+
+// Timestamp of the last chain heartbeat (0 = not running).
+export const getHarvestRunning = () => readState('harvest_running');
+export const markHarvestRunning = () => writeState('harvest_running', String(Date.now()));
+export const clearHarvestRunning = () => writeState('harvest_running', '0');
+// Timestamp of the most recent stop request.
+export const getHarvestStop = () => readState('harvest_stop');
+export const requestHarvestStop = () => writeState('harvest_stop', String(Date.now()));
+
 async function fetchPage(query: string, startIndex: number): Promise<{ rateLimited: boolean; items: any[] }> {
   const params = new URLSearchParams({
     q: query,

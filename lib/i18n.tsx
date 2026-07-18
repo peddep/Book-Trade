@@ -494,6 +494,7 @@ const STRINGS: Dict = {
   'admin.progress': { th: 'คำค้น {current}/{total} • มีหนังสือ {count} เล่มแล้ว', en: 'Query {current}/{total} • {count} titles so far' },
   'admin.done': { th: '✅ เสร็จสิ้น! คลังมีหนังสือ {count} เล่ม', en: '✅ Done! The catalog now holds {count} titles' },
   'admin.rateLimited': { th: '⚠️ ถึงลิมิตของ Google Books แล้ว ความคืบหน้าถูกบันทึกไว้ ลองกด "นำเข้าต่อ" ภายหลัง หรือเพิ่ม GOOGLE_BOOKS_API_KEY ใน Vercel', en: '⚠️ Google Books rate limit reached. Progress is saved — press "Continue Import" later, or add GOOGLE_BOOKS_API_KEY in Vercel.' },
+  'admin.keepsRunning': { th: '↻ ทำงานต่อบนเซิร์ฟเวอร์ ปิดหน้านี้ได้เลย', en: '↻ Runs on the server — you can close this page.' },
   'admin.error': { th: 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง', en: 'Something went wrong. Try again.' },
 
   // Trades
