@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   // Full backup: every row of every table (minus password hashes), as a
   // downloadable JSON file.
   if (new URL(req.url).searchParams.get('export') === '1') {
-    const tables = ['users', 'books', 'trades', 'wonder_box', 'messages', 'wishlist', 'reports', 'catalog_books'];
+    const tables = ['users', 'books', 'trades', 'wonder_box', 'messages', 'wishlist', 'reports', 'catalog_books', 'donations'];
     const dump: Record<string, unknown[]> = {};
     for (const tbl of tables) {
       try {
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 
   // Harvested / admin-added suggestion catalog (may be large — show newest 500).
   const catalogSearch = new URL(req.url).searchParams.get('catalog_q')?.trim() ?? '';
-  const [users, books, trades, wonderbox, messages, reports, catalog] = await Promise.all([
+  const [users, books, trades, wonderbox, messages, reports, catalog, donations] = await Promise.all([
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
@@ -81,6 +81,9 @@ export async function GET(req: NextRequest) {
         : 'SELECT id, title, author, publisher, source, created_at FROM catalog_books ORDER BY id DESC LIMIT 500',
       args: catalogSearch ? [`%${catalogSearch}%`, `%${catalogSearch}%`] : [],
     }).catch(() => ({ rows: [] })),
+    db.execute(`SELECT d.id, u.name AS user_name, d.bank_name, d.amount, d.status, d.created_at
+                FROM donations d JOIN users u ON d.user_id = u.id
+                ORDER BY (d.status = 'pending') DESC, d.id DESC LIMIT 200`).catch(() => ({ rows: [] })),
   ]);
 
   return NextResponse.json({
@@ -100,6 +103,7 @@ export async function GET(req: NextRequest) {
     messages: messages.rows,
     reports: reports.rows,
     catalog: catalog.rows,
+    donations: donations.rows,
   });
 }
 
@@ -133,6 +137,19 @@ export async function POST(req: NextRequest) {
   // Mark a report as resolved.
   if (body.action === 'resolve_report' && body.report_id) {
     await getDb().execute({ sql: "UPDATE reports SET status = 'resolved' WHERE id = ?", args: [Number(body.report_id)] });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Donation moderation: verify against the bank statement, or delete fakes.
+  if ((body.action === 'verify_donation' || body.action === 'unverify_donation') && body.donation_id) {
+    await getDb().execute({
+      sql: 'UPDATE donations SET status = ? WHERE id = ?',
+      args: [body.action === 'verify_donation' ? 'verified' : 'pending', Number(body.donation_id)],
+    });
+    return NextResponse.json({ ok: true });
+  }
+  if (body.action === 'delete_donation' && body.donation_id) {
+    await getDb().execute({ sql: 'DELETE FROM donations WHERE id = ?', args: [Number(body.donation_id)] });
     return NextResponse.json({ ok: true });
   }
 

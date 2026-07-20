@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import TopTabs from '@/components/TopTabs';
+import DonationCard from '@/components/DonationCard';
 import { useI18n, type Lang } from '@/lib/i18n';
 
 interface User {
@@ -131,6 +132,9 @@ export default function RoomPage() {
             <p className="text-xs text-[#6b7280] mt-1">{t('room2.booksListed')}</p>
           </Card>
         </div>
+
+        {/* Donation section: top donators + donate flow */}
+        <DonationCard userName={user.name} />
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* News */}
