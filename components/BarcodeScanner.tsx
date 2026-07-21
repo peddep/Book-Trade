@@ -8,8 +8,17 @@ interface Props {
   onClose: () => void;
 }
 
-// Full-screen barcode scanner. Uses the phone camera and ZXing to read the
-// ISBN barcode (EAN-13) on the back cover of a book.
+function isIsbn(text: string): string | null {
+  const t = text.replace(/[^0-9Xx]/g, '');
+  if (t.length === 13 && /^97[89]/.test(t)) return t;
+  if (t.length === 10) return t;
+  return null;
+}
+
+// Full-screen ISBN barcode scanner. Prefers the phone's native
+// BarcodeDetector (fast and reliable on Android/Chrome); falls back to ZXing.
+// Always requests the BACK camera at a usable resolution — the previous
+// version often got the front camera, which is why scanning was hit-or-miss.
 export default function BarcodeScanner({ onDetected, onClose }: Props) {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -17,31 +26,94 @@ export default function BarcodeScanner({ onDetected, onClose }: Props) {
   const doneRef = useRef(false);
 
   useEffect(() => {
-    let controls: { stop: () => void } | null = null;
+    let stream: MediaStream | null = null;
+    let raf = 0;
+    let zxingControls: { stop: () => void } | null = null;
     let cancelled = false;
 
-    (async () => {
-      try {
-        const { BrowserMultiFormatReader } = await import('@zxing/browser');
-        const reader = new BrowserMultiFormatReader();
-        if (cancelled || !videoRef.current) return;
-        controls = await reader.decodeFromVideoDevice(undefined, videoRef.current, result => {
-          if (!result || doneRef.current) return;
-          const text = result.getText().replace(/[^0-9Xx]/g, '');
-          // ISBNs are 10 or 13 digits; book EAN-13 starts with 978/979.
-          if (text.length === 13 ? /^97[89]/.test(text) : text.length === 10) {
-            doneRef.current = true;
-            onDetected(text);
+    function found(text: string) {
+      const isbn = isIsbn(text);
+      if (!isbn || doneRef.current) return false;
+      doneRef.current = true;
+      onDetected(isbn);
+      return true;
+    }
+
+    async function start() {
+      const video = videoRef.current;
+      if (!video) return;
+
+      // Back camera, decent resolution — critical for reading small barcodes.
+      const constraints: MediaStreamConstraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+        audio: false,
+      };
+
+      // Path 1: native BarcodeDetector (Chrome/Android — fast and reliable).
+      const BD = (window as any).BarcodeDetector;
+      let detector: any = null;
+      if (BD) {
+        try {
+          const formats: string[] = await BD.getSupportedFormats();
+          if (formats.includes('ean_13')) {
+            detector = new BD({ formats: ['ean_13', 'ean_8'].filter(f => formats.includes(f)) });
           }
+        } catch { /* fall back to ZXing */ }
+      }
+
+      if (detector) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+          video.srcObject = stream;
+          await video.play();
+          const tick = async () => {
+            if (cancelled || doneRef.current) return;
+            try {
+              const codes = await detector.detect(video);
+              for (const c of codes) if (found(c.rawValue)) return;
+            } catch { /* frame not ready */ }
+            raf = requestAnimationFrame(tick);
+          };
+          raf = requestAnimationFrame(tick);
+          return;
+        } catch {
+          // camera failed for native path — try ZXing below
+          stream?.getTracks().forEach(t => t.stop());
+          stream = null;
+        }
+      }
+
+      // Path 2: ZXing with EAN-only hints + TRY_HARDER (works on iOS Safari).
+      try {
+        const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([
+          import('@zxing/browser'),
+          import('@zxing/library'),
+        ]);
+        const hints = new Map();
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8]);
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        const reader = new BrowserMultiFormatReader(hints);
+        if (cancelled) return;
+        zxingControls = await reader.decodeFromConstraints(constraints, video, result => {
+          if (result) found(result.getText());
         });
       } catch {
         if (!cancelled) setError(t('scan.cameraError'));
       }
-    })();
+    }
+
+    start();
 
     return () => {
       cancelled = true;
-      controls?.stop();
+      cancelAnimationFrame(raf);
+      zxingControls?.stop();
+      stream?.getTracks().forEach(t => t.stop());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -51,7 +123,7 @@ export default function BarcodeScanner({ onDetected, onClose }: Props) {
       <p className="text-white font-bold mb-3">📷 {t('scan.title')}</p>
       <div className="relative w-full max-w-sm rounded-2xl overflow-hidden" style={{ border: '2px solid #8b5cf6' }}>
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <video ref={videoRef} className="w-full" style={{ maxHeight: '55vh', objectFit: 'cover' }} />
+        <video ref={videoRef} playsInline muted className="w-full" style={{ maxHeight: '55vh', objectFit: 'cover' }} />
         {/* Aiming guide */}
         <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-16 rounded-lg pointer-events-none"
           style={{ border: '2px dashed rgba(255,255,255,0.7)' }} />

@@ -13,6 +13,7 @@ interface Book {
   subject?: string;
   condition?: string;
   price?: number | null;
+  volume?: string | null;
   cover_color: string;
   cover_url?: string | null;
 }
@@ -84,7 +85,10 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
           </div>
           <div className="min-w-0">
             <p className="text-xs text-[#6b7280]">{t('modal.youWant')}</p>
-            <p className="font-semibold text-[#2e1065] text-sm">{bookTitle(targetBook.title, targetBook.title_en)}</p>
+            <p className="font-semibold text-[#2e1065] text-sm">
+              {bookTitle(targetBook.title, targetBook.title_en)}
+              {targetBook.volume && <span style={{ color: '#7c3aed' }}> · {t('book.vol', { n: targetBook.volume })}</span>}
+            </p>
             <p className="text-xs text-[#6b7280] truncate">{targetBook.author}</p>
             {(targetBook.subject || targetBook.price != null) && (
               <div className="flex flex-wrap gap-1 mt-1.5">

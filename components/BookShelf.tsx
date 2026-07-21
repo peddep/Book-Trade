@@ -11,6 +11,7 @@ export interface ShelfBook {
   cover_color: string;
   cover_url?: string | null;
   price?: number | null;
+  volume?: string | null;
   available: number;
   in_wonderbox?: number;
 }
@@ -83,6 +84,12 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   {b.price != null && (
                     <span className="absolute bottom-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fbbf24' }}>
                       {b.price > 0 ? `฿${b.price}` : t('card.free')}
+                    </span>
+                  )}
+                  {/* Volume badge for multi-volume series (manga) */}
+                  {b.volume && (
+                    <span className="absolute bottom-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.9)', color: '#ffffff' }}>
+                      {t('book.vol', { n: b.volume })}
                     </span>
                   )}
                   {/* In the Wonder Box: purple ✨ ribbon */}

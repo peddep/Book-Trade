@@ -38,7 +38,7 @@ async function addMissingColumns(table: string, defs: string[]): Promise<string[
 let bookColumnsEnsured = false;
 export async function ensureBookColumns() {
   if (bookColumnsEnsured) return;
-  const added = await addMissingColumns('books', ['cover_url TEXT', 'title_en TEXT', 'price REAL']);
+  const added = await addMissingColumns('books', ['cover_url TEXT', 'title_en TEXT', 'price REAL', 'volume TEXT']);
   // Backfill random prices only when the price column was just created — no
   // point re-scanning the whole table on every cold start once it's done.
   if (added.includes('price')) {
@@ -91,6 +91,7 @@ export async function initDb() {
         title TEXT NOT NULL,
         title_en TEXT,
         price REAL,
+        volume TEXT,
         author TEXT NOT NULL,
         subject TEXT,
         grade_level TEXT,

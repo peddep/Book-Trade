@@ -31,6 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params;
   const db = getDb();
+  await ensureBookColumns();
   const found = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [id] });
   const book = found.rows[0] as any;
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -55,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     sets.push('price = ?');
     args.push(p !== null && !isNaN(p) && p >= 0 ? p : null);
   }
-  for (const f of ['subject', 'grade_level', 'condition', 'description'] as const) {
+  for (const f of ['subject', 'grade_level', 'condition', 'description', 'volume'] as const) {
     if (typeof body[f] !== 'undefined') {
       sets.push(`${f} = ?`);
       args.push(body[f] === '' ? null : body[f]);

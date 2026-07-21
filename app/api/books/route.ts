@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   }
 
-  const { title, title_en, author, subject, grade_level, condition, description, cover_url, price } = await req.json();
+  const { title, title_en, author, subject, grade_level, condition, description, cover_url, price, volume } = await req.json();
   if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 });
 
   // Price is required when adding a book.
@@ -145,9 +145,11 @@ export async function POST(req: NextRequest) {
   // Cover is the student's uploaded photo (or none).
   const coverUrl = sanitizeCover(cover_url);
   const titleEn = typeof title_en === 'string' && title_en.trim() ? title_en.trim() : null;
+  // Volume number for multi-volume series (manga เล่ม 1, 2, …).
+  const volumeStr = typeof volume === 'string' && volume.trim() ? volume.trim().slice(0, 20) : volume != null && volume !== '' ? String(volume).slice(0, 20) : null;
   const result = await db.execute({
-    sql: 'INSERT INTO books (owner_id, title, title_en, price, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    args: [user.id, title, titleEn, priceNum, authorFinal, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
+    sql: 'INSERT INTO books (owner_id, title, title_en, price, volume, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [user.id, title, titleEn, priceNum, volumeStr, authorFinal, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
   });
 
   const book = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [Number(result.lastInsertRowid)] });
