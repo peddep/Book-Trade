@@ -8,24 +8,26 @@ const TITLE_SUGGESTIONS = titleSuggestions();
 interface Props {
   value: string;
   onChange: (title: string) => void;
-  // Called when the typed/picked title matches a suggestion that has an author.
-  onAuthorFound?: (author: string) => void;
+  // Called on pick with whatever the suggestion knew about the book, so the
+  // form can fill those boxes instead of asking an API for them again.
+  onMeta?: (meta: { author?: string; publisher?: string }) => void;
   placeholder?: string;
   listId: string; // kept for API compatibility
   required?: boolean;
 }
 
 interface Option {
-  value: string;   // the (Thai-first) title inserted on pick
-  label?: string;  // the English name shown as a subtitle
-  author?: string; // author from remote sources
+  value: string;      // the (Thai-first) title inserted on pick
+  label?: string;     // the English name shown as a subtitle
+  author?: string;    // author from our catalog / remote sources
+  publisher?: string; // publisher, when the source had one
 }
 
 // Title input with a custom suggestion dropdown. Unlike a native <datalist>,
 // it matches the query against BOTH the Thai title and the English label — so
 // typing "harry" surfaces "แฮร์รี่ พอตเตอร์กับศิลาอาถรรพ์".
-export default function TitleInput({ value, onChange, onAuthorFound, placeholder, required }: Props) {
-  const [remote, setRemote] = useState<{ title: string; author: string }[]>([]);
+export default function TitleInput({ value, onChange, onMeta, placeholder, required }: Props) {
+  const [remote, setRemote] = useState<{ title: string; author: string; publisher?: string }[]>([]);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -82,7 +84,7 @@ export default function TitleInput({ value, onChange, onAuthorFound, placeholder
       const k = b.title.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
-      options.push({ value: b.title, label: b.author || undefined, author: b.author || undefined });
+      options.push({ value: b.title, label: b.author || undefined, author: b.author || undefined, publisher: b.publisher || undefined });
     }
   }
   const exact = options.length === 1 && options[0].value === value;
@@ -90,7 +92,7 @@ export default function TitleInput({ value, onChange, onAuthorFound, placeholder
 
   function pick(o: Option) {
     onChange(o.value);
-    if (o.author) onAuthorFound?.(o.author);
+    if (o.author || o.publisher) onMeta?.({ author: o.author, publisher: o.publisher });
     setOpen(false);
   }
 

@@ -38,7 +38,19 @@ async function addMissingColumns(table: string, defs: string[]): Promise<string[
 let bookColumnsEnsured = false;
 export async function ensureBookColumns() {
   if (bookColumnsEnsured) return;
-  const added = await addMissingColumns('books', ['cover_url TEXT', 'title_en TEXT', 'price REAL', 'volume TEXT', 'publisher TEXT']);
+  // isbn: set when the book was added by scanning, so the next student to scan
+  // the same barcode is answered from our own database instead of an API.
+  // cover_source: 'api' | 'upload' | 'camera' — only 'api' covers are reused on
+  // someone else's listing, since the other two are the student's own photo.
+  const added = await addMissingColumns('books', [
+    'cover_url TEXT', 'title_en TEXT', 'price REAL', 'volume TEXT', 'publisher TEXT',
+    'isbn TEXT', 'cover_source TEXT',
+  ]);
+  if (added.includes('isbn')) {
+    try {
+      await getDb().execute('CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn)');
+    } catch { /* ignore */ }
+  }
   // Backfill random prices only when the price column was just created — no
   // point re-scanning the whole table on every cold start once it's done.
   if (added.includes('price')) {

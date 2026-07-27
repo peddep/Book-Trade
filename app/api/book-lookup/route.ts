@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import { getDb, ensureBookColumns } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -81,6 +82,68 @@ async function fetchCoverAsDataUrl(url: string): Promise<string | null> {
   }
 }
 
+// Looks the book up in data we already own: books other students have listed,
+// plus the harvested Thai catalog. Instant, quota-free, and it keeps working
+// when the upstream APIs refuse us — which is the normal case without an API
+// key. The more the school lists, the better this gets.
+async function lookupLocal(by: { isbn?: string; title?: string }): Promise<Lookup | null> {
+  try {
+    await ensureBookColumns();
+    const db = getDb();
+
+    // A previously scanned copy of the same barcode is the best match; failing
+    // that, an exact title match. Prefer rows that carry the most information.
+    const listed = by.isbn
+      ? await db.execute({
+          sql: `SELECT title, title_en, author, publisher, subject, cover_url, cover_source FROM books
+                WHERE isbn = ? ORDER BY (cover_url IS NOT NULL) DESC, id DESC LIMIT 1`,
+          args: [by.isbn],
+        })
+      : await db.execute({
+          sql: `SELECT title, title_en, author, publisher, subject, cover_url, cover_source FROM books
+                WHERE lower(title) = lower(?) ORDER BY (cover_url IS NOT NULL) DESC, id DESC LIMIT 1`,
+          args: [by.title ?? ''],
+        });
+
+    const row = listed.rows[0];
+    // Harvested catalog: title/author/publisher only, no cover.
+    const title = row ? String(row.title) : by.title ?? '';
+    const cat = title
+      ? await db.execute({
+          sql: 'SELECT author, publisher FROM catalog_books WHERE lower(title) = lower(?) LIMIT 1',
+          args: [title],
+        }).catch(() => ({ rows: [] as Record<string, unknown>[] }))
+      : { rows: [] as Record<string, unknown>[] };
+    const catRow = cat.rows[0];
+
+    if (!row && !catRow) return null;
+
+    const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+    // Only reuse a cover the APIs gave us. An uploaded or camera photo belongs
+    // to the student who took it — it should not appear on someone else's book.
+    const reusableCover = row && row.cover_source === 'api' ? str(row.cover_url) : null;
+    const tags = str(row?.subject)?.split(',').map(s => s.trim()).filter(Boolean) ?? [];
+
+    return {
+      title: title || null,
+      author: str(row?.author) ?? str(catRow?.author),
+      publisher: str(row?.publisher) ?? str(catRow?.publisher),
+      description: null,
+      categories: tags.slice(0, 4),
+      price: null, // another student's asking price is theirs, not a list price
+      coverUrl: reusableCover,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// True when the local hit is thin enough that it's still worth asking an API
+// to top it up (the APIs can add a cover, description and price).
+function localIsComplete(l: Lookup): boolean {
+  return Boolean(l.title && l.author && l.publisher && l.coverUrl);
+}
+
 async function lookupGoogle(query: string): Promise<Lookup | null> {
   const params = new URLSearchParams({
     q: query,
@@ -139,8 +202,23 @@ async function lookupOpenLibraryIsbn(isbn: string): Promise<Lookup | null> {
   }
 }
 
-// Looks up a book by ISBN (barcode scan) or by title, returning the official
-// metadata + cover from Thai publishers' records on Google Books / Open Library.
+// Fills the gaps in `primary` from `extra`, keeping `primary`'s values.
+function merge(primary: Lookup, extra: Lookup | null): Lookup {
+  if (!extra) return primary;
+  return {
+    title: primary.title ?? extra.title,
+    author: primary.author ?? extra.author,
+    publisher: primary.publisher ?? extra.publisher,
+    description: primary.description ?? extra.description,
+    categories: primary.categories.length ? primary.categories : extra.categories,
+    price: primary.price ?? extra.price,
+    coverUrl: primary.coverUrl ?? extra.coverUrl,
+  };
+}
+
+// Looks up a book by ISBN (barcode scan) or by title. Checks our own data
+// first — books other students already listed and the harvested Thai catalog —
+// then tops up whatever is still missing from Google Books / Open Library.
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -151,28 +229,39 @@ export async function GET(req: NextRequest) {
   lastCallBlocked = false;
 
   if (isbn && (isbn.length === 10 || isbn.length === 13)) {
+    // Someone at this school already listed this exact barcode — answer from
+    // our own database and skip the APIs entirely.
+    const local = await lookupLocal({ isbn });
+    if (local?.title && localIsComplete(local)) {
+      return NextResponse.json({ found: true, isbn, source: 'local', ...local });
+    }
+
     const g = await lookupGoogle(`isbn:${isbn}`);
     if (g?.title) {
       // Top up anything Google was missing (cover / publisher) from Open Library.
-      if (!g.coverUrl || !g.publisher) {
-        const ol = await lookupOpenLibraryIsbn(isbn);
-        if (ol) {
-          g.coverUrl = g.coverUrl ?? ol.coverUrl;
-          g.publisher = g.publisher ?? ol.publisher;
-        }
-      }
-      return NextResponse.json({ found: true, isbn, ...g });
+      const topped = !g.coverUrl || !g.publisher ? merge(g, await lookupOpenLibraryIsbn(isbn)) : g;
+      // The local title is the one students here actually use, so keep it.
+      return NextResponse.json({ found: true, isbn, source: local?.title ? 'local' : 'api', ...merge(local ?? topped, topped) });
     }
     const ol = await lookupOpenLibraryIsbn(isbn);
-    if (ol?.title) return NextResponse.json({ found: true, isbn, ...ol });
+    if (ol?.title) return NextResponse.json({ found: true, isbn, source: 'api', ...merge(local ?? ol, ol) });
+    // APIs gave us nothing; a partial local hit still beats an empty form.
+    if (local?.title) return NextResponse.json({ found: true, isbn, source: 'local', ...local });
     // `blocked` means the APIs refused us (quota) rather than not knowing the
     // book — without GOOGLE_BOOKS_API_KEY this is the usual outcome.
     return NextResponse.json({ found: false, blocked: lastCallBlocked });
   }
 
   if (title.length >= 3) {
+    const local = await lookupLocal({ title });
+    if (local?.title && localIsComplete(local)) {
+      return NextResponse.json({ found: true, source: 'local', ...local });
+    }
     const g = await lookupGoogle(`intitle:"${title}"`);
-    if (g?.title) return NextResponse.json({ found: true, ...g });
+    if (g?.title) {
+      return NextResponse.json({ found: true, source: local?.title ? 'local' : 'api', ...merge(local ?? g, g) });
+    }
+    if (local?.title) return NextResponse.json({ found: true, source: 'local', ...local });
     return NextResponse.json({ found: false, blocked: lastCallBlocked });
   }
 

@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 interface Suggestion {
   title: string;
   author: string;
+  publisher: string;
 }
 
 const THAI_SCRIPT = /[฀-๿]/;
@@ -29,15 +30,22 @@ async function searchLocalDb(q: string): Promise<Suggestion[]> {
       catalogEnsured = true;
     }
     const like = `%${q}%`;
+    // The publisher is already stored on both tables — carry it through so
+    // picking a suggestion fills that box too instead of re-asking an API.
     const [catalog, listed] = await Promise.all([
-      db.execute({ sql: 'SELECT title, author FROM catalog_books WHERE title LIKE ? LIMIT 8', args: [like] }),
-      db.execute({ sql: 'SELECT DISTINCT title, author FROM books WHERE title LIKE ? LIMIT 4', args: [like] }),
+      db.execute({ sql: 'SELECT title, author, publisher FROM catalog_books WHERE title LIKE ? LIMIT 8', args: [like] }),
+      db.execute({ sql: 'SELECT DISTINCT title, author, publisher FROM books WHERE title LIKE ? LIMIT 4', args: [like] })
+        .catch(() => ({ rows: [] as Record<string, unknown>[] })),
     ]);
     const out: Suggestion[] = [];
     for (const row of [...listed.rows, ...catalog.rows]) {
       const title = typeof row.title === 'string' ? row.title.trim() : '';
       if (!title) continue;
-      out.push({ title, author: typeof row.author === 'string' ? row.author : '' });
+      out.push({
+        title,
+        author: typeof row.author === 'string' ? row.author : '',
+        publisher: typeof row.publisher === 'string' ? row.publisher : '',
+      });
     }
     return out;
   } catch {
@@ -48,7 +56,7 @@ async function searchLocalDb(q: string): Promise<Suggestion[]> {
 // Open Library: no key, no quota. Thin Thai coverage, good English coverage.
 async function searchOpenLibrary(q: string, thai: boolean): Promise<Suggestion[]> {
   const query = thai ? `${q} language:tha` : q;
-  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,author_name`;
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,author_name,publisher`;
   const res = await fetch(url, {
     headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' },
     signal: AbortSignal.timeout(6000),
@@ -61,7 +69,8 @@ async function searchOpenLibrary(q: string, thai: boolean): Promise<Suggestion[]
     const title = typeof doc.title === 'string' ? doc.title.trim() : '';
     if (!title) continue;
     const author = Array.isArray(doc.author_name) && doc.author_name.length ? doc.author_name[0] : '';
-    out.push({ title, author });
+    const publisher = Array.isArray(doc.publisher) && doc.publisher.length ? String(doc.publisher[0]) : '';
+    out.push({ title, author, publisher });
   }
   return out;
 }
@@ -75,7 +84,7 @@ async function searchGoogleBooks(q: string): Promise<Suggestion[]> {
     langRestrict: 'th',
     maxResults: '8',
     printType: 'books',
-    fields: 'items(volumeInfo(title,authors))',
+    fields: 'items(volumeInfo(title,authors,publisher))',
   });
   const key = process.env.GOOGLE_BOOKS_API_KEY;
   if (key) params.set('key', key);
@@ -91,7 +100,7 @@ async function searchGoogleBooks(q: string): Promise<Suggestion[]> {
     const title = typeof info.title === 'string' ? info.title.trim() : '';
     if (!title) continue;
     const author = Array.isArray(info.authors) && info.authors.length ? info.authors[0] : '';
-    out.push({ title, author });
+    out.push({ title, author, publisher: typeof info.publisher === 'string' ? info.publisher : '' });
   }
   return out;
 }

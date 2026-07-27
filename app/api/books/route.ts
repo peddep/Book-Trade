@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   }
 
-  const { title, title_en, author, subject, grade_level, condition, description, cover_url, price, volume, publisher } = await req.json();
+  const { title, title_en, author, subject, grade_level, condition, description, cover_url, price, volume, publisher, isbn, cover_source } = await req.json();
   if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 });
 
   // Price is required when adding a book.
@@ -148,9 +148,15 @@ export async function POST(req: NextRequest) {
   // Volume number for multi-volume series (manga เล่ม 1, 2, …).
   const volumeStr = typeof volume === 'string' && volume.trim() ? volume.trim().slice(0, 20) : volume != null && volume !== '' ? String(volume).slice(0, 20) : null;
   const publisherStr = typeof publisher === 'string' && publisher.trim() ? publisher.trim().slice(0, 120) : null;
+  // ISBN from a barcode scan — lets the next student who scans this book be
+  // answered from our own database instead of an API.
+  const isbnStr = typeof isbn === 'string' && /^[0-9Xx]{10,13}$/.test(isbn.trim()) ? isbn.trim() : null;
+  // Where the cover came from. Only 'api' covers are ever reused on another
+  // student's listing; 'upload' and 'camera' are that student's own photo.
+  const coverSrc = coverUrl && ['api', 'upload', 'camera'].includes(cover_source) ? cover_source : coverUrl ? 'upload' : null;
   const result = await db.execute({
-    sql: 'INSERT INTO books (owner_id, title, title_en, price, volume, publisher, author, subject, grade_level, condition, description, cover_color, cover_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    args: [user.id, title, titleEn, priceNum, volumeStr, publisherStr, authorFinal, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl],
+    sql: 'INSERT INTO books (owner_id, title, title_en, price, volume, publisher, author, subject, grade_level, condition, description, cover_color, cover_url, isbn, cover_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [user.id, title, titleEn, priceNum, volumeStr, publisherStr, authorFinal, subject ?? null, grade_level ?? null, condition ?? 'Good', description ?? null, color, coverUrl, isbnStr, coverSrc],
   });
 
   const book = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [Number(result.lastInsertRowid)] });

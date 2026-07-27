@@ -27,11 +27,13 @@ interface Book {
   price?: number | null;
   volume?: string | null;
   publisher?: string | null;
+  isbn?: string | null;
+  cover_source?: string | null;
   created_at?: string;
   available: number;
 }
 
-const EMPTY = { title: '', title_en: '', price: '', volume: '', publisher: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
+const EMPTY = { title: '', title_en: '', price: '', volume: '', publisher: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '', cover_source: '', isbn: '' };
 
 // Manages the user's books as a bookshelf (3-column scrollable grid). Tapping a
 // book reveals its title and edit actions. `compact` is the Trade page's left
@@ -47,20 +49,29 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   const [sort, setSort] = useState<SortKey>('recent');
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState('');
+  // Drives the scanner's second step: 'have' closes it, 'need' offers the
+  // camera so the student can photograph the cover themselves.
+  const [coverStatus, setCoverStatus] = useState<'pending' | 'have' | 'need'>('pending');
 
-  // Barcode scanned → look the ISBN up and fill in as much of the form as the
-  // book APIs can give us: title, author, publisher, cover, tags, description
-  // and (for series) the volume number parsed out of the title.
+  // Barcode scanned → look the ISBN up and fill in as much of the form as we
+  // can: title, author, publisher, cover, tags, description and (for series)
+  // the volume number parsed out of the title. Checked against books already
+  // listed on the site first, then the book APIs.
   async function onIsbn(isbn: string) {
-    setScanning(false);
     setScanMsg(t('scan.looking'));
+    setCoverStatus('pending');
     try {
       const res = await fetch(`/api/book-lookup?isbn=${isbn}`);
       const d = await res.json();
+      // Remember the barcode either way, so the next student who scans this
+      // book is answered from our own database.
+      setForm(prev => ({ ...prev, isbn }));
       if (!d.found || !d.title) {
+        setCoverStatus('need');
         setScanMsg(d.blocked ? t('scan.blocked') : t('scan.notFound'));
         return;
       }
+      setCoverStatus(d.coverUrl ? 'have' : 'need');
 
       // "One Piece, Vol. 12" / "วันพีซ เล่ม 12" → volume 12
       const volMatch = String(d.title).match(/(?:vol\.?|volume|เล่ม(?:ที่)?)\s*(\d+)/i);
@@ -79,6 +90,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         description: prev.description || (d.description ?? ''),
         price: prev.price || (d.price != null ? String(d.price) : ''),
         cover_url: d.coverUrl ?? prev.cover_url,
+        cover_source: d.coverUrl ? 'api' : prev.cover_source,
       }));
 
       // Tell the student what was filled so they only complete the rest.
@@ -89,8 +101,10 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         d.coverUrl && t('scan.gotCover'),
         tags.length > 0 && t('profile.fSubject'),
       ].filter(Boolean) as string[];
-      setScanMsg(`✓ ${d.title}${filled.length ? ` — ${t('scan.filled', { fields: filled.join(', ') })}` : ''}`);
+      const via = d.source === 'local' ? ` ${t('scan.fromSite')}` : '';
+      setScanMsg(`✓ ${d.title}${filled.length ? ` — ${t('scan.filled', { fields: filled.join(', ') })}` : ''}${via}`);
     } catch {
+      setCoverStatus('need');
       setScanMsg(t('scan.notFound'));
     }
   }
@@ -111,6 +125,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           return {
             ...prev,
             cover_url: d.coverUrl ?? prev.cover_url,
+            cover_source: d.coverUrl ? 'api' : prev.cover_source,
             author: prev.author || (d.author ?? ''),
             publisher: prev.publisher || (d.publisher ?? ''),
             subject: prev.subject || (Array.isArray(d.categories) ? d.categories.join(',') : ''),
@@ -183,6 +198,8 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     setForm(EMPTY);
     setEditingId(null);
     setShowForm(true);
+    setScanMsg('');
+    setCoverStatus('pending');
   }
 
   function startEdit(id: number) {
@@ -191,6 +208,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     setForm({
       title: b.title, title_en: b.title_en ?? '', price: b.price != null ? String(b.price) : '', volume: b.volume ?? '', publisher: b.publisher ?? '', author: b.author, subject: b.subject ?? '', grade_level: b.grade_level ?? '',
       condition: b.condition, description: b.description ?? '', cover_url: b.cover_url ?? '',
+      cover_source: b.cover_source ?? '', isbn: b.isbn ?? '',
     });
     setEditingId(id);
     setShowForm(true);
@@ -235,7 +253,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     if (!file) return;
     try {
       const dataUrl = await fileToCoverDataUrl(file);
-      setForm(prev => ({ ...prev, cover_url: dataUrl }));
+      setForm(prev => ({ ...prev, cover_url: dataUrl, cover_source: 'upload' }));
     } catch {
       // ignore unreadable images
     }
@@ -273,7 +291,9 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleTh')} *</label>
-          <TitleInput value={form.title} onChange={setTitle} onAuthorFound={a => setForm(prev => ({ ...prev, author: a }))} placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
+          <TitleInput value={form.title} onChange={setTitle}
+            onMeta={m => setForm(prev => ({ ...prev, author: m.author || prev.author, publisher: m.publisher || prev.publisher }))}
+            placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
         </div>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fSubject')}</label>
@@ -425,7 +445,15 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     </div>
   );
 
-  const scanner = scanning && <BarcodeScanner onDetected={onIsbn} onClose={() => setScanning(false)} />;
+  const scanner = scanning && (
+    <BarcodeScanner
+      onDetected={onIsbn}
+      onClose={() => setScanning(false)}
+      coverStatus={coverStatus}
+      // The student's own photo of the front cover — kept on their listing only.
+      onCapture={dataUrl => setForm(prev => ({ ...prev, cover_url: dataUrl, cover_source: 'camera' }))}
+    />
+  );
 
   if (compact) {
     return (

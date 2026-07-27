@@ -77,7 +77,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.cover_url !== '' && cover === null) {
       return NextResponse.json({ error: 'invalid_cover' }, { status: 400 });
     }
-    await db.execute({ sql: 'UPDATE books SET cover_url = ? WHERE id = ?', args: [cover, id] });
+    // A cover set here is the owner's own photo, so it is never reused on
+    // another student's listing (see cover_source in lib/db.ts).
+    await db.execute({ sql: 'UPDATE books SET cover_url = ?, cover_source = ? WHERE id = ?', args: [cover, cover ? 'upload' : null, id] });
   }
   return NextResponse.json({ ok: true });
 }
