@@ -395,6 +395,7 @@ const STRINGS: Dict = {
   'profile.fPublisher': { th: 'สำนักพิมพ์', en: 'Publisher' },
   'profile.fPublisherPlaceholder': { th: 'เช่น อมรินทร์, แจ่มใส', en: 'e.g. Amarin, Jamsai' },
   'scan.filled': { th: 'กรอกให้แล้ว: {fields}', en: 'filled in: {fields}' },
+  'scan.blocked': { th: '⚠️ ค้นข้อมูลหนังสือไม่ได้ชั่วคราว (โควตา API เต็ม) กรุณากรอกเอง — แอดมินตั้งค่า GOOGLE_BOOKS_API_KEY ได้เพื่อแก้', en: '⚠️ Book lookup is temporarily unavailable (API quota). Please fill the form in manually — the admin can fix this by setting GOOGLE_BOOKS_API_KEY.' },
   'scan.gotCover': { th: 'ปกหนังสือ', en: 'cover' },
   'book.vol': { th: 'เล่ม {n}', en: 'Vol. {n}' },
   'modal.priceRange': { th: 'แลกได้เฉพาะหนังสือราคา ฿{min}–฿{max} (ต่างกันไม่เกิน ฿100)', en: 'You can offer books priced ฿{min}–฿{max} (within ฿100).' },

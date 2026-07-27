@@ -57,7 +57,10 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     try {
       const res = await fetch(`/api/book-lookup?isbn=${isbn}`);
       const d = await res.json();
-      if (!d.found || !d.title) { setScanMsg(t('scan.notFound')); return; }
+      if (!d.found || !d.title) {
+        setScanMsg(d.blocked ? t('scan.blocked') : t('scan.notFound'));
+        return;
+      }
 
       // "One Piece, Vol. 12" / "วันพีซ เล่ม 12" → volume 12
       const volMatch = String(d.title).match(/(?:vol\.?|volume|เล่ม(?:ที่)?)\s*(\d+)/i);
@@ -74,6 +77,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         volume: prev.volume || (volMatch ? volMatch[1] : ''),
         subject: prev.subject || tags.join(','),
         description: prev.description || (d.description ?? ''),
+        price: prev.price || (d.price != null ? String(d.price) : ''),
         cover_url: d.coverUrl ?? prev.cover_url,
       }));
 
@@ -81,6 +85,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       const filled = [
         d.author && t('profile.fAuthor'),
         d.publisher && t('profile.fPublisher'),
+        d.price != null && t('profile.fPrice'),
         d.coverUrl && t('scan.gotCover'),
         tags.length > 0 && t('profile.fSubject'),
       ].filter(Boolean) as string[];

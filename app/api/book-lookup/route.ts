@@ -9,8 +9,13 @@ interface Lookup {
   publisher: string | null;
   description: string | null;
   categories: string[];
+  price: number | null; // list price, only when the API reports it in THB
   coverUrl: string | null; // data URL, ready to store like an uploaded photo
 }
+
+// Set when an upstream API refused the request (quota/rate limit) rather than
+// genuinely not having the book — the two need different messages.
+let lastCallBlocked = false;
 
 // Maps Google Books categories / title hints onto our own tag list.
 const CATEGORY_TAGS: [RegExp, string][] = [
@@ -81,26 +86,38 @@ async function lookupGoogle(query: string): Promise<Lookup | null> {
     q: query,
     maxResults: '1',
     printType: 'books',
-    fields: 'items(volumeInfo(title,authors,publisher,description,categories,imageLinks))',
+    // saleInfo carries the publisher's list price when Google has it.
+    fields: 'items(volumeInfo(title,authors,publisher,description,categories,imageLinks),saleInfo(listPrice,retailPrice))',
   });
   const key = process.env.GOOGLE_BOOKS_API_KEY;
   if (key) params.set('key', key);
   try {
     const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${params}`, { signal: AbortSignal.timeout(6000) });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // 429 = quota/rate limit (very common without an API key), 403 = blocked.
+      if (res.status === 429 || res.status === 403) lastCallBlocked = true;
+      return null;
+    }
     const d = await res.json();
-    const info = d.items?.[0]?.volumeInfo;
+    const item = d.items?.[0];
+    const info = item?.volumeInfo;
     if (!info) return null;
     // Prefer a larger thumbnail; strip page-curl effect param.
     let img: string | null = info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail ?? null;
     if (img) img = img.replace('http://', 'https://').replace('&edge=curl', '');
     const desc = typeof info.description === 'string' ? info.description.trim().slice(0, 500) : null;
+    // Only trust a price the API reports in baht — converting currencies would
+    // put a misleading number in the student's price box.
+    const sale = item?.saleInfo ?? {};
+    const p = sale.retailPrice ?? sale.listPrice;
+    const price = p && p.currencyCode === 'THB' && Number(p.amount) > 0 ? Math.round(Number(p.amount)) : null;
     return {
       title: typeof info.title === 'string' ? info.title : null,
       author: Array.isArray(info.authors) && info.authors.length ? info.authors[0] : null,
       publisher: typeof info.publisher === 'string' ? info.publisher : null,
       description: desc,
       categories: toTags(info.categories),
+      price,
       coverUrl: img ? await fetchCoverAsDataUrl(img) : null,
     };
   } catch {
@@ -116,7 +133,7 @@ async function lookupOpenLibraryIsbn(isbn: string): Promise<Lookup | null> {
     const title = typeof d.title === 'string' ? d.title : null;
     const cover = await fetchCoverAsDataUrl(`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false`);
     const publishers = Array.isArray(d.publishers) && d.publishers.length ? String(d.publishers[0]) : null;
-    return { title, author: null, publisher: publishers, description: null, categories: [], coverUrl: cover };
+    return { title, author: null, publisher: publishers, description: null, categories: [], price: null, coverUrl: cover };
   } catch {
     return null;
   }
@@ -131,6 +148,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const isbn = searchParams.get('isbn')?.replace(/[^0-9Xx]/g, '') ?? '';
   const title = searchParams.get('title')?.trim() ?? '';
+  lastCallBlocked = false;
 
   if (isbn && (isbn.length === 10 || isbn.length === 13)) {
     const g = await lookupGoogle(`isbn:${isbn}`);
@@ -147,13 +165,15 @@ export async function GET(req: NextRequest) {
     }
     const ol = await lookupOpenLibraryIsbn(isbn);
     if (ol?.title) return NextResponse.json({ found: true, isbn, ...ol });
-    return NextResponse.json({ found: false });
+    // `blocked` means the APIs refused us (quota) rather than not knowing the
+    // book — without GOOGLE_BOOKS_API_KEY this is the usual outcome.
+    return NextResponse.json({ found: false, blocked: lastCallBlocked });
   }
 
   if (title.length >= 3) {
     const g = await lookupGoogle(`intitle:"${title}"`);
     if (g?.title) return NextResponse.json({ found: true, ...g });
-    return NextResponse.json({ found: false });
+    return NextResponse.json({ found: false, blocked: lastCallBlocked });
   }
 
   return NextResponse.json({ error: 'isbn or title required' }, { status: 400 });
