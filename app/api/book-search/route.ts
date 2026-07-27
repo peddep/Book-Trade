@@ -84,6 +84,9 @@ async function searchGoogleBooks(q: string): Promise<Suggestion[]> {
     langRestrict: 'th',
     maxResults: '8',
     printType: 'books',
+    // Google thins or refuses results for callers it cannot geolocate, which
+    // includes datacenter IPs like Vercel's.
+    country: 'TH',
     fields: 'items(volumeInfo(title,authors,publisher))',
   });
   const key = process.env.GOOGLE_BOOKS_API_KEY;

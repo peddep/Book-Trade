@@ -144,13 +144,41 @@ function localIsComplete(l: Lookup): boolean {
   return Boolean(l.title && l.author && l.publisher && l.coverUrl);
 }
 
+function googleKeyParam(): string {
+  const key = process.env.GOOGLE_BOOKS_API_KEY;
+  return key ? `&key=${encodeURIComponent(key)}` : '';
+}
+
+// A search hit carries an abbreviated volumeInfo — for Thai books it very often
+// has the title and nothing else. The single-volume endpoint returns the full
+// record, which frequently does have the author and publisher.
+async function fetchGoogleVolumeInfo(id: string): Promise<any | null> {
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}?country=TH${googleKeyParam()}`,
+      { signal: AbortSignal.timeout(6000) },
+    );
+    if (!res.ok) {
+      if (res.status === 429 || res.status === 403) lastCallBlocked = true;
+      return null;
+    }
+    return (await res.json())?.volumeInfo ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function lookupGoogle(query: string): Promise<Lookup | null> {
   const params = new URLSearchParams({
     q: query,
     maxResults: '1',
     printType: 'books',
+    // Google refuses or silently thins results for callers it cannot geolocate,
+    // which includes datacenter IPs like Vercel's.
+    country: 'TH',
+    // `id` lets us re-fetch the full record when the summary is thin.
     // saleInfo carries the publisher's list price when Google has it.
-    fields: 'items(volumeInfo(title,authors,publisher,description,categories,imageLinks),saleInfo(listPrice,retailPrice))',
+    fields: 'items(id,volumeInfo(title,authors,publisher,description,categories,imageLinks),saleInfo(listPrice,retailPrice))',
   });
   const key = process.env.GOOGLE_BOOKS_API_KEY;
   if (key) params.set('key', key);
@@ -163,8 +191,13 @@ async function lookupGoogle(query: string): Promise<Lookup | null> {
     }
     const d = await res.json();
     const item = d.items?.[0];
-    const info = item?.volumeInfo;
+    let info = item?.volumeInfo;
     if (!info) return null;
+    // Thin summary → ask for the full record and use whichever fields it adds.
+    if (item?.id && (!info.authors?.length || !info.publisher)) {
+      const full = await fetchGoogleVolumeInfo(item.id);
+      if (full) info = { ...full, ...info, authors: info.authors ?? full.authors, publisher: info.publisher ?? full.publisher };
+    }
     // Prefer a larger thumbnail; strip page-curl effect param.
     let img: string | null = info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail ?? null;
     if (img) img = img.replace('http://', 'https://').replace('&edge=curl', '');
@@ -190,13 +223,31 @@ async function lookupGoogle(query: string): Promise<Lookup | null> {
 
 async function lookupOpenLibraryIsbn(isbn: string): Promise<Lookup | null> {
   try {
-    const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`, { signal: AbortSignal.timeout(6000) });
+    // jscmd=data resolves author and publisher *names* in a single request.
+    // The /isbn/{isbn}.json record this used to call holds only /authors/OL…A
+    // references, so it could never produce an author name at all.
+    const res = await fetch(
+      `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`,
+      { headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' }, signal: AbortSignal.timeout(6000) },
+    );
     if (!res.ok) return null;
-    const d = await res.json();
-    const title = typeof d.title === 'string' ? d.title : null;
-    const cover = await fetchCoverAsDataUrl(`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false`);
-    const publishers = Array.isArray(d.publishers) && d.publishers.length ? String(d.publishers[0]) : null;
-    return { title, author: null, publisher: publishers, description: null, categories: [], price: null, coverUrl: cover };
+    const d = (await res.json())?.[`ISBN:${isbn}`];
+    if (!d) return null;
+    const firstName = (arr: unknown): string | null => {
+      if (!Array.isArray(arr) || !arr.length) return null;
+      const n = (arr[0] as Record<string, unknown> | undefined)?.name;
+      return typeof n === 'string' && n.trim() ? n.trim() : null;
+    };
+    const img = d.cover?.large ?? d.cover?.medium ?? d.cover?.small ?? null;
+    return {
+      title: typeof d.title === 'string' ? d.title : null,
+      author: firstName(d.authors),
+      publisher: firstName(d.publishers),
+      description: null,
+      categories: [],
+      price: null,
+      coverUrl: img ? await fetchCoverAsDataUrl(String(img)) : null,
+    };
   } catch {
     return null;
   }
@@ -238,8 +289,8 @@ export async function GET(req: NextRequest) {
 
     const g = await lookupGoogle(`isbn:${isbn}`);
     if (g?.title) {
-      // Top up anything Google was missing (cover / publisher) from Open Library.
-      const topped = !g.coverUrl || !g.publisher ? merge(g, await lookupOpenLibraryIsbn(isbn)) : g;
+      // Top up anything Google was missing (author / publisher / cover).
+      const topped = !g.coverUrl || !g.publisher || !g.author ? merge(g, await lookupOpenLibraryIsbn(isbn)) : g;
       // The local title is the one students here actually use, so keep it.
       return NextResponse.json({ found: true, isbn, source: local?.title ? 'local' : 'api', ...merge(local ?? topped, topped) });
     }

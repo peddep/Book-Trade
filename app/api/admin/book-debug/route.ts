@@ -42,9 +42,10 @@ export async function GET(req: NextRequest) {
     out.localBooks = { error: String(e) };
   }
 
-  // 2. Google Books — the status code and the raw shape of what came back.
-  const params = new URLSearchParams({ q: `isbn:${isbn}`, maxResults: '1', printType: 'books' });
+  // 2. Google Books search — the status code and the raw shape of what came back.
+  const params = new URLSearchParams({ q: `isbn:${isbn}`, maxResults: '1', printType: 'books', country: 'TH' });
   if (key) params.set('key', key);
+  let volumeId: string | null = null;
   try {
     const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${params}`, {
       signal: AbortSignal.timeout(8000),
@@ -52,8 +53,10 @@ export async function GET(req: NextRequest) {
     const body = await res.text();
     let parsed: any = null;
     try { parsed = JSON.parse(body); } catch { /* not json */ }
-    const info = parsed?.items?.[0]?.volumeInfo;
-    out.google = {
+    const item = parsed?.items?.[0];
+    const info = item?.volumeInfo;
+    volumeId = typeof item?.id === 'string' ? item.id : null;
+    out.googleSearch = {
       status: res.status,
       totalItems: parsed?.totalItems,
       // On failure this is the message that explains why (quota, location, key).
@@ -61,6 +64,7 @@ export async function GET(req: NextRequest) {
       // On success: which fields the entry actually carries. A Thai book is
       // often present but sparse, which looks identical to "not found" in the
       // form even though the request succeeded.
+      volumeId,
       volumeInfoKeys: info ? Object.keys(info) : null,
       title: info?.title ?? null,
       authors: info?.authors ?? null,
@@ -68,14 +72,46 @@ export async function GET(req: NextRequest) {
       hasImageLinks: Boolean(info?.imageLinks),
     };
   } catch (e) {
-    out.google = { error: String(e) };
+    out.googleSearch = { error: String(e) };
   }
 
-  // 3. Open Library, the fallback.
+  // 2b. The full volume record, which often carries fields the search summary
+  // leaves out — this is the step that should rescue a sparse Thai entry.
+  if (volumeId) {
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(volumeId)}?country=TH${key ? `&key=${encodeURIComponent(key)}` : ''}`,
+        { signal: AbortSignal.timeout(8000) },
+      );
+      const d = res.ok ? await res.json() : null;
+      const info = d?.volumeInfo;
+      out.googleFullVolume = {
+        status: res.status,
+        volumeInfoKeys: info ? Object.keys(info) : null,
+        title: info?.title ?? null,
+        authors: info?.authors ?? null,
+        publisher: info?.publisher ?? null,
+      };
+    } catch (e) {
+      out.googleFullVolume = { error: String(e) };
+    }
+  }
+
+  // 3. Open Library, the fallback (same endpoint the lookup uses).
   try {
-    const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`, { signal: AbortSignal.timeout(8000) });
-    const d = res.ok ? await res.json() : null;
-    out.openLibrary = { status: res.status, title: d?.title ?? null, publishers: d?.publishers ?? null };
+    const res = await fetch(
+      `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`,
+      { headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' }, signal: AbortSignal.timeout(8000) },
+    );
+    const d = res.ok ? (await res.json())?.[`ISBN:${isbn}`] : null;
+    out.openLibrary = {
+      status: res.status,
+      found: Boolean(d),
+      title: d?.title ?? null,
+      authors: d?.authors ?? null,
+      publishers: d?.publishers ?? null,
+      hasCover: Boolean(d?.cover),
+    };
   } catch (e) {
     out.openLibrary = { error: String(e) };
   }
