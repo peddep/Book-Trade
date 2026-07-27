@@ -335,22 +335,6 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
             className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fPublisherPlaceholder')} />
         </div>
-        {!compact && (
-          <>
-            <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fGradeLevel')}</label>
-              <input value={form.grade_level} onChange={e => setForm({ ...form, grade_level: e.target.value })}
-                className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-                placeholder={t('profile.fGradePlaceholder')} />
-            </div>
-            <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fDescription')}</label>
-              <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-                placeholder={t('profile.fDescPlaceholder')} />
-            </div>
-          </>
-        )}
       </div>
 
       {/* Cover upload — only when adding; existing books change cover from the shelf */}
