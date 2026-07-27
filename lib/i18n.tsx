@@ -391,6 +391,7 @@ const STRINGS: Dict = {
   'adm.export': { th: '⬇ ดาวน์โหลดข้อมูลทั้งหมด (JSON)', en: '⬇ Export all data (JSON)' },
   'shelf.inWonderbox': { th: 'ในกล่อง', en: 'In box' },
   'profile.fVolume': { th: 'เล่มที่', en: 'Vol.' },
+  'profile.fAuthorHint': { th: 'เว้นว่างได้ ระบบจะเติมให้อัตโนมัติ', en: 'Leave blank and we\'ll fill it in for you.' },
   'profile.fPublisher': { th: 'สำนักพิมพ์', en: 'Publisher' },
   'profile.fPublisherPlaceholder': { th: 'เช่น อมรินทร์, แจ่มใส', en: 'e.g. Amarin, Jamsai' },
   'scan.filled': { th: 'กรอกให้แล้ว: {fields}', en: 'filled in: {fields}' },

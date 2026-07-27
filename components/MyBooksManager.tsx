@@ -321,6 +321,14 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           </div>
         </div>
         <div>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fAuthor')}</label>
+          <input value={form.author} maxLength={120}
+            onChange={e => setForm({ ...form, author: e.target.value })}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+            placeholder={t('profile.fAuthorPlaceholder')} />
+          <p className="text-xs text-[#9ca3af] mt-1">{t('profile.fAuthorHint')}</p>
+        </div>
+        <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPublisher')}</label>
           <input value={form.publisher} maxLength={120}
             onChange={e => setForm({ ...form, publisher: e.target.value })}
