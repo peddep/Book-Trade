@@ -400,6 +400,8 @@ const STRINGS: Dict = {
   'scan.coverStep': { th: 'ได้บาร์โค้ดแล้ว! ตอนนี้ถ่ายรูปปกหน้า', en: 'Got the barcode! Now photograph the front cover' },
   'scan.coverHint': { th: 'พลิกไปด้านหน้าปก ให้ปกอยู่ในกรอบ แล้วกดถ่าย — หรือกดข้ามถ้าไม่อยากใส่รูป', en: 'Turn the book to the front, fit the cover in the frame and tap — or skip if you would rather not add a photo.' },
   'scan.shutter': { th: 'ถ่ายปก', en: 'Take cover photo' },
+  'scan.holdSteady': { th: 'ถือหนังสือไว้ก่อนนะ กำลังหาข้อมูลอยู่…', en: 'Keep holding the book — looking it up…' },
+  'scan.notFoundRetry': { th: '✗ ไม่พบหนังสือจากบาร์โค้ดนี้ — ลองเล็งบาร์โค้ด ISBN หลังปกอีกครั้ง หรือกดปิดแล้วกรอกเอง', en: '✗ No book found for that barcode — try the ISBN barcode on the back cover again, or close and type it in.' },
   'scan.skipCover': { th: 'ข้าม', en: 'Skip' },
   'scan.fromSite': { th: '(ข้อมูลจากหนังสือเล่มเดียวกันที่มีในเว็บอยู่แล้ว)', en: '(from a copy already listed on BookTrade)' },
   'book.vol': { th: 'เล่ม {n}', en: 'Vol. {n}' },

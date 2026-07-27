@@ -49,9 +49,11 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   const [sort, setSort] = useState<SortKey>('recent');
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState('');
-  // Drives the scanner's second step: 'have' closes it, 'need' offers the
-  // camera so the student can photograph the cover themselves.
-  const [coverStatus, setCoverStatus] = useState<'pending' | 'have' | 'need'>('pending');
+  // Reported to the scanner so it can hold the camera on the barcode until the
+  // lookup actually resolves, then either close, ask for a cover photo, or
+  // resume scanning.
+  const [scanStatus, setScanStatus] = useState<'idle' | 'looking' | 'foundCover' | 'foundNoCover' | 'notFound'>('idle');
+  const [scanTitle, setScanTitle] = useState<string | null>(null);
 
   // Barcode scanned → look the ISBN up and fill in as much of the form as we
   // can: title, author, publisher, cover, tags, description and (for series)
@@ -59,19 +61,21 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   // listed on the site first, then the book APIs.
   async function onIsbn(isbn: string) {
     setScanMsg(t('scan.looking'));
-    setCoverStatus('pending');
+    setScanStatus('looking');
+    setScanTitle(null);
     try {
       const res = await fetch(`/api/book-lookup?isbn=${isbn}`);
       const d = await res.json();
-      // Remember the barcode either way, so the next student who scans this
-      // book is answered from our own database.
-      setForm(prev => ({ ...prev, isbn }));
       if (!d.found || !d.title) {
-        setCoverStatus('need');
+        setScanStatus('notFound');
         setScanMsg(d.blocked ? t('scan.blocked') : t('scan.notFound'));
         return;
       }
-      setCoverStatus(d.coverUrl ? 'have' : 'need');
+      // Remember the barcode, so the next student who scans this book is
+      // answered from our own database.
+      setForm(prev => ({ ...prev, isbn }));
+      setScanTitle(String(d.title));
+      setScanStatus(d.coverUrl ? 'foundCover' : 'foundNoCover');
 
       // "One Piece, Vol. 12" / "วันพีซ เล่ม 12" → volume 12
       const volMatch = String(d.title).match(/(?:vol\.?|volume|เล่ม(?:ที่)?)\s*(\d+)/i);
@@ -104,7 +108,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       const via = d.source === 'local' ? ` ${t('scan.fromSite')}` : '';
       setScanMsg(`✓ ${d.title}${filled.length ? ` — ${t('scan.filled', { fields: filled.join(', ') })}` : ''}${via}`);
     } catch {
-      setCoverStatus('need');
+      setScanStatus('notFound');
       setScanMsg(t('scan.notFound'));
     }
   }
@@ -199,7 +203,8 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     setEditingId(null);
     setShowForm(true);
     setScanMsg('');
-    setCoverStatus('pending');
+    setScanStatus('idle');
+    setScanTitle(null);
   }
 
   function startEdit(id: number) {
@@ -280,7 +285,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-bold text-[#2e1065]">{editingId ? t('profile.editBookTitle') : t('profile.addBookTitle')}</h3>
         {!editingId && (
-          <button type="button" onClick={() => { setScanMsg(''); setScanning(true); }}
+          <button type="button" onClick={() => { setScanMsg(''); setScanStatus('idle'); setScanTitle(null); setScanning(true); }}
             className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
             📷 {t('scan.button')}
@@ -449,7 +454,8 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     <BarcodeScanner
       onDetected={onIsbn}
       onClose={() => setScanning(false)}
-      coverStatus={coverStatus}
+      status={scanStatus}
+      foundTitle={scanTitle}
       // The student's own photo of the front cover — kept on their listing only.
       onCapture={dataUrl => setForm(prev => ({ ...prev, cover_url: dataUrl, cover_source: 'camera' }))}
     />
