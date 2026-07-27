@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { getDb, ensureBookColumns } from '@/lib/db';
+import { inferTags } from '@/lib/book-tags';
 
 export const runtime = 'nodejs';
 
@@ -75,11 +76,34 @@ async function fetchCoverAsDataUrl(url: string): Promise<string | null> {
     const type = res.headers.get('content-type') ?? 'image/jpeg';
     if (!type.startsWith('image/') || type.includes('svg')) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length === 0 || buf.length > MAX_COVER_BYTES) return null;
+    // A "no cover" placeholder comes back as a valid but tiny image; treating
+    // it as a real cover would put a grey rectangle on the listing.
+    if (buf.length < 1000 || buf.length > MAX_COVER_BYTES) return null;
     return `data:${type};base64,${buf.toString('base64')}`;
   } catch {
     return null;
   }
+}
+
+// Tries each candidate in turn and keeps the first that yields a real image.
+async function fetchFirstCover(urls: (string | null | undefined)[]): Promise<string | null> {
+  for (const url of urls) {
+    if (!url) continue;
+    const data = await fetchCoverAsDataUrl(url);
+    if (data) return data;
+  }
+  return null;
+}
+
+// Google serves cover art from a separate host that answers for a volume id
+// even when the JSON response carried no imageLinks at all. zoom=1 is the
+// standard cover size; zoom=0 is larger but missing for many volumes.
+function googleCoverCandidates(volumeId: string | null, imageLinks: any): (string | null)[] {
+  const fromLinks = (imageLinks?.thumbnail ?? imageLinks?.smallThumbnail ?? null) as string | null;
+  const cleaned = fromLinks ? fromLinks.replace('http://', 'https://').replace('&edge=curl', '') : null;
+  if (!volumeId) return [cleaned];
+  const base = `https://books.google.com/books/content?id=${encodeURIComponent(volumeId)}&printsec=frontcover&img=1&source=gbs_api`;
+  return [cleaned, `${base}&zoom=1`, `${base}&zoom=0`];
 }
 
 // Looks the book up in data we already own: books other students have listed,
@@ -141,7 +165,7 @@ async function lookupLocal(by: { isbn?: string; title?: string }): Promise<Looku
 // True when the local hit is thin enough that it's still worth asking an API
 // to top it up (the APIs can add a cover, description and price).
 function localIsComplete(l: Lookup): boolean {
-  return Boolean(l.title && l.author && l.publisher && l.coverUrl);
+  return Boolean(l.title && l.author && l.publisher && l.coverUrl && l.categories.length);
 }
 
 function googleKeyParam(): string {
@@ -194,13 +218,21 @@ async function lookupGoogle(query: string): Promise<Lookup | null> {
     let info = item?.volumeInfo;
     if (!info) return null;
     // Thin summary → ask for the full record and use whichever fields it adds.
-    if (item?.id && (!info.authors?.length || !info.publisher)) {
-      const full = await fetchGoogleVolumeInfo(item.id);
-      if (full) info = { ...full, ...info, authors: info.authors ?? full.authors, publisher: info.publisher ?? full.publisher };
+    const volumeId: string | null = typeof item?.id === 'string' ? item.id : null;
+    const thin = !info.authors?.length || !info.publisher || !info.categories?.length || !info.imageLinks;
+    if (volumeId && thin) {
+      const full = await fetchGoogleVolumeInfo(volumeId);
+      if (full) {
+        info = {
+          ...full,
+          ...info,
+          authors: info.authors ?? full.authors,
+          publisher: info.publisher ?? full.publisher,
+          categories: info.categories ?? full.categories,
+          imageLinks: info.imageLinks ?? full.imageLinks,
+        };
+      }
     }
-    // Prefer a larger thumbnail; strip page-curl effect param.
-    let img: string | null = info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail ?? null;
-    if (img) img = img.replace('http://', 'https://').replace('&edge=curl', '');
     const desc = typeof info.description === 'string' ? info.description.trim().slice(0, 500) : null;
     // Only trust a price the API reports in baht — converting currencies would
     // put a misleading number in the student's price box.
@@ -214,7 +246,9 @@ async function lookupGoogle(query: string): Promise<Lookup | null> {
       description: desc,
       categories: toTags(info.categories),
       price,
-      coverUrl: img ? await fetchCoverAsDataUrl(img) : null,
+      // Fall back to Google's cover host, which answers for a volume id even
+      // when the JSON carried no imageLinks.
+      coverUrl: await fetchFirstCover(googleCoverCandidates(volumeId, info.imageLinks)),
     };
   } catch {
     return null;
@@ -238,7 +272,6 @@ async function lookupOpenLibraryIsbn(isbn: string): Promise<Lookup | null> {
       const n = (arr[0] as Record<string, unknown> | undefined)?.name;
       return typeof n === 'string' && n.trim() ? n.trim() : null;
     };
-    const img = d.cover?.large ?? d.cover?.medium ?? d.cover?.small ?? null;
     return {
       title: typeof d.title === 'string' ? d.title : null,
       author: firstName(d.authors),
@@ -246,7 +279,12 @@ async function lookupOpenLibraryIsbn(isbn: string): Promise<Lookup | null> {
       description: null,
       categories: [],
       price: null,
-      coverUrl: img ? await fetchCoverAsDataUrl(String(img)) : null,
+      // default=false makes the cover host 404 instead of returning its grey
+      // placeholder, so a miss stays a miss.
+      coverUrl: await fetchFirstCover([
+        d.cover?.large, d.cover?.medium, d.cover?.small,
+        `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false`,
+      ]),
     };
   } catch {
     return null;
@@ -267,6 +305,15 @@ function merge(primary: Lookup, extra: Lookup | null): Lookup {
   };
 }
 
+// Every success path returns through here, so a book never reaches the form
+// untagged while we still have enough signal to propose something.
+function foundResponse(l: Lookup, extra: Record<string, unknown> = {}) {
+  const categories = l.categories.length
+    ? l.categories
+    : inferTags({ title: l.title, publisher: l.publisher, description: l.description });
+  return NextResponse.json({ found: true, ...extra, ...l, categories });
+}
+
 // Looks up a book by ISBN (barcode scan) or by title. Checks our own data
 // first — books other students already listed and the harvested Thai catalog —
 // then tops up whatever is still missing from Google Books / Open Library.
@@ -284,7 +331,7 @@ export async function GET(req: NextRequest) {
     // our own database and skip the APIs entirely.
     const local = await lookupLocal({ isbn });
     if (local?.title && localIsComplete(local)) {
-      return NextResponse.json({ found: true, isbn, source: 'local', ...local });
+      return foundResponse(local, { isbn, source: 'local' });
     }
 
     const g = await lookupGoogle(`isbn:${isbn}`);
@@ -292,12 +339,12 @@ export async function GET(req: NextRequest) {
       // Top up anything Google was missing (author / publisher / cover).
       const topped = !g.coverUrl || !g.publisher || !g.author ? merge(g, await lookupOpenLibraryIsbn(isbn)) : g;
       // The local title is the one students here actually use, so keep it.
-      return NextResponse.json({ found: true, isbn, source: local?.title ? 'local' : 'api', ...merge(local ?? topped, topped) });
+      return foundResponse(merge(local ?? topped, topped), { isbn, source: local?.title ? 'local' : 'api' });
     }
     const ol = await lookupOpenLibraryIsbn(isbn);
-    if (ol?.title) return NextResponse.json({ found: true, isbn, source: 'api', ...merge(local ?? ol, ol) });
+    if (ol?.title) return foundResponse(merge(local ?? ol, ol), { isbn, source: 'api' });
     // APIs gave us nothing; a partial local hit still beats an empty form.
-    if (local?.title) return NextResponse.json({ found: true, isbn, source: 'local', ...local });
+    if (local?.title) return foundResponse(local, { isbn, source: 'local' });
     // `blocked` means the APIs refused us (quota) rather than not knowing the
     // book — without GOOGLE_BOOKS_API_KEY this is the usual outcome.
     return NextResponse.json({ found: false, blocked: lastCallBlocked });
@@ -306,13 +353,13 @@ export async function GET(req: NextRequest) {
   if (title.length >= 3) {
     const local = await lookupLocal({ title });
     if (local?.title && localIsComplete(local)) {
-      return NextResponse.json({ found: true, source: 'local', ...local });
+      return foundResponse(local, { source: 'local' });
     }
     const g = await lookupGoogle(`intitle:"${title}"`);
     if (g?.title) {
-      return NextResponse.json({ found: true, source: local?.title ? 'local' : 'api', ...merge(local ?? g, g) });
+      return foundResponse(merge(local ?? g, g), { source: local?.title ? 'local' : 'api' });
     }
-    if (local?.title) return NextResponse.json({ found: true, source: 'local', ...local });
+    if (local?.title) return foundResponse(local, { source: 'local' });
     return NextResponse.json({ found: false, blocked: lastCallBlocked });
   }
 
