@@ -26,11 +26,12 @@ interface Book {
   cover_url?: string | null;
   price?: number | null;
   volume?: string | null;
+  publisher?: string | null;
   created_at?: string;
   available: number;
 }
 
-const EMPTY = { title: '', title_en: '', price: '', volume: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
+const EMPTY = { title: '', title_en: '', price: '', volume: '', publisher: '', author: '', subject: '', grade_level: '', condition: 'Good', description: '', cover_url: '' };
 
 // Manages the user's books as a bookshelf (3-column scrollable grid). Tapping a
 // book reveals its title and edit actions. `compact` is the Trade page's left
@@ -47,24 +48,43 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState('');
 
-  // Barcode scanned → look the ISBN up and fill title/author/cover.
+  // Barcode scanned → look the ISBN up and fill in as much of the form as the
+  // book APIs can give us: title, author, publisher, cover, tags, description
+  // and (for series) the volume number parsed out of the title.
   async function onIsbn(isbn: string) {
     setScanning(false);
     setScanMsg(t('scan.looking'));
     try {
       const res = await fetch(`/api/book-lookup?isbn=${isbn}`);
       const d = await res.json();
-      if (d.found && d.title) {
-        setForm(prev => ({
-          ...prev,
-          title: d.title,
-          author: d.author ?? prev.author,
-          cover_url: d.coverUrl ?? prev.cover_url,
-        }));
-        setScanMsg(`✓ ${d.title}`);
-      } else {
-        setScanMsg(t('scan.notFound'));
-      }
+      if (!d.found || !d.title) { setScanMsg(t('scan.notFound')); return; }
+
+      // "One Piece, Vol. 12" / "วันพีซ เล่ม 12" → volume 12
+      const volMatch = String(d.title).match(/(?:vol\.?|volume|เล่ม(?:ที่)?)\s*(\d+)/i);
+      const tags: string[] = Array.isArray(d.categories) ? d.categories : [];
+      const thai = /[฀-๿]/.test(String(d.title));
+
+      setForm(prev => ({
+        ...prev,
+        title: d.title,
+        // A Latin-script result doubles as the English title.
+        title_en: prev.title_en || (thai ? '' : d.title),
+        author: d.author ?? prev.author,
+        publisher: d.publisher ?? prev.publisher,
+        volume: prev.volume || (volMatch ? volMatch[1] : ''),
+        subject: prev.subject || tags.join(','),
+        description: prev.description || (d.description ?? ''),
+        cover_url: d.coverUrl ?? prev.cover_url,
+      }));
+
+      // Tell the student what was filled so they only complete the rest.
+      const filled = [
+        d.author && t('profile.fAuthor'),
+        d.publisher && t('profile.fPublisher'),
+        d.coverUrl && t('scan.gotCover'),
+        tags.length > 0 && t('profile.fSubject'),
+      ].filter(Boolean) as string[];
+      setScanMsg(`✓ ${d.title}${filled.length ? ` — ${t('scan.filled', { fields: filled.join(', ') })}` : ''}`);
     } catch {
       setScanMsg(t('scan.notFound'));
     }
@@ -87,6 +107,8 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
             ...prev,
             cover_url: d.coverUrl ?? prev.cover_url,
             author: prev.author || (d.author ?? ''),
+            publisher: prev.publisher || (d.publisher ?? ''),
+            subject: prev.subject || (Array.isArray(d.categories) ? d.categories.join(',') : ''),
           };
         });
       } catch { /* best-effort */ }
@@ -130,7 +152,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: form.title, title_en: form.title_en, price: form.price, volume: form.volume, author: form.author, subject: form.subject,
+          title: form.title, title_en: form.title_en, price: form.price, volume: form.volume, publisher: form.publisher, author: form.author, subject: form.subject,
           grade_level: form.grade_level, condition: form.condition, description: form.description,
         }),
       });
@@ -162,7 +184,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     const b = books.find(x => x.id === id);
     if (!b) return;
     setForm({
-      title: b.title, title_en: b.title_en ?? '', price: b.price != null ? String(b.price) : '', volume: b.volume ?? '', author: b.author, subject: b.subject ?? '', grade_level: b.grade_level ?? '',
+      title: b.title, title_en: b.title_en ?? '', price: b.price != null ? String(b.price) : '', volume: b.volume ?? '', publisher: b.publisher ?? '', author: b.author, subject: b.subject ?? '', grade_level: b.grade_level ?? '',
       condition: b.condition, description: b.description ?? '', cover_url: b.cover_url ?? '',
     });
     setEditingId(id);
@@ -297,6 +319,13 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
               className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
               placeholder="1" />
           </div>
+        </div>
+        <div>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPublisher')}</label>
+          <input value={form.publisher} maxLength={120}
+            onChange={e => setForm({ ...form, publisher: e.target.value })}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+            placeholder={t('profile.fPublisherPlaceholder')} />
         </div>
         {!compact && (
           <>

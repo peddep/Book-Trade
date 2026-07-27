@@ -36,6 +36,7 @@ await db.batch(
       title_en TEXT,
       price REAL,
       volume TEXT,
+      publisher TEXT,
       author TEXT NOT NULL,
       subject TEXT,
       grade_level TEXT,

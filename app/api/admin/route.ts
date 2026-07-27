@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
                 FROM users ORDER BY id`),
-    db.execute(`SELECT b.id, b.title, b.title_en, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
+    db.execute(`SELECT b.id, b.title, b.title_en, b.volume, b.publisher, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
                   b.cover_url, u.name AS owner_name
                 FROM books b JOIN users u ON b.owner_id = u.id ORDER BY b.id DESC LIMIT 200`),
     db.execute(`SELECT t.id, t.status, t.message, t.created_at, t.updated_at,

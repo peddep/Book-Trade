@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     sets.push('price = ?');
     args.push(p !== null && !isNaN(p) && p >= 0 ? p : null);
   }
-  for (const f of ['subject', 'grade_level', 'condition', 'description', 'volume'] as const) {
+  for (const f of ['subject', 'grade_level', 'condition', 'description', 'volume', 'publisher'] as const) {
     if (typeof body[f] !== 'undefined') {
       sets.push(`${f} = ?`);
       args.push(body[f] === '' ? null : body[f]);

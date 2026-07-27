@@ -16,6 +16,7 @@ interface Book {
   title_en?: string | null;
   price?: number | null;
   volume?: string | null;
+  publisher?: string | null;
   available: number;
   owner_name?: string;
   owner_avatar_color?: string;
@@ -86,6 +87,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
             {book.volume && <span className="font-semibold" style={{ color: '#7c3aed' }}> · {t('book.vol', { n: book.volume })}</span>}
           </h3>
           <p className="text-sm text-[#6b7280] mt-0.5">{book.author}</p>
+          {book.publisher && <p className="text-xs text-[#9ca3af]">{book.publisher}</p>}
         </div>
 
         <div className="flex flex-wrap gap-1.5">

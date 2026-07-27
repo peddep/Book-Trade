@@ -31,7 +31,7 @@ const COLUMNS: Record<Tab, string[]> = {
   reports: ['id', 'status', 'target_type', 'target_label', 'reason', 'reporter_name', 'created_at'],
   donations: ['id', 'user_name', 'bank_name', 'amount', 'status', 'created_at'],
   users: ['id', 'name', 'real_name', 'email', 'grade', 'class_no', 'contact', 'banned', 'books_count', 'trades_completed', 'created_at'],
-  books: ['id', 'title', 'title_en', 'author', 'subject', 'condition', 'price', 'available', 'owner_name', 'created_at'],
+  books: ['id', 'title', 'title_en', 'volume', 'publisher', 'author', 'subject', 'condition', 'price', 'available', 'owner_name', 'created_at'],
   catalog: ['id', 'title', 'author', 'publisher', 'source', 'created_at'],
   trades: ['id', 'status', 'requester_name', 'offered_title', 'owner_name', 'wanted_title', 'message', 'created_at', 'updated_at'],
   wonderbox: ['id', 'user_name', 'title', 'status', 'created_at'],
@@ -92,6 +92,8 @@ export default function AdminPage() {
       body: JSON.stringify({
         title: editBook.title,
         title_en: editBook.title_en,
+        volume: editBook.volume,
+        publisher: editBook.publisher,
         author: editBook.author,
         subject: editBook.subject,
         condition: editBook.condition,
@@ -387,6 +389,8 @@ export default function AdminPage() {
                 {[
                   { k: 'title', label: t('profile.fTitleTh') },
                   { k: 'title_en', label: t('profile.fTitleEn') },
+                  { k: 'volume', label: t('profile.fVolume') },
+                  { k: 'publisher', label: t('profile.fPublisher') },
                   { k: 'author', label: t('profile.fAuthor') },
                   { k: 'subject', label: t('profile.fSubject') },
                   { k: 'price', label: t('profile.fPrice'), type: 'number' },
