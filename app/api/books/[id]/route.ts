@@ -77,9 +77,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.cover_url !== '' && cover === null) {
       return NextResponse.json({ error: 'invalid_cover' }, { status: 400 });
     }
-    // A cover set here is the owner's own photo, so it is never reused on
-    // another student's listing (see cover_source in lib/db.ts).
-    await db.execute({ sql: 'UPDATE books SET cover_url = ?, cover_source = ? WHERE id = ?', args: [cover, cover ? 'upload' : null, id] });
+    // A cover the admin sets is curated, so it is the most authoritative one we
+    // have and is reused on other copies of the same book. A cover the owner
+    // uploads is an arbitrary file from their gallery and stays on their listing
+    // only (see cover_source in lib/db.ts).
+    const source = cover ? (isAdmin(user) ? 'admin' : 'upload') : null;
+    await db.execute({ sql: 'UPDATE books SET cover_url = ?, cover_source = ? WHERE id = ?', args: [cover, source, id] });
+
+    // Reuse only applies to future lookups, so an admin fixing one copy would
+    // leave the classmates already listing that same book without a cover. Fill
+    // those in too — same title, and only where the cover is still empty, so
+    // nobody's own picture is ever replaced.
+    if (cover && isAdmin(user)) {
+      const r = await db.execute({
+        sql: `UPDATE books SET cover_url = ?, cover_source = 'admin'
+              WHERE lower(title) = lower(?) AND id != ? AND (cover_url IS NULL OR cover_url = '')`,
+        args: [cover, String(book.title), id],
+      });
+      return NextResponse.json({ ok: true, alsoFilled: Number(r.rowsAffected) });
+    }
   }
   return NextResponse.json({ ok: true });
 }

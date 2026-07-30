@@ -154,9 +154,13 @@ async function lookupLocal(by: { isbn?: string; title?: string }): Promise<Looku
     if (!row && !catRow) return null;
 
     const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
-    // Only reuse a cover the APIs gave us. An uploaded or camera photo belongs
-    // to the student who took it — it should not appear on someone else's book.
-    const reusableCover = row && row.cover_source === 'api' ? str(row.cover_url) : null;
+    // Which covers may appear on another student's listing. A camera capture
+    // qualifies because it comes from a flow that asks for the front cover and
+    // crops to a cover-shaped frame — it is a picture of the book. A plain
+    // upload is an arbitrary file from the student's gallery and stays private
+    // to their own listing.
+    const SHAREABLE_COVERS = new Set(['api', 'camera', 'admin']);
+    const reusableCover = row && SHAREABLE_COVERS.has(String(row.cover_source)) ? str(row.cover_url) : null;
     const tags = str(row?.subject)?.split(',').map(s => s.trim()).filter(Boolean) ?? [];
 
     return {

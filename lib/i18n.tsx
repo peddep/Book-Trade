@@ -324,6 +324,7 @@ const STRINGS: Dict = {
   'adm.reports': { th: 'รายงาน', en: 'Reports' },
   'adm.openReports': { th: 'รายงานใหม่', en: 'Open reports' },
   'adm.deleteBook': { th: 'ลบ', en: 'Delete' },
+  'adm.missingCover': { th: '📕 เฉพาะเล่มที่ยังไม่มีปก (เรียงตามจำนวนคนที่ลง)', en: '📕 Only books with no cover (most-listed first)' },
   'adm.clearPlaceholders': { th: '🧹 ล้างปกที่เป็นรูป "Image not available"', en: '🧹 Clear "Image not available" covers' },
   'adm.clearPlaceholdersConfirm': { th: 'ลบปกที่ดึงมาจาก API แล้วเป็นรูปเปล่า "Image not available" ทั้งหมด? (รูปที่นักเรียนถ่ายเองจะไม่ถูกลบ)', en: 'Remove every auto-fetched cover that is really the blank "Image not available" placeholder? Photos students took themselves are not affected.' },
   'adm.clearPlaceholdersDone': { th: 'ล้างแล้ว {n} เล่ม', en: 'Cleared {n} book(s)' },

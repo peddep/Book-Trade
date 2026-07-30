@@ -45,14 +45,26 @@ export async function GET(req: NextRequest) {
 
   // Harvested / admin-added suggestion catalog (may be large — show newest 500).
   const catalogSearch = new URL(req.url).searchParams.get('catalog_q')?.trim() ?? '';
+  // Cover-curation view: only books with no cover, most-listed titles first, so
+  // fixing a handful of rows covers the most listings. `copies` counts how many
+  // students list that same title — a cover added here is reused across them.
+  const missingCover = new URL(req.url).searchParams.get('missing_cover') === '1';
+  const booksSql = missingCover
+    ? `SELECT b.id, b.title, b.title_en, b.volume, b.publisher, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
+         b.cover_url, u.name AS owner_name,
+         (SELECT COUNT(*) FROM books b2 WHERE lower(b2.title) = lower(b.title)) AS copies
+       FROM books b JOIN users u ON b.owner_id = u.id
+       WHERE b.cover_url IS NULL OR b.cover_url = ''
+       ORDER BY copies DESC, b.id DESC LIMIT 200`
+    : `SELECT b.id, b.title, b.title_en, b.volume, b.publisher, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
+         b.cover_url, u.name AS owner_name
+       FROM books b JOIN users u ON b.owner_id = u.id ORDER BY b.id DESC LIMIT 200`;
   const [users, books, trades, wonderbox, messages, reports, catalog, donations] = await Promise.all([
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
                 FROM users ORDER BY id`),
-    db.execute(`SELECT b.id, b.title, b.title_en, b.volume, b.publisher, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
-                  b.cover_url, u.name AS owner_name
-                FROM books b JOIN users u ON b.owner_id = u.id ORDER BY b.id DESC LIMIT 200`),
+    db.execute(booksSql),
     db.execute(`SELECT t.id, t.status, t.message, t.created_at, t.updated_at,
                   ru.name AS requester_name, ou.name AS owner_name,
                   ob.title AS offered_title, wb.title AS wanted_title

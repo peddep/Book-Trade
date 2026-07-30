@@ -47,6 +47,8 @@ export default function AdminPage() {
   const [catalogLines, setCatalogLines] = useState('');
   const [catalogResult, setCatalogResult] = useState('');
   const [placeholderResult, setPlaceholderResult] = useState('');
+  // Books tab: show only books with no cover, most-listed titles first.
+  const [missingCover, setMissingCover] = useState(false);
   const [catalogBusy, setCatalogBusy] = useState(false);
   const [catalogQ, setCatalogQ] = useState('');
   const [editBook, setEditBook] = useState<Record<string, any> | null>(null);
@@ -81,9 +83,16 @@ export default function AdminPage() {
   }
 
   async function refresh() {
-    const r = await fetch('/api/admin');
+    const r = await fetch(`/api/admin${missingCover ? '?missing_cover=1' : ''}`);
     if (r.ok) setData(await r.json());
   }
+
+  // Reload the books list when the cover filter is toggled.
+  useEffect(() => {
+    if (!data) return;
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missingCover]);
 
   async function saveBookEdit() {
     if (!editBook) return;
@@ -169,7 +178,11 @@ export default function AdminPage() {
   ];
 
   const rows = data[tab] ?? [];
-  const cols = COLUMNS[tab];
+  // The cover-curation view shows a narrower, more useful set of columns:
+  // `copies` is how many students list that same title.
+  const cols = tab === 'books' && missingCover
+    ? ['id', 'copies', 'title', 'volume', 'publisher', 'author', 'owner_name']
+    : COLUMNS[tab];
 
   return (
     <>
@@ -257,6 +270,15 @@ export default function AdminPage() {
             "Image not available" placeholder. Student photos are untouched. */}
         {tab === 'books' && (
           <div className="mb-3 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setMissingCover(v => !v)}
+              className="px-3 py-1.5 rounded-full text-xs font-bold"
+              style={missingCover
+                ? { background: '#7c3aed', color: '#ffffff' }
+                : { background: '#e9d5ff', color: '#2e1065' }}
+            >
+              {missingCover ? `✓ ${t('adm.missingCover')}` : t('adm.missingCover')}
+            </button>
             <button
               onClick={async () => {
                 if (!confirm(t('adm.clearPlaceholdersConfirm'))) return;
