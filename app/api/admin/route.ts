@@ -134,6 +134,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  // Strip auto-fetched covers that are actually the APIs' "Image not available"
+  // placeholder. Those compress to a couple of KB where real cover art is far
+  // larger, and only 'api' covers are touched — a student's own photo is never
+  // removed. Clearing one just sends the book back to having no cover, which
+  // the owner or an admin can then set.
+  if (body.action === 'clear_placeholder_covers') {
+    await ensureBookColumns();
+    // Base64 inflates by about 4/3, plus the data: prefix.
+    const MAX_LEN = Math.round((4_000 * 4) / 3) + 64;
+    const r = await getDb().execute({
+      sql: `UPDATE books SET cover_url = NULL, cover_source = NULL
+            WHERE cover_source = 'api' AND cover_url IS NOT NULL AND length(cover_url) < ?`,
+      args: [MAX_LEN],
+    });
+    return NextResponse.json({ ok: true, cleared: Number(r.rowsAffected) });
+  }
+
   // Mark a report as resolved.
   if (body.action === 'resolve_report' && body.report_id) {
     await getDb().execute({ sql: "UPDATE reports SET status = 'resolved' WHERE id = ?", args: [Number(body.report_id)] });

@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [tempPw, setTempPw] = useState<{ name: string; password: string } | null>(null);
   const [catalogLines, setCatalogLines] = useState('');
   const [catalogResult, setCatalogResult] = useState('');
+  const [placeholderResult, setPlaceholderResult] = useState('');
   const [catalogBusy, setCatalogBusy] = useState(false);
   const [catalogQ, setCatalogQ] = useState('');
   const [editBook, setEditBook] = useState<Record<string, any> | null>(null);
@@ -250,6 +251,33 @@ export default function AdminPage() {
             className="w-full mb-3 px-3 py-2 rounded-xl text-sm"
             style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
           />
+        )}
+
+        {/* Bulk cleanup for auto-fetched covers that are really the APIs'
+            "Image not available" placeholder. Student photos are untouched. */}
+        {tab === 'books' && (
+          <div className="mb-3 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={async () => {
+                if (!confirm(t('adm.clearPlaceholdersConfirm'))) return;
+                const res = await fetch('/api/admin', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: 'clear_placeholder_covers' }),
+                });
+                if (res.ok) {
+                  const d = await res.json();
+                  setPlaceholderResult(t('adm.clearPlaceholdersDone', { n: d.cleared }));
+                  refresh();
+                }
+              }}
+              className="px-3 py-1.5 rounded-full text-xs font-bold"
+              style={{ background: '#fee2e2', color: '#b91c1c' }}
+            >
+              {t('adm.clearPlaceholders')}
+            </button>
+            {placeholderResult && <span className="text-xs font-semibold" style={{ color: '#10b981' }}>{placeholderResult}</span>}
+          </div>
         )}
 
         {/* Data table */}

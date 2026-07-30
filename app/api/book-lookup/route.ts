@@ -66,6 +66,13 @@ function toTags(categories: unknown): string[] {
 }
 
 const MAX_COVER_BYTES = 300_000;
+// Google and Open Library both answer "no cover for this book" with a valid
+// placeholder image — a mostly-white panel reading "Image not available" —
+// rather than a 404. Those compress to a couple of KB, where real cover art is
+// photographic and lands well above this. Anything smaller is treated as a
+// miss, which sends the student to the camera step instead of pasting a
+// placeholder onto their listing.
+const MIN_COVER_BYTES = 4_000;
 
 // Downloads a cover image and inlines it as a data URL (same storage model as
 // student-uploaded photos, so no external hotlinking).
@@ -74,11 +81,11 @@ async function fetchCoverAsDataUrl(url: string): Promise<string | null> {
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
     if (!res.ok) return null;
     const type = res.headers.get('content-type') ?? 'image/jpeg';
-    if (!type.startsWith('image/') || type.includes('svg')) return null;
+    // Cover art from these APIs is always JPEG or PNG; the placeholders are
+    // served as GIFs in some regions.
+    if (!type.startsWith('image/') || /svg|gif/.test(type)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    // A "no cover" placeholder comes back as a valid but tiny image; treating
-    // it as a real cover would put a grey rectangle on the listing.
-    if (buf.length < 1000 || buf.length > MAX_COVER_BYTES) return null;
+    if (buf.length < MIN_COVER_BYTES || buf.length > MAX_COVER_BYTES) return null;
     return `data:${type};base64,${buf.toString('base64')}`;
   } catch {
     return null;
@@ -95,15 +102,19 @@ async function fetchFirstCover(urls: (string | null | undefined)[]): Promise<str
   return null;
 }
 
-// Google serves cover art from a separate host that answers for a volume id
-// even when the JSON response carried no imageLinks at all. zoom=1 is the
-// standard cover size; zoom=0 is larger but missing for many volumes.
+// Cover URLs to try, in order. `imageLinks` is Google's own statement that a
+// cover exists, so it gates the whole thing: asking the cover host for a volume
+// with no imageLinks does not find a missing picture, it just returns the
+// "Image not available" placeholder. The host is only used to fetch a larger
+// rendering of a cover Google has already said it has.
 function googleCoverCandidates(volumeId: string | null, imageLinks: any): (string | null)[] {
   const fromLinks = (imageLinks?.thumbnail ?? imageLinks?.smallThumbnail ?? null) as string | null;
-  const cleaned = fromLinks ? fromLinks.replace('http://', 'https://').replace('&edge=curl', '') : null;
+  if (!fromLinks) return [];
+  const cleaned = fromLinks.replace('http://', 'https://').replace('&edge=curl', '');
   if (!volumeId) return [cleaned];
   const base = `https://books.google.com/books/content?id=${encodeURIComponent(volumeId)}&printsec=frontcover&img=1&source=gbs_api`;
-  return [cleaned, `${base}&zoom=1`, `${base}&zoom=0`];
+  // zoom=1 is the standard cover size, and is larger than the thumbnail URL.
+  return [`${base}&zoom=1`, cleaned];
 }
 
 // Looks the book up in data we already own: books other students have listed,
