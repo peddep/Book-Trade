@@ -293,61 +293,24 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         )}
       </div>
       {scanMsg && <p className="text-xs font-semibold" style={{ color: scanMsg.startsWith('✓') ? '#10b981' : '#7c3aed' }}>{scanMsg}</p>}
+      {/* Which book is this? Title first, then the details a scan fills in. */}
       <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}>
-        <div>
-          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleTh')} *</label>
-          <TitleInput value={form.title} onChange={setTitle}
-            onMeta={m => setForm(prev => ({ ...prev, author: m.author || prev.author, publisher: m.publisher || prev.publisher }))}
-            placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
-        </div>
-        <div>
-          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fSubject')}</label>
-          {/* Multi-select tag chips; stored as a comma-separated list */}
-          <div className="flex flex-wrap gap-1.5 p-2.5 rounded-xl max-h-36 overflow-y-auto"
-            style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-            {SUBJECTS.map(s => {
-              const selected = form.subject.split(',').filter(Boolean).includes(s);
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => {
-                    const tags = form.subject.split(',').filter(Boolean);
-                    const next = selected ? tags.filter(x => x !== s) : [...tags, s];
-                    setForm({ ...form, subject: next.join(',') });
-                  }}
-                  className="text-xs font-semibold px-2.5 py-1 rounded-full transition-colors"
-                  style={selected
-                    ? { background: '#7c3aed', color: '#ffffff', border: '1px solid #7c3aed' }
-                    : { background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}
-                >
-                  {selected ? '✓ ' : ''}{t(`subj.${s}`)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        <div>
-          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fCondition')}</label>
-          <select value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })}
-            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}>
-            {CONDITIONS.map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
-          </select>
-        </div>
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPrice')}{!editingId && ' *'}</label>
-            <input type="number" min="0" step="1" inputMode="numeric" required={!editingId} value={form.price}
-              onChange={e => setForm({ ...form, price: e.target.value })}
-              className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-              placeholder={t('profile.fPricePlaceholder')} />
-          </div>
-          <div className="w-28 flex-shrink-0">
-            <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fVolume')}</label>
-            <input value={form.volume} maxLength={20} inputMode="numeric"
-              onChange={e => setForm({ ...form, volume: e.target.value })}
-              className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-              placeholder="1" />
+        <div className={compact ? '' : 'sm:col-span-2'}>
+          <div className="flex gap-3">
+            <div className="flex-1 min-w-0">
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fTitleTh')} *</label>
+              <TitleInput value={form.title} onChange={setTitle}
+                onMeta={m => setForm(prev => ({ ...prev, author: m.author || prev.author, publisher: m.publisher || prev.publisher }))}
+                placeholder={t('profile.fTitlePlaceholder')} listId="mybooks-title-suggestions" required />
+            </div>
+            {/* Volume sits with the title — together they name the book */}
+            <div className="w-20 sm:w-24 flex-shrink-0">
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fVolume')}</label>
+              <input value={form.volume} maxLength={20} inputMode="numeric"
+                onChange={e => setForm({ ...form, volume: e.target.value })}
+                className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                placeholder="1" />
+            </div>
           </div>
         </div>
         <div>
@@ -364,6 +327,22 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
             onChange={e => setForm({ ...form, publisher: e.target.value })}
             className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fPublisherPlaceholder')} />
+        </div>
+
+        {/* Your particular copy — the two things no lookup can know */}
+        <div>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fCondition')}</label>
+          <select value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}>
+            {CONDITIONS.map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPrice')}{!editingId && ' *'}</label>
+          <input type="number" min="0" step="1" inputMode="numeric" required={!editingId} value={form.price}
+            onChange={e => setForm({ ...form, price: e.target.value })}
+            className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+            placeholder={t('profile.fPricePlaceholder')} />
         </div>
       </div>
 
@@ -393,6 +372,36 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
           <p className="text-[11px] mt-1.5" style={{ color: '#9ca3af' }}>{t('profile.coverHint')}</p>
         </div>
       )}
+
+      {/* Tags last: helpful for browsing but rarely edited, and the chip list is
+          tall enough to push everything else off the screen if it sits higher. */}
+      <div>
+        <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fSubject')}</label>
+        {/* Multi-select tag chips; stored as a comma-separated list */}
+        <div className="flex flex-wrap gap-1.5 p-2.5 rounded-xl max-h-36 overflow-y-auto"
+          style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+          {SUBJECTS.map(s => {
+            const selected = form.subject.split(',').filter(Boolean).includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  const tags = form.subject.split(',').filter(Boolean);
+                  const next = selected ? tags.filter(x => x !== s) : [...tags, s];
+                  setForm({ ...form, subject: next.join(',') });
+                }}
+                className="text-xs font-semibold px-2.5 py-1 rounded-full transition-colors"
+                style={selected
+                  ? { background: '#7c3aed', color: '#ffffff', border: '1px solid #7c3aed' }
+                  : { background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}
+              >
+                {selected ? '✓ ' : ''}{t(`subj.${s}`)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="flex gap-2">
         <button type="button" onClick={closeForm} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: '#e9d5ff', color: '#6b7280' }}>
