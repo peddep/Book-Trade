@@ -5,24 +5,23 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
 
-// Warm paper palette: aged cream, ink brown, and a gold rule. The app itself is
-// purple, so the primary action keeps that colour — the page sets the tone, the
-// button matches where it takes you.
-const PAPER = '#f5efe3';
-const SURFACE = '#fffcf5';
-const INK = '#2e2a24';
-const MUTED = '#6f6455';
-const RULE = '#e0d5c0';
-const GOLD = '#9a6b2f';
+// Same purple-and-white palette as the rest of the site.
+const PAPER = '#faf5ff';
+const SURFACE = '#ffffff';
+const INK = '#2e1065';
+const MUTED = '#6b7280';
+const RULE = '#e9d5ff';
+const ACCENT = '#7c3aed';
+const BAND = '#f3e8ff';
 
 const serif = { fontFamily: 'var(--font-serif), Georgia, serif' } as const;
 
 // Decorative shelf. Deliberately not real listings — the front page shows
 // totals only, so these are just spines, not anyone's books.
 const SPINES = [
-  { h: 96, c: '#7b3f2f' }, { h: 112, c: '#2f5d50' }, { h: 88, c: '#9a6b2f' },
-  { h: 120, c: '#5b21b6' }, { h: 100, c: '#8c2f39' }, { h: 108, c: '#3b5a7a' },
-  { h: 92, c: '#6b7c3a' }, { h: 116, c: '#7b3f2f' }, { h: 96, c: '#2f5d50' },
+  { h: 96, c: '#7c3aed' }, { h: 112, c: '#6366f1' }, { h: 88, c: '#a78bfa' },
+  { h: 120, c: '#5b21b6' }, { h: 100, c: '#8b5cf6' }, { h: 108, c: '#818cf8' },
+  { h: 92, c: '#c084fc' }, { h: 116, c: '#7c3aed' }, { h: 96, c: '#6d28d9' },
 ];
 
 function Stat({ n, label }: { n: number | null; label: string }) {
@@ -57,10 +56,11 @@ export default function Home() {
   ];
 
   const conditions = [
-    { key: 'Like New', color: '#2f5d50' },
-    { key: 'Good', color: '#3b5a7a' },
-    { key: 'Fair', color: '#9a6b2f' },
-    { key: 'Poor', color: '#8c2f39' },
+    // Same colours BookCard uses, so a condition means the same thing everywhere.
+    { key: 'Like New', color: '#10b981' },
+    { key: 'Good', color: '#3b82f6' },
+    { key: 'Fair', color: '#f59e0b' },
+    { key: 'Poor', color: '#ef4444' },
   ];
 
   const cta = (
@@ -82,19 +82,15 @@ export default function Home() {
       <main style={{ background: PAPER, color: INK }}>
         {/* Hero */}
         <section className="relative overflow-hidden">
-          {/* Faint paper grain, drawn rather than loaded as an image */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.35]" style={{
+          {/* Soft wash behind the hero, drawn rather than loaded as an image */}
+          <div className="absolute inset-0 pointer-events-none opacity-40" style={{
             backgroundImage:
-              'radial-gradient(circle at 15% 20%, #e8dcc4 0%, transparent 45%), radial-gradient(circle at 85% 10%, #efe4d0 0%, transparent 40%)',
+              'radial-gradient(circle at 15% 20%, #ddd6fe 0%, transparent 45%), radial-gradient(circle at 85% 10%, #ede9fe 0%, transparent 40%)',
           }} />
           <div className="max-w-3xl mx-auto px-4 pt-16 pb-12 text-center relative z-10">
-            <p className="inline-block text-[11px] font-semibold px-3 py-1 rounded-full mb-5"
-              style={{ background: '#efe6d6', color: GOLD, border: `1px solid ${RULE}` }}>
-              {t('home.eyebrow')}
-            </p>
             <h1 className="text-4xl sm:text-5xl font-bold leading-[1.25] mb-5" style={serif}>
               {t('home.title1')}{' '}
-              <span style={{ color: GOLD }}>{t('home.title2')}</span>
+              <span style={{ color: ACCENT }}>{t('home.title2')}</span>
             </h1>
             <p className="text-base sm:text-lg leading-relaxed mb-8 max-w-xl mx-auto" style={{ color: MUTED }}>
               {t('home.subtitle')}
@@ -114,7 +110,7 @@ export default function Home() {
                   }} />
               ))}
             </div>
-            <div className="h-2 rounded-sm" style={{ background: '#8a6a45', boxShadow: '0 3px 6px rgba(0,0,0,0.18)' }} />
+            <div className="h-2 rounded-sm" style={{ background: '#6d28d9', boxShadow: '0 3px 6px rgba(46,16,101,0.18)' }} />
           </div>
         </section>
 
@@ -135,7 +131,7 @@ export default function Home() {
           <ol className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {steps.map((step, i) => (
               <li key={i} className="relative p-6 rounded-2xl" style={{ background: SURFACE, border: `1px solid ${RULE}` }}>
-                <span className="absolute top-4 right-5 text-3xl font-bold opacity-20" style={{ ...serif, color: GOLD }}>
+                <span className="absolute top-4 right-5 text-3xl font-bold opacity-25" style={{ ...serif, color: ACCENT }}>
                   {i + 1}
                 </span>
                 <div className="text-3xl mb-3">{step.icon}</div>
@@ -147,7 +143,7 @@ export default function Home() {
         </section>
 
         {/* What you get */}
-        <section className="py-14" style={{ background: '#efe6d6', borderTop: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}` }}>
+        <section className="py-14" style={{ background: BAND, borderTop: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}` }}>
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10" style={serif}>{t('home.why')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
