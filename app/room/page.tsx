@@ -218,10 +218,6 @@ export default function RoomPage() {
               {t('room2.admin')}
             </Link>
           )}
-          <Link href="/donate" className="block w-full py-2.5 mb-3 rounded-xl font-semibold text-sm text-center text-white"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
-            {t('room2.donate')}
-          </Link>
           <button onClick={logout} className="w-full py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#fee2e2', color: '#ef4444' }}>
             {t('room2.signOut')}
           </button>

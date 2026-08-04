@@ -424,7 +424,6 @@ const STRINGS: Dict = {
   'donate.subtitle': { th: 'ถ้าชอบเว็บนี้ ช่วยสนับสนุนค่าดูแลระบบได้ตามใจ สแกน QR ด้านล่างเพื่อโอนผ่านพร้อมเพย์', en: 'If you enjoy this site, you can chip in for its upkeep. Scan the PromptPay QR below.' },
   'donate.hint': { th: 'สแกนด้วยแอปธนาคารใดก็ได้ รองรับทุกธนาคาร', en: 'Scan with any Thai banking app — all banks accepted.' },
   'donate.thanks': { th: '🙏 ขอบคุณสำหรับการสนับสนุน!', en: '🙏 Thank you for your support!' },
-  'room2.donate': { th: '💜 สนับสนุนเว็บไซต์', en: '💜 Support the site' },
   'don.title': { th: '💜 ผู้สนับสนุน', en: '💜 Supporters' },
   'don.none': { th: 'ยังไม่มีผู้สนับสนุน — เป็นคนแรกได้เลย!', en: 'No supporters yet — be the first!' },
   'don.button': { th: '💜 โดเนทสนับสนุนเว็บ', en: '💜 Donate' },
