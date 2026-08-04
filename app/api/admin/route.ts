@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   // Full backup: every row of every table (minus password hashes), as a
   // downloadable JSON file.
   if (new URL(req.url).searchParams.get('export') === '1') {
-    const tables = ['users', 'books', 'trades', 'wonder_box', 'messages', 'wishlist', 'reports', 'catalog_books', 'donations'];
+    const tables = ['users', 'books', 'trades', 'wonder_box', 'messages', 'wishlist', 'reports', 'catalog_books', 'donations', 'feedback'];
     const dump: Record<string, unknown[]> = {};
     for (const tbl of tables) {
       try {
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     : `SELECT b.id, b.title, b.title_en, b.volume, b.publisher, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
          b.cover_url, u.name AS owner_name
        FROM books b JOIN users u ON b.owner_id = u.id ORDER BY b.id DESC LIMIT 200`;
-  const [users, books, trades, wonderbox, messages, reports, catalog, donations] = await Promise.all([
+  const [users, books, trades, wonderbox, messages, reports, catalog, donations, feedback] = await Promise.all([
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
@@ -96,6 +96,9 @@ export async function GET(req: NextRequest) {
     db.execute(`SELECT d.id, u.name AS user_name, d.bank_name, d.amount, d.status, d.created_at
                 FROM donations d JOIN users u ON d.user_id = u.id
                 ORDER BY (d.status = 'pending') DESC, d.id DESC LIMIT 200`).catch(() => ({ rows: [] })),
+    db.execute(`SELECT f.id, f.kind, f.body, f.status, f.created_at, u.name AS user_name, u.email AS user_email
+                FROM feedback f JOIN users u ON f.user_id = u.id
+                ORDER BY (f.status = 'open') DESC, f.id DESC LIMIT 200`).catch(() => ({ rows: [] })),
   ]);
 
   return NextResponse.json({
@@ -106,6 +109,7 @@ export async function GET(req: NextRequest) {
       completed: (await db.execute("SELECT COUNT(*) AS n FROM trades WHERE status = 'completed'")).rows[0].n,
       messages: (await db.execute('SELECT COUNT(*) AS n FROM messages')).rows[0].n,
       openReports: (await db.execute("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'")).rows[0].n,
+      openFeedback: (await db.execute("SELECT COUNT(*) AS n FROM feedback WHERE status = 'open'").catch(() => ({ rows: [{ n: 0 }] }))).rows[0].n,
       catalog: (await db.execute('SELECT COUNT(*) AS n FROM catalog_books').catch(() => ({ rows: [{ n: 0 }] }))).rows[0].n,
     },
     users: users.rows,
@@ -116,6 +120,7 @@ export async function GET(req: NextRequest) {
     reports: reports.rows,
     catalog: catalog.rows,
     donations: donations.rows,
+    feedback: feedback.rows,
   });
 }
 
@@ -161,6 +166,19 @@ export async function POST(req: NextRequest) {
       args: [MAX_LEN],
     });
     return NextResponse.json({ ok: true, cleared: Number(r.rowsAffected) });
+  }
+
+  // Work through the suggestion / bug queue.
+  if ((body.action === 'resolve_feedback' || body.action === 'reopen_feedback') && body.feedback_id) {
+    await getDb().execute({
+      sql: 'UPDATE feedback SET status = ? WHERE id = ?',
+      args: [body.action === 'resolve_feedback' ? 'done' : 'open', Number(body.feedback_id)],
+    });
+    return NextResponse.json({ ok: true });
+  }
+  if (body.action === 'delete_feedback' && body.feedback_id) {
+    await getDb().execute({ sql: 'DELETE FROM feedback WHERE id = ?', args: [Number(body.feedback_id)] });
+    return NextResponse.json({ ok: true });
   }
 
   // Mark a report as resolved.

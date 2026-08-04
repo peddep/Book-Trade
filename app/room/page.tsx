@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import TopTabs from '@/components/TopTabs';
 import DonationCard from '@/components/DonationCard';
+import FeedbackCard from '@/components/FeedbackCard';
 import { useI18n, type Lang } from '@/lib/i18n';
 
 interface User {
@@ -183,6 +184,9 @@ export default function RoomPage() {
                 )}
               </Card>
             </div>
+
+            {/* Suggestions / bug reports */}
+            <FeedbackCard />
           </div>
         </div>
 

@@ -21,15 +21,17 @@ interface AdminData {
   reports: Row[];
   catalog: Row[];
   donations: Row[];
+  feedback: Row[];
 }
 
-const TABS = ['reports', 'donations', 'users', 'books', 'catalog', 'trades', 'wonderbox', 'messages'] as const;
+const TABS = ['reports', 'feedback', 'donations', 'users', 'books', 'catalog', 'trades', 'wonderbox', 'messages'] as const;
 type Tab = (typeof TABS)[number];
 
 // Columns shown per table (order matters).
 const COLUMNS: Record<Tab, string[]> = {
   reports: ['id', 'status', 'target_type', 'target_label', 'reason', 'reporter_name', 'created_at'],
   donations: ['id', 'user_name', 'bank_name', 'amount', 'status', 'created_at'],
+  feedback: ['id', 'kind', 'status', 'body', 'user_name', 'user_email', 'created_at'],
   users: ['id', 'name', 'real_name', 'email', 'grade', 'class_no', 'contact', 'banned', 'books_count', 'trades_completed', 'created_at'],
   books: ['id', 'title', 'title_en', 'volume', 'publisher', 'author', 'subject', 'condition', 'price', 'available', 'owner_name', 'created_at'],
   catalog: ['id', 'title', 'author', 'publisher', 'source', 'created_at'],
@@ -311,7 +313,7 @@ export default function AdminPage() {
                   <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap" style={{ color: '#7c3aed' }}>{c}</th>
                 ))}
                 {tab === 'books' && <th className="px-3 py-2 font-semibold" style={{ color: '#7c3aed' }}>cover</th>}
-                {(tab === 'users' || tab === 'reports' || tab === 'donations') && <th className="px-3 py-2"></th>}
+                {(tab === 'users' || tab === 'reports' || tab === 'donations' || tab === 'feedback') && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
@@ -418,10 +420,31 @@ export default function AdminPage() {
                       </div>
                     </td>
                   )}
+                  {tab === 'feedback' && (
+                    <td className="px-3 py-2 align-top whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {r.status === 'done' ? (
+                          <button onClick={() => adminAction({ action: 'reopen_feedback', feedback_id: r.id })}
+                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                            ↩ {t('adm.reopen')}
+                          </button>
+                        ) : (
+                          <button onClick={() => adminAction({ action: 'resolve_feedback', feedback_id: r.id })}
+                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#dcfce7', color: '#10b981' }}>
+                            ✓ {t('adm.markDone')}
+                          </button>
+                        )}
+                        <button onClick={() => adminAction({ action: 'delete_feedback', feedback_id: r.id }, `${t('adm.deleteFeedback')}?`)}
+                          className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#fee2e2', color: '#ef4444' }}>
+                          🗑
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={cols.length + (tab === 'users' || tab === 'books' || tab === 'reports' || tab === 'donations' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
+                <tr><td colSpan={cols.length + (tab === 'users' || tab === 'books' || tab === 'reports' || tab === 'donations' || tab === 'feedback' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
               )}
             </tbody>
           </table>

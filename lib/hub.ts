@@ -61,6 +61,15 @@ export async function ensureHubTables() {
         body TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
+      // Suggestions and bug reports from students, for the admin to work through.
+      `CREATE TABLE IF NOT EXISTS feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        kind TEXT NOT NULL DEFAULT 'suggestion',
+        body TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
       // Donation pledges: the student says who's transferring and how much;
       // the admin verifies against the real bank statement.
       `CREATE TABLE IF NOT EXISTS donations (
