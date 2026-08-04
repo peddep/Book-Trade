@@ -38,9 +38,17 @@ function Stat({ n, label }: { n: number | null; label: string }) {
 export default function Home() {
   const { t } = useI18n();
   const [stats, setStats] = useState<{ books: number; trades: number; students: number } | null>(null);
+  // null = still checking. Signed-in students must not be shown sign-up or
+  // sign-in buttons: following either one silently replaces their session, and
+  // registering again would strand their books on the old account.
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetch('/api/stats').then(r => (r.ok ? r.json() : null)).then(setStats).catch(() => {});
+    fetch('/api/auth/me')
+      .then(r => (r.ok ? r.json() : { user: null }))
+      .then(d => setSignedIn(Boolean(d.user)))
+      .catch(() => setSignedIn(false));
   }, []);
 
   const steps = [
@@ -63,7 +71,22 @@ export default function Home() {
     { key: 'Poor', color: '#ef4444' },
   ];
 
-  const cta = (
+  // Reserve the row's height while the session check is in flight, so the page
+  // doesn't jump once we know which pair of buttons belongs here.
+  const cta = signedIn === null ? (
+    <div className="h-[50px]" />
+  ) : signedIn ? (
+    <div className="flex gap-3 justify-center flex-wrap">
+      <Link href="/trade" className="px-7 py-3 rounded-xl font-bold text-white text-base shadow-sm"
+        style={{ background: 'linear-gradient(135deg, #5b21b6, #7c3aed)' }}>
+        {t('home.continueTrading')}
+      </Link>
+      <Link href="/profile" className="px-7 py-3 rounded-xl font-bold text-base"
+        style={{ background: SURFACE, color: INK, border: `1px solid ${RULE}` }}>
+        {t('tabs.books')}
+      </Link>
+    </div>
+  ) : (
     <div className="flex gap-3 justify-center flex-wrap">
       <Link href="/register" className="px-7 py-3 rounded-xl font-bold text-white text-base shadow-sm"
         style={{ background: 'linear-gradient(135deg, #5b21b6, #7c3aed)' }}>
@@ -96,7 +119,9 @@ export default function Home() {
               {t('home.subtitle')}
             </p>
             {cta}
-            <p className="text-xs mt-4" style={{ color: MUTED }}>{t('home.ctaNote')}</p>
+            {signedIn === false && (
+              <p className="text-xs mt-4" style={{ color: MUTED }}>{t('home.ctaNote')}</p>
+            )}
           </div>
 
           {/* Bookshelf */}

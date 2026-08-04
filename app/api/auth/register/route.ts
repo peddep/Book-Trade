@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getDb, ensureUserColumns } from '@/lib/db';
-import { signSession } from '@/lib/auth';
+import { signSession, getCurrentUser } from '@/lib/auth';
 import { ipRateLimit } from '@/lib/ratelimit';
 
 const AVATAR_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
 export async function POST(req: NextRequest) {
+  // Registering while signed in would create a second account and move the
+  // session onto it, stranding this student's books on the first one. The
+  // pages redirect away before it gets this far; this is the backstop, since
+  // a client-side redirect is not something to rely on.
+  if (await getCurrentUser()) {
+    return NextResponse.json({ error: 'already_signed_in' }, { status: 409 });
+  }
+
   // Anti-abuse: at most 5 signups per 10 minutes from one IP.
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   if (ipRateLimit(`register:${ip}`, 5, 10 * 60 * 1000)) {

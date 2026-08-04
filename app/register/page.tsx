@@ -33,6 +33,15 @@ export default function RegisterPage() {
   const router = useRouter();
   const firstSave = useRef(true);
 
+  // Already signed in: registering again would create a second account and
+  // swap the session to it, leaving this student's books on the first one.
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => (r.ok ? r.json() : { user: null }))
+      .then(d => { if (d.user) router.replace('/trade'); })
+      .catch(() => {});
+  }, [router]);
+
   // Restore a saved draft (e.g. after visiting the Rules / Privacy pages).
   useEffect(() => {
     try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
@@ -13,6 +13,15 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Already signed in: signing in again as someone else would swap the session
+  // out from under them with no warning. Send them to the app instead.
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => (r.ok ? r.json() : { user: null }))
+      .then(d => { if (d.user) router.replace('/trade'); })
+      .catch(() => {});
+  }, [router]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

@@ -34,6 +34,7 @@ const STRINGS: Dict = {
   'home.step3Title': { th: 'เสนอการแลกเปลี่ยน', en: 'Offer a Trade' },
   'home.step3Desc': { th: 'เมื่ออีกฝ่ายตกลง เว็บจะหาเวลาว่างที่ตรงกัน แล้วนัดเจอกันที่ห้องสมุดโรงเรียน', en: 'When they accept, the site finds a free period you both share and you meet at the school library.' },
   'home.conditionGuide': { th: 'คู่มือสภาพหนังสือ', en: 'Book Condition Guide' },
+  'home.continueTrading': { th: 'ไปหน้าเทรด →', en: 'Go to trading →' },
   'home.ctaNote': { th: 'สมัครฟรี ใช้อีเมลโรงเรียน @student.nssc.ac.th', en: 'Free to join — use your @student.nssc.ac.th school email.' },
   'home.howItWorksSub': { th: 'ตั้งแต่ลงหนังสือจนถึงวันนัดเจอกัน', en: 'From listing a book to meeting up.' },
   'home.statBooks': { th: 'หนังสือที่ลงไว้', en: 'Books listed' },
