@@ -99,12 +99,18 @@ export default function ChatBox() {
           <p className="text-xs text-[#9ca3af] text-center my-auto">{t('chat.empty')}</p>
         ) : (
           messages.map(m => {
-            if (m.kind === 'announcement') {
+            if (m.kind === 'announcement' || m.kind === 'donation') {
+              const donation = m.kind === 'donation';
+              // Donations posted before they had their own kind carry the label
+              // inside the body; drop it so it isn't shown twice.
+              const body = donation ? m.body.replace(/^💜\s*/, '') : m.body;
               return (
                 <div key={m.id} className="mx-auto text-center px-3 py-1.5 rounded-full max-w-[90%]"
-                  style={{ background: '#ede9fe', border: '1px solid #ddd6fe' }}>
-                  <p className="text-[11px] font-semibold" style={{ color: '#7c3aed' }}>
-                    🏆 {t('chat.announce')} · {m.body}
+                  style={donation
+                    ? { background: '#fce7f3', border: '1px solid #fbcfe8' }
+                    : { background: '#ede9fe', border: '1px solid #ddd6fe' }}>
+                  <p className="text-[11px] font-semibold" style={{ color: donation ? '#be185d' : '#7c3aed' }}>
+                    {donation ? `💜 ${t('chat.donate')}` : `🏆 ${t('chat.announce')}`} · {body}
                   </p>
                 </div>
               );

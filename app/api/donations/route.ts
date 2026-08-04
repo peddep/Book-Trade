@@ -44,10 +44,13 @@ export async function POST(req: NextRequest) {
     sql: 'INSERT INTO donations (user_id, bank_name, amount) VALUES (?, ?, ?)',
     args: [user.id, bankName, amount],
   });
-  // Celebrate in the community chat.
+  // Celebrate in the community chat. This is its own kind: 'announcement' is
+  // labelled "trade completed" when rendered, which made donations read as
+  // trades. The label lives in the chat component so it can be translated, so
+  // the body carries only the facts.
   await db.execute({
-    sql: "INSERT INTO messages (user_id, kind, body) VALUES (NULL, 'announcement', ?)",
-    args: [`💜 ${user.name} สนับสนุนเว็บ ฿${amount} ขอบคุณครับ!`],
+    sql: "INSERT INTO messages (user_id, kind, body) VALUES (NULL, 'donation', ?)",
+    args: [`${user.name} · ฿${amount}`],
   });
   return NextResponse.json({ ok: true }, { status: 201 });
 }

@@ -92,6 +92,13 @@ export async function ensureHubTables() {
     ],
     'write'
   );
+  // Donations used to be posted as plain announcements, which the chat labels
+  // "trade completed" — so past donations read as trades. Move them onto their
+  // own kind. Matches the 💜 the old bodies always started with, so nothing
+  // else is touched. Runs once per cold start and is a no-op after the first.
+  try {
+    await db.execute("UPDATE messages SET kind = 'donation' WHERE kind = 'announcement' AND body LIKE '💜%'");
+  } catch { /* older database without the messages table yet */ }
   ensured = true;
 }
 

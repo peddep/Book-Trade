@@ -296,6 +296,7 @@ const STRINGS: Dict = {
   'chat.send': { th: 'ส่ง', en: 'Send' },
   'chat.empty': { th: 'ยังไม่มีข้อความ เริ่มพูดคุยกันเลย!', en: 'No messages yet. Say hi!' },
   'chat.announce': { th: 'แลกเปลี่ยนสำเร็จ', en: 'Trade completed' },
+  'chat.donate': { th: 'ขอบคุณผู้สนับสนุน', en: 'Thank you for supporting' },
   'chat.you': { th: 'คุณ', en: 'You' },
   'chat.new': { th: 'ข้อความใหม่', en: 'New messages' },
   'reg.emailDomain': { th: 'ต้องใช้อีเมลโรงเรียน (@{domain}) ในการสมัคร', en: 'Please sign up with your school email (@{domain}).' },
