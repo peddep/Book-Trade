@@ -47,18 +47,21 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
   return (
     <div className="overflow-y-auto pr-1 relative" style={{ maxHeight }}>
       <div className="grid grid-cols-3 gap-x-3 gap-y-4">
-        {books.map(b => {
+        {books.map((b, i) => {
           const open = openId === b.id;
           const selected = selectMode && selectedId === b.id;
           const disabled = selectMode && !!disabledIds?.has(b.id);
           return (
-            <div key={b.id} className="flex flex-col relative">
+            // Books arrive in sequence rather than all at once, so a shelf
+            // reads as filling up. Capped so a long shelf is not a slow one.
+            <div key={b.id} className="flex flex-col relative bt-fade-up bt-stagger"
+              style={{ '--i': Math.min(i, 11) } as React.CSSProperties}>
               {/* Book cover (relative wrapper so the star button isn't nested in a button) */}
               <div className="relative w-full">
                 <button
                   onClick={() => (disabled ? undefined : selectMode ? onSelect?.(b.id) : setOpenId(open ? null : b.id))}
                   disabled={disabled}
-                  className="relative block w-full rounded-r-md rounded-l-sm overflow-hidden transition-transform hover:-translate-y-0.5"
+                  className="relative block w-full rounded-r-md rounded-l-sm overflow-hidden transition-transform hover:-translate-y-0.5 bt-press"
                   style={{
                     aspectRatio: '2 / 3',
                     background: b.cover_color,

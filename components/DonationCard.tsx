@@ -92,7 +92,7 @@ export default function DonationCard({ userName }: { userName: string }) {
       {stage !== 'closed' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46,16,101,0.45)' }}
           onClick={closeAll}>
-          <div className="w-full max-w-sm rounded-2xl p-6" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+          <div className="w-full max-w-sm rounded-2xl p-6 bt-pop-in" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
             onClick={e => e.stopPropagation()}>
 
             {stage === 'form' && (

@@ -24,11 +24,35 @@ const SPINES = [
   { h: 92, c: '#c084fc' }, { h: 116, c: '#7c3aed' }, { h: 96, c: '#6d28d9' },
 ];
 
+// Counts up to the real figure once it arrives. Skipped entirely when the
+// visitor has asked for reduced motion, or for a value of zero where there is
+// nothing to count.
+function useCountUp(target: number | null, ms = 900) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (target === null) return;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || target === 0) { setN(target); return; }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / ms);
+      // Ease out, so it slows into the final number rather than stopping dead.
+      setN(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return target === null ? null : n;
+}
+
 function Stat({ n, label }: { n: number | null; label: string }) {
+  const shown = useCountUp(n);
   return (
     <div className="text-center px-2">
       <p className="text-3xl sm:text-4xl font-bold tabular-nums" style={{ ...serif, color: INK }}>
-        {n === null ? '·' : n.toLocaleString()}
+        {shown === null ? '·' : shown.toLocaleString()}
       </p>
       <p className="text-xs sm:text-sm mt-1" style={{ color: MUTED }}>{label}</p>
     </div>
@@ -111,14 +135,15 @@ export default function Home() {
               'radial-gradient(circle at 15% 20%, #ddd6fe 0%, transparent 45%), radial-gradient(circle at 85% 10%, #ede9fe 0%, transparent 40%)',
           }} />
           <div className="max-w-3xl mx-auto px-4 pt-16 pb-12 text-center relative z-10">
-            <h1 className="text-4xl sm:text-5xl font-bold leading-[1.25] mb-5" style={serif}>
+            <h1 className="text-4xl sm:text-5xl font-bold leading-[1.25] mb-5 bt-fade-up" style={serif}>
               {t('home.title1')}{' '}
               <span style={{ color: ACCENT }}>{t('home.title2')}</span>
             </h1>
-            <p className="text-base sm:text-lg leading-relaxed mb-8 max-w-xl mx-auto" style={{ color: MUTED }}>
+            <p className="text-base sm:text-lg leading-relaxed mb-8 max-w-xl mx-auto bt-fade-up bt-stagger"
+              style={{ ...{ '--i': 1 } as React.CSSProperties, color: MUTED }}>
               {t('home.subtitle')}
             </p>
-            {cta}
+            <div className="bt-fade-up bt-stagger" style={{ '--i': 2 } as React.CSSProperties}>{cta}</div>
             {signedIn === false && (
               <p className="text-xs mt-4" style={{ color: MUTED }}>{t('home.ctaNote')}</p>
             )}
@@ -127,12 +152,14 @@ export default function Home() {
           {/* Bookshelf */}
           <div className="max-w-3xl mx-auto px-4 relative z-10">
             <div className="flex items-end justify-center gap-[3px] sm:gap-1.5">
+              {/* Spines rise onto the shelf one after another */}
               {SPINES.map((s, i) => (
-                <div key={i} className="rounded-t-sm flex-1 max-w-[26px]"
+                <div key={i} className="rounded-t-sm flex-1 max-w-[26px] bt-grow-up bt-stagger"
                   style={{
                     height: s.h, background: s.c,
+                    '--i': i,
                     boxShadow: 'inset -3px 0 0 rgba(0,0,0,0.18), inset 3px 0 0 rgba(255,255,255,0.12)',
-                  }} />
+                  } as React.CSSProperties} />
               ))}
             </div>
             <div className="h-2 rounded-sm" style={{ background: '#6d28d9', boxShadow: '0 3px 6px rgba(46,16,101,0.18)' }} />
@@ -155,7 +182,8 @@ export default function Home() {
           <p className="text-sm text-center mb-10" style={{ color: MUTED }}>{t('home.howItWorksSub')}</p>
           <ol className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {steps.map((step, i) => (
-              <li key={i} className="relative p-6 rounded-2xl" style={{ background: SURFACE, border: `1px solid ${RULE}` }}>
+              <li key={i} className="relative p-6 rounded-2xl bt-fade-up bt-stagger"
+                style={{ background: SURFACE, border: `1px solid ${RULE}`, '--i': i } as React.CSSProperties}>
                 <span className="absolute top-4 right-5 text-3xl font-bold opacity-25" style={{ ...serif, color: ACCENT }}>
                   {i + 1}
                 </span>
@@ -173,7 +201,8 @@ export default function Home() {
             <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10" style={serif}>{t('home.why')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {features.map((f, i) => (
-                <div key={i} className="p-5 rounded-2xl" style={{ background: SURFACE, border: `1px solid ${RULE}` }}>
+                <div key={i} className="p-5 rounded-2xl bt-fade-up bt-stagger"
+                  style={{ background: SURFACE, border: `1px solid ${RULE}`, '--i': i } as React.CSSProperties}>
                   <div className="text-2xl mb-2">{f.icon}</div>
                   <h3 className="font-bold mb-1.5" style={serif}>{f.title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: MUTED }}>{f.desc}</p>
@@ -188,8 +217,9 @@ export default function Home() {
           <h2 className="text-xl font-bold mb-1" style={serif}>{t('home.conditionGuide')}</h2>
           <p className="text-sm mb-6" style={{ color: MUTED }}>{t('home.conditionSub')}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {conditions.map(c => (
-              <div key={c.key} className="p-4 rounded-xl" style={{ background: SURFACE, border: `1px solid ${RULE}` }}>
+            {conditions.map((c, i) => (
+              <div key={c.key} className="p-4 rounded-xl bt-fade-up bt-stagger"
+                style={{ background: SURFACE, border: `1px solid ${RULE}`, '--i': i } as React.CSSProperties}>
                 <div className="w-8 h-1.5 rounded-full mb-2.5" style={{ background: c.color }} />
                 <p className="text-sm font-bold" style={{ color: INK }}>{t(`cond.${c.key}`)}</p>
                 <p className="text-xs mt-1 leading-relaxed" style={{ color: MUTED }}>{t(`cond.${c.key}.desc`)}</p>

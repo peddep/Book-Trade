@@ -247,7 +247,7 @@ export default function WonderBoxPage() {
             onClick={() => setPickerOpen(false)}
           >
             <div
-              className="w-full max-w-lg p-5 rounded-2xl shadow-2xl"
+              className="w-full max-w-lg p-5 rounded-2xl shadow-2xl bt-pop-in"
               style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
               onClick={e => e.stopPropagation()}
             >
@@ -279,7 +279,7 @@ export default function WonderBoxPage() {
             onClick={() => setRevealed(null)}
           >
             <div
-              className="w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center"
+              className="w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center bt-pop-in"
               style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
               onClick={e => e.stopPropagation()}
             >

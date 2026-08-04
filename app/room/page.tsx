@@ -231,7 +231,7 @@ export default function RoomPage() {
         {editing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46, 16, 101, 0.4)' }}
             onClick={() => setEditing(false)}>
-            <div className="w-full max-w-sm p-6 rounded-2xl shadow-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+            <div className="w-full max-w-sm p-6 rounded-2xl shadow-2xl bt-pop-in" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-lg font-bold text-[#2e1065]">{t('profile2.title')}</p>

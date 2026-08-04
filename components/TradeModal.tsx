@@ -62,7 +62,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl flex flex-col overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-2xl flex flex-col overflow-hidden bt-pop-in" style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         {/* Sticky header with the close button */}
         <div className="flex justify-between items-center px-6 pt-5 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #f3e8ff' }}>
           <h2 className="text-lg font-bold text-[#2e1065]">{t('modal.title')}</h2>

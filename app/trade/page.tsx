@@ -59,13 +59,13 @@ export default function TradeHubPage() {
   const banners = (
     <div className="flex flex-col gap-3">
       <ChatBox />
-      {OPTIONS.map(o => (
+      {OPTIONS.map((o, i) => (
         <div key={o.key} className="relative">
           <Badge n={o.key === 'wonderbox' ? gifts : 0} />
           <Link
             href={o.href}
-            className="flex items-center gap-4 px-6 py-5 rounded-full transition-transform hover:scale-[1.02]"
-            style={{ background: o.color, boxShadow: '0 4px 14px rgba(0,0,0,0.35)' }}
+            className="flex items-center gap-4 px-6 py-5 rounded-full transition-transform hover:scale-[1.02] bt-press bt-fade-up bt-stagger"
+            style={{ background: o.color, boxShadow: '0 4px 14px rgba(0,0,0,0.35)', '--i': i } as React.CSSProperties}
           >
             <span className="text-3xl w-10 text-center flex-shrink-0">{o.icon}</span>
             <span className="flex-1">

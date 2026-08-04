@@ -105,7 +105,7 @@ export default function ChatBox() {
               // inside the body; drop it so it isn't shown twice.
               const body = donation ? m.body.replace(/^💜\s*/, '') : m.body;
               return (
-                <div key={m.id} className="mx-auto text-center px-3 py-1.5 rounded-full max-w-[90%]"
+                <div key={m.id} className="mx-auto text-center px-3 py-1.5 rounded-full max-w-[90%] bt-slide-in"
                   style={donation
                     ? { background: '#fce7f3', border: '1px solid #fbcfe8' }
                     : { background: '#ede9fe', border: '1px solid #ddd6fe' }}>
@@ -117,7 +117,7 @@ export default function ChatBox() {
             }
             const mine = m.user_id === me;
             return (
-              <div key={m.id} className={`flex items-end gap-2 ${mine ? 'flex-row-reverse' : ''}`}>
+              <div key={m.id} className={`flex items-end gap-2 bt-slide-in ${mine ? 'flex-row-reverse' : ''}`}>
                 <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
                   style={{ background: m.user_avatar ?? '#8b5cf6' }}>
                   {(m.user_name?.[0] ?? '?').toUpperCase()}

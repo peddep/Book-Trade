@@ -11,3 +11,55 @@ body {
   font-family: system-ui, sans-serif;
   min-height: 100vh;
 }
+
+/* ── Animation ───────────────────────────────────────────────────────────
+   Only transform and opacity are animated, so everything stays on the
+   compositor and does not force layout — these run on students' phones.
+   Anything longer than a few hundred ms gets in the way of someone listing
+   a stack of books, so nothing here does.                                */
+
+@keyframes bt-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes bt-pop-in {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes bt-grow-up {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@keyframes bt-slide-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.bt-fade-up  { animation: bt-fade-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.bt-pop-in   { animation: bt-pop-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.bt-grow-up  { animation: bt-grow-up 520ms cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: bottom; }
+.bt-slide-in { animation: bt-slide-in 260ms ease-out both; }
+
+/* Stagger helper: set --i on the item and the delay follows its position. */
+.bt-stagger { animation-delay: calc(var(--i, 0) * 60ms); }
+
+/* Presses feel more responsive than hovers on a phone, where there is no hover. */
+.bt-press { transition: transform 120ms ease, box-shadow 120ms ease; }
+.bt-press:active { transform: scale(0.97); }
+
+/* Respect the system setting. Someone who has asked for less motion gets the
+   finished state immediately rather than a faster version of the same thing. */
+@media (prefers-reduced-motion: reduce) {
+  .bt-fade-up, .bt-pop-in, .bt-grow-up, .bt-slide-in {
+    animation: none !important;
+  }
+  .bt-press { transition: none; }
+  .bt-press:active { transform: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

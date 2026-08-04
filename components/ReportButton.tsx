@@ -48,7 +48,7 @@ export default function ReportButton({ targetType, targetId, variant = 'icon' }:
       {open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(46,16,101,0.4)' }}
           onClick={() => setOpen(false)}>
-          <div className="w-full max-w-sm p-5 rounded-2xl shadow-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+          <div className="w-full max-w-sm p-5 rounded-2xl shadow-2xl bt-pop-in" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
             onClick={e => e.stopPropagation()}>
             {sent ? (
               <p className="text-center text-sm font-semibold py-4" style={{ color: '#10b981' }}>✓ {t('report.thanks')}</p>
