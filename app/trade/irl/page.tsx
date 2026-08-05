@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import IrlGuide from '@/components/IrlGuide';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 
@@ -148,6 +149,8 @@ export default function IrlTradePage() {
         <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mt-2">🤝 {t('irl.title')}</h1>
         <p className="text-sm text-[#6b7280] mb-5">{t('irl.subtitle')}</p>
+
+        <IrlGuide />
 
         {/* Stage tabs */}
         <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
