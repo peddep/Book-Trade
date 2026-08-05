@@ -25,6 +25,7 @@ export default function RoomPage() {
   const [user, setUser] = useState<User | null>(null);
   const [tradesMade, setTradesMade] = useState(0);
   const [booksListed, setBooksListed] = useState(0);
+  const [pendingOffers, setPendingOffers] = useState(0);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: '', grade: '', class_no: '', avatar_color: '#6366f1', new_password: '' });
   const [saving, setSaving] = useState(false);
@@ -60,13 +61,17 @@ export default function RoomPage() {
   }
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (!d.user) { router.push('/login'); return; }
-      setUser(d.user);
+    Promise.all([
+      fetch('/api/auth/me').then(r => r.json()).catch(() => ({ user: null })),
+      fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })),
+    ]).then(([me, tr]) => {
+      if (!me.user) { router.push('/login'); return; }
+      setUser(me.user);
+      const all = tr.trades ?? [];
+      setTradesMade(all.filter((x: any) => x.status === 'accepted').length);
+      // Offers waiting on me to accept or reject.
+      setPendingOffers(all.filter((x: any) => x.owner_id === me.user.id && x.status === 'pending').length);
     });
-    fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).then(d =>
-      setTradesMade((d.trades ?? []).filter((x: any) => x.status === 'accepted').length)
-    );
     fetch('/api/books?mine=1').then(r => r.json()).then(d => setBooksListed((d.books ?? []).length));
   }, [router]);
 
@@ -133,6 +138,23 @@ export default function RoomPage() {
             <p className="text-xs text-[#6b7280] mt-1">{t('room2.booksListed')}</p>
           </Card>
         </div>
+
+        {/* Incoming offers. This is the only route to /trades on a phone, where
+            the navbar menu that used to hold it is hidden. */}
+        <Link href="/trades"
+          className="flex items-center justify-between gap-3 mb-6 px-5 py-3.5 rounded-2xl bt-press"
+          style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+          <span className="font-semibold text-sm text-[#2e1065]">🤝 {t('nav.trades')}</span>
+          <span className="flex items-center gap-2">
+            {pendingOffers > 0 && (
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold text-white flex items-center justify-center"
+                style={{ background: '#ef4444' }}>
+                {pendingOffers}
+              </span>
+            )}
+            <span style={{ color: '#9ca3af' }}>›</span>
+          </span>
+        </Link>
 
         {/* Donation section: top donators + donate flow */}
         <DonationCard userName={user.name} />

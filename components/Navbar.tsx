@@ -66,7 +66,11 @@ export default function Navbar() {
           </button>
           {user && <NotificationBell />}
           {user ? (
-            <div className="relative">
+            // Hidden on phone: the three tabs sit on the page itself, sign-out
+            // is in the room page settings, and offers are reachable from there
+            // and from the bell — so on a small screen this menu was only
+            // crowding the header.
+            <div className="relative hidden sm:block">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="relative flex items-center gap-2 rounded-full p-1 hover:opacity-80"
