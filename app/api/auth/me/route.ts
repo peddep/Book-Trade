@@ -6,7 +6,21 @@ import { getCurrentUser, isAdmin, signSession } from '@/lib/auth';
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ user: null });
-  return NextResponse.json({ user: { ...user, is_admin: isAdmin(user) } });
+  // availability and contact live only in the database, not in the session
+  // cookie, so read them here — the profile editor needs them to prefill.
+  let extra: { availability: string[]; contact: string | null } = { availability: [], contact: null };
+  try {
+    await ensureUserColumns();
+    const r = await getDb().execute({ sql: 'SELECT availability, contact FROM users WHERE id = ?', args: [user.id] });
+    const row = r.rows[0] as any;
+    if (row) {
+      extra = {
+        availability: (() => { try { const a = JSON.parse(row.availability ?? '[]'); return Array.isArray(a) ? a : []; } catch { return []; } })(),
+        contact: row.contact ?? null,
+      };
+    }
+  } catch { /* older database */ }
+  return NextResponse.json({ user: { ...user, ...extra, is_admin: isAdmin(user) } });
 }
 
 // Update the signed-in user's profile (name, grade, avatar colour).
@@ -44,6 +58,18 @@ export async function PATCH(req: NextRequest) {
   if ('contact' in body) {
     const contact = typeof body.contact === 'string' && body.contact.trim() ? body.contact.trim().slice(0, 100) : null;
     await db.execute({ sql: 'UPDATE users SET contact = ? WHERE id = ?', args: [contact, user.id] });
+  }
+  // Availability, likewise DB-only. It was previously fixed at registration,
+  // which left anyone whose timetable changed — or who ticked it hurriedly —
+  // permanently unable to correct it, and every "no matching free period" it
+  // caused was wrong. Stored as a JSON array of "<slot>-<day>" keys, plus the
+  // special key "any" meaning free whenever the other person is.
+  if ('availability' in body) {
+    const valid = /^(p4|p5|after)-[0-4]$/;
+    const slots = Array.isArray(body.availability)
+      ? body.availability.filter((k: unknown) => typeof k === 'string' && (k === 'any' || valid.test(k))).slice(0, 20)
+      : [];
+    await db.execute({ sql: 'UPDATE users SET availability = ? WHERE id = ?', args: [JSON.stringify(slots), user.id] });
   }
   // Optional password change.
   if (typeof body.new_password === 'string' && body.new_password) {

@@ -46,10 +46,14 @@ interface Trade {
   requester_avatar: string;
   requester_availability?: string | null;
   requester_contact?: string | null;
+  requester_grade?: string | null;
+  requester_class?: string | null;
   owner_name: string;
   owner_avatar: string;
   owner_availability?: string | null;
   owner_contact?: string | null;
+  owner_grade?: string | null;
+  owner_class?: string | null;
   offered_title: string;
   offered_title_en?: string | null;
   offered_color: string;
@@ -83,11 +87,24 @@ function parseAvail(raw?: string | null): string[] {
   try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; }
 }
 
-// Shared slot keys, sorted by slot then day for stable display.
+// Every slot in the grid, used when someone says they are free any time.
+const ALL_SLOTS = SLOT_ORDER.flatMap(s => [0, 1, 2, 3, 4].map(d => `${s}-${d}`));
+
+// Shared slot keys, sorted by slot then day for stable display. Someone marked
+// flexible matches whatever the other person picked, so a pair whose grids
+// genuinely never line up — different years eat lunch at different times — is
+// not told there is no time when one of them is happy to fit in.
 function overlap(a?: string | null, b?: string | null): string[] {
-  const setB = new Set(parseAvail(b));
-  return parseAvail(a)
-    .filter(k => setB.has(k))
+  const listA = parseAvail(a);
+  const listB = parseAvail(b);
+  const anyA = listA.includes('any');
+  const anyB = listB.includes('any');
+  const realA = anyA ? ALL_SLOTS : listA;
+  const realB = anyB ? ALL_SLOTS : listB;
+  // Both flexible: nothing to narrow it down, so offer the whole grid.
+  const setB = new Set(realB);
+  return realA
+    .filter(k => k !== 'any' && setB.has(k))
     .sort((x, y) => {
       const [sx, dx] = x.split('-'); const [sy, dy] = y.split('-');
       return SLOT_ORDER.indexOf(sx) - SLOT_ORDER.indexOf(sy) || Number(dx) - Number(dy);
@@ -191,6 +208,13 @@ export default function IrlTradePage() {
               const otherContact = isRequester ? trade.owner_contact : trade.requester_contact;
               const shared = overlap(trade.requester_availability, trade.owner_availability);
               const meeting = nextMeeting(shared);
+              // Same room every day: working out a free period is beside the
+              // point, so say so instead of making them read a timetable.
+              const sameClass = Boolean(
+                trade.requester_grade && trade.requester_class &&
+                trade.requester_grade === trade.owner_grade &&
+                trade.requester_class === trade.owner_class,
+              );
               const meetingText = meeting
                 ? `${meeting.date.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { weekday: 'long', day: 'numeric', month: 'short' })} · ${meeting.date.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })} (${t(SLOT_KEYS[meeting.slot])})`
                 : null;
@@ -236,7 +260,14 @@ export default function IrlTradePage() {
                   {tab === 'upcoming' && (
                     <div className="p-3 rounded-xl" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
                       {/* Decided meeting date & time (from both users' registered availability) */}
-                      {meetingText ? (
+                      {sameClass ? (
+                        <div className="mb-3 p-3 rounded-xl" style={{ background: '#dcfce7', border: '1px solid #86efac' }}>
+                          <p className="text-xs font-bold" style={{ color: '#15803d' }}>
+                            🎒 {t('irl.sameClass', { room: `${t('grade.prefix')}${trade.owner_grade}/${trade.owner_class}` })}
+                          </p>
+                          <p className="text-xs mt-1" style={{ color: '#166534' }}>{t('irl.sameClassHint')}</p>
+                        </div>
+                      ) : meetingText ? (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
                           <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>📅 {t('irl.meetOn')}</p>
                           <p className="text-base font-bold text-white leading-tight mt-0.5">{meetingText}</p>

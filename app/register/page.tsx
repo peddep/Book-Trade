@@ -5,17 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
+import AvailabilityGrid from '@/components/AvailabilityGrid';
 
 const DRAFT_KEY = 'register-draft';
 
 const GRADES = ['1', '2', '3', '4', '5', '6'];
 const CLASSES = Array.from({ length: 16 }, (_, i) => String(i + 1));
-const DAYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
-const SLOTS = [
-  { key: 'p4', label: 'reg.slotP4' },
-  { key: 'p5', label: 'reg.slotP5' },
-  { key: 'after', label: 'reg.slotAfter' },
-];
 
 export default function RegisterPage() {
   const { t, gradeLabel } = useI18n();
@@ -96,10 +91,6 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function toggleSlot(key: string) {
-    setAvailability(prev => (prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]));
   }
 
   return (
@@ -227,47 +218,8 @@ export default function RegisterPage() {
             <div>
               <label className="text-sm text-[#4b5563] mb-1 block">{t('reg.availabilityTitle')}</label>
               <p className="text-xs text-[#9ca3af] mb-2">{t('reg.availabilityHint')}</p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-center border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="p-1"></th>
-                      {DAYS.map(d => (
-                        <th key={d} className="p-1 text-xs font-semibold text-[#7c3aed]">{t(d)}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {SLOTS.map(slot => (
-                      <tr key={slot.key}>
-                        <td className="p-1 text-[11px] text-left font-semibold text-[#4b5563] whitespace-nowrap pr-2">{t(slot.label)}</td>
-                        {DAYS.map((_, col) => {
-                          const key = `${slot.key}-${col}`;
-                          const on = availability.includes(key);
-                          return (
-                            <td key={key} className="p-0.5">
-                              <button
-                                type="button"
-                                onClick={() => toggleSlot(key)}
-                                aria-pressed={on}
-                                className="w-full rounded-lg flex items-center justify-center text-sm font-bold transition-colors"
-                                style={{
-                                  height: 34,
-                                  background: on ? '#7c3aed' : '#ffffff',
-                                  color: on ? '#ffffff' : '#c4b5fd',
-                                  border: `1px solid ${on ? '#7c3aed' : '#e9d5ff'}`,
-                                }}
-                              >
-                                {on ? '✓' : ''}
-                              </button>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AvailabilityGrid value={availability} onChange={setAvailability} />
+
             </div>
 
             {error && <p className="text-sm text-red-400">{error}</p>}
