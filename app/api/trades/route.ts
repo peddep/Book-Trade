@@ -3,6 +3,7 @@ import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from 
 import { getCurrentUser } from '@/lib/auth';
 import { priceDiffOk, isBookBusy, ensureHubTables, isBanned } from '@/lib/hub';
 import { tooManyRecent } from '@/lib/ratelimit';
+import { notify } from '@/lib/notify';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -71,6 +72,13 @@ export async function POST(req: NextRequest) {
   const result = await db.execute({
     sql: 'INSERT INTO trades (requester_id, owner_id, offered_book_id, wanted_book_id, message) VALUES (?, ?, ?, ?, ?)',
     args: [user.id, Number(wantedBook.owner_id), offered_book_id, wanted_book_id, message ?? null],
+  });
+
+  // The owner is almost certainly not looking at the site right now.
+  await notify(Number(wantedBook.owner_id), 'trade_offer', {
+    actor: user.name,
+    subject: String(wantedBook.title),
+    link: '/trades',
   });
 
   return NextResponse.json({ trade: { id: Number(result.lastInsertRowid) } }, { status: 201 });

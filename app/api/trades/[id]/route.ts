@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { announceTrade } from '@/lib/hub';
+import { notify, notifyBoth } from '@/lib/notify';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -56,6 +57,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         args: [Number(trade.requester_id), Number(trade.wanted_book_id)],
       });
       await announceTrade(Number(id));
+      await notifyBoth(Number(trade.requester_id), Number(trade.owner_id), 'trade_completed', { link: '/trades' });
     }
 
     return NextResponse.json({ ok: true });
@@ -75,6 +77,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   await db.execute({ sql: "UPDATE trades SET status = ?, updated_at = datetime('now') WHERE id = ?", args: [status, id] });
+
+  // Tell whichever side did not press the button. Accept and reject are the
+  // owner's doing, so the requester hears about them; a cancel is the
+  // requester's, so the owner does.
+  {
+    const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
+    const names = await db.execute({
+      sql: `SELECT (SELECT name FROM users WHERE id = ?) AS actor,
+                   (SELECT title FROM books WHERE id = ?) AS subject`,
+      args: [user.id, Number(trade.wanted_book_id)],
+    });
+    const row = names.rows[0] as any;
+    const kind = status === 'accepted' ? 'trade_accepted' : status === 'rejected' ? 'trade_rejected' : 'trade_cancelled';
+    await notify(other, kind, {
+      actor: row?.actor ? String(row.actor) : null,
+      subject: row?.subject ? String(row.subject) : null,
+      link: status === 'accepted' ? '/trade/irl' : '/trades',
+    });
+  }
 
   if (status === 'accepted') {
     await db.execute({

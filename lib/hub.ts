@@ -61,6 +61,20 @@ export async function ensureHubTables() {
         body TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
+      // Things that happened to a student while they were not looking. The text
+      // is not stored: `kind` plus the two parameters are rendered and
+      // translated in the client, so a Thai student and an English one see the
+      // same notification in their own language.
+      `CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        kind TEXT NOT NULL,
+        actor TEXT,
+        subject TEXT,
+        link TEXT,
+        read INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
       // Suggestions and bug reports from students, for the admin to work through.
       `CREATE TABLE IF NOT EXISTS feedback (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -206,6 +220,10 @@ export async function runWonderBoxMatcher() {
       sql: "UPDATE wonder_box SET status = 'matched', matched_trade_id = ? WHERE id IN (?, ?)",
       args: [tradeId, Number(a.id), Number(b.id)],
     });
+    // This runs on a schedule, so neither student is present when it happens —
+    // without a note, a matched box sits unopened.
+    const { notifyBoth } = await import('./notify');
+    await notifyBoth(Number(a.user_id), Number(b.user_id), 'wonderbox_match', { link: '/trade/wonderbox' });
   }
 }
 

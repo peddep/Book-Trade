@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
+import NotificationBell from '@/components/NotificationBell';
 
 interface User {
   id: number;
@@ -63,6 +64,7 @@ export default function Navbar() {
           >
             {lang === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
           </button>
+          {user && <NotificationBell />}
           {user ? (
             <div className="relative">
               <button
