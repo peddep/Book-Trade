@@ -18,9 +18,11 @@ if the database variables are set for *all* environments, your preview writes
 straight into the students' live database. That is worse than testing on
 production, because it looks safe.
 
-So give Preview its own database:
+So give Preview its own database. **All of this can be done from a phone** —
+no terminal, no clone, nothing to install.
 
-1. **Create a second Turso database**, e.g. `booktrade-preview`.
+1. **Create a second Turso database**, e.g. `booktrade-preview`, and copy its
+   URL and a token.
 
 2. **In Vercel → Settings → Environment Variables**, check the scope of each:
 
@@ -31,20 +33,35 @@ So give Preview its own database:
    | `SESSION_SECRET` | live secret | **a different secret** |
    | `ALLOWED_EMAIL_DOMAIN` | `student.nssc.ac.th` | leave unset, so you can register test accounts |
 
+   Vercel allows the same key twice as long as the environments do not overlap,
+   so edit the live ones to **Production only** first, then add Preview ones.
    A different `SESSION_SECRET` means a login on the test site is not a valid
    session on the real one.
 
-3. **Push to a branch** rather than `main`. Vercel comments the preview URL on
-   the pull request, or you can find it under Deployments.
+3. **Push a commit to a branch** — via GitHub's pencil icon if you have no
+   terminal. A branch that merely points at the same commit as `main` will not
+   produce a preview: Vercel deploys commits, not branch names, and it has
+   already built that one. There has to be something new.
 
-4. **Set the preview database up once**, pointing `.env.local` at it:
+4. **Open the preview.** Vercel → Deployments → the row labelled **Preview**
+   with your branch name → **Visit**. If you opened a pull request, the Vercel
+   bot comments the link on it. The URL is stable per branch, so bookmark it.
 
-   ```bash
-   npm run db:init    # create the tables
-   npm run db:seed    # fill it with sample students and books
-   ```
+   The database sets itself up on first use, so there is nothing to run.
 
-5. **Merge to `main`** when you are happy with it.
+5. **Check you are on the right site.** A preview shows an orange strip across
+   the top:
+
+   > 🧪 เว็บทดสอบ — ไม่ใช่เว็บจริง · TEST SITE — not the real BookTrade
+
+   The live site never shows it. If you do not see it, you are on production.
+
+6. **Verify the isolation, once.** On the preview, add a book called
+   `TEST DELETE ME`, then check your live site. It must not be there. If it is,
+   step 2 did not take — fix it and **redeploy the preview**, because Vercel
+   bakes environment variables in at build time.
+
+7. **Merge to `main`** when you are happy with it.
 
 The daily harvest cron only runs on production, and is guarded by
 `CRON_SECRET`, so a preview will not burn your Google Books quota or write to
@@ -55,20 +72,21 @@ the catalogue.
 ```bash
 npm install
 printf 'TURSO_DATABASE_URL=file:local.db\nSESSION_SECRET=anything-long\n' > .env.local
-npm run db:init
-npm run db:seed
 npm run dev
 ```
 
 `file:local.db` is a plain file on your machine — nothing reaches the cloud and
-nothing can reach the students.
+nothing can reach the students. The tables create themselves; `npm run db:seed`
+adds sample data if you want it.
 
 ---
 
 ## Sample accounts
 
-`npm run db:seed` creates five students with books, trades in every state, and
-a few chat messages, so the site is worth clicking around in:
+Optional — a database fills itself in as you use it, so you can just register
+an account. But if you have a terminal, `npm run db:seed` creates five students
+with books, trades in every state, and a few chat messages, so the site is
+worth clicking around in straight away:
 
 | Sign in as | Password |
 |---|---|
@@ -107,7 +125,7 @@ Copy `.env.example` to `.env.local` and fill it in.
 | `npm run dev` | Development server. |
 | `npm run build` | Production build. |
 | `npm test` | Integration tests for the trade rules — spawns its own server against a throwaway database. |
-| `npm run db:init` | Create the tables. |
+| `npm run db:init` | Create the tables by hand. Rarely needed — the app does this itself on first use. |
 | `npm run db:seed` | Fill a **test** database with sample data. Refuses a populated one; `-- --force` wipes and reseeds. |
 | `npm run harvest:thai` | Pull Thai book titles into the suggestion catalogue. |
 
