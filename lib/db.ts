@@ -34,10 +34,30 @@ async function addMissingColumns(table: string, defs: string[]): Promise<string[
   return added;
 }
 
+// Creates the core tables if they are not there yet, once per cold start.
+// Everything else in the app already creates its own tables on demand, so an
+// empty database used to fail on these three alone and needed `npm run db:init`
+// from a terminal first. Now pointing the site at a brand-new database is
+// enough — which is what makes a preview environment set-up-able from a phone.
+// CREATE TABLE IF NOT EXISTS is a no-op against a database that already has
+// them, so this costs one batch on the first request after a deploy.
+let coreTablesEnsured = false;
+async function ensureCoreTables() {
+  if (coreTablesEnsured) return;
+  try {
+    await initDb();
+  } catch {
+    // Racing with another cold start, or a read-only replica: the tables are
+    // either already there or the next call will report the real problem.
+  }
+  coreTablesEnsured = true;
+}
+
 // Adds newer books columns (cover_url, title_en, price) to older databases.
 let bookColumnsEnsured = false;
 export async function ensureBookColumns() {
   if (bookColumnsEnsured) return;
+  await ensureCoreTables();
   // isbn: set when the book was added by scanning, so the next student to scan
   // the same barcode is answered from our own database instead of an API.
   // cover_source: 'api' | 'upload' | 'camera' — only 'api' covers are reused on
@@ -68,6 +88,7 @@ export const ensureCoverColumn = ensureBookColumns;
 let userColumnsEnsured = false;
 export async function ensureUserColumns() {
   if (userColumnsEnsured) return;
+  await ensureCoreTables();
   await addMissingColumns('users', ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT', 'banned INTEGER DEFAULT 0']);
   userColumnsEnsured = true;
 }
@@ -76,6 +97,7 @@ export async function ensureUserColumns() {
 let tradeColumnsEnsured = false;
 export async function ensureTradeColumns() {
   if (tradeColumnsEnsured) return;
+  await ensureCoreTables();
   await addMissingColumns('trades', ['requester_confirm TEXT', 'owner_confirm TEXT']);
   tradeColumnsEnsured = true;
 }
