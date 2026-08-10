@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -109,6 +110,10 @@ async function searchGoogleBooks(q: string): Promise<Suggestion[]> {
 }
 
 export async function GET(req: NextRequest) {
+  // Sign-in required: the local half of these suggestions is drawn from books
+  // students have listed, and it is only ever called from the add-book form.
+  if (!(await getCurrentUser())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const q = new URL(req.url).searchParams.get('q')?.trim();
   if (!q || q.length < 2) return NextResponse.json({ books: [] });
 

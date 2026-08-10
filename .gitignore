@@ -45,3 +45,8 @@ next-env.d.ts
 /data/*.db
 /data/*.db-shm
 /data/*.db-wal
+
+# throwaway local/test databases (test-*.db, preview-*.db, local.db)
+*.db
+*.db-shm
+*.db-wal

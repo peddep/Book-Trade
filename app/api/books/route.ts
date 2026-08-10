@@ -69,6 +69,15 @@ function sanitizeCover(cover: unknown): string | null {
 }
 
 export async function GET(req: NextRequest) {
+  // Sign-in required. The rows carry the owner's name, year and cover photo,
+  // so answering without a session published every student's listings to
+  // anyone with the URL. The session was already being read here — it just was
+  // not being enforced. Every caller is a signed-in page, so nothing that
+  // should work stops working. Aggregate counts for the front page come from
+  // /api/stats, which is deliberately public and carries no personal data.
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const db = getDb();
   await Promise.all([ensureBookColumns(), ensureHubTables()]);
   const { searchParams } = new URL(req.url);
@@ -77,7 +86,6 @@ export async function GET(req: NextRequest) {
   const myBooks = searchParams.get('mine') === '1';
   // When set, hide books already committed to another trade avenue.
   const excludeBusy = searchParams.get('exclude_busy') === '1';
-  const user = await getCurrentUser();
 
   let sql = `
     SELECT b.*, u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade,
