@@ -25,10 +25,28 @@ export const viewport = {
   userScalable: false,
 };
 
+// Vercel sets VERCEL_ENV to 'preview' on branch deployments and 'production'
+// on the live site. Read on the server, so it costs nothing on the client and
+// cannot be wrong. The banner only ever exists on a preview.
+function PreviewBanner() {
+  if (process.env.VERCEL_ENV !== 'preview') return null;
+  return (
+    <div style={{
+      background: '#b45309', color: '#ffffff', textAlign: 'center',
+      padding: '4px 12px', fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
+    }}>
+      🧪 เว็บทดสอบ — ไม่ใช่เว็บจริง · TEST SITE — not the real BookTrade
+    </div>
+  );
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th" className={serif.variable}>
       <body>
+        {/* Telling the test site apart from the real one at a glance is the
+            difference between poking at a preview and editing students' data. */}
+        <PreviewBanner />
         <Providers>{children}</Providers>
       </body>
     </html>
