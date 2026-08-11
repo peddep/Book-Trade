@@ -7,7 +7,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, execSync } from 'node:child_process';
-import { rmSync } from 'node:fs';
+import { rmSync, readFileSync, readdirSync, readlinkSync } from 'node:fs';
 
 const PORT = 3199;
 const BASE = `http://localhost:${PORT}`;
@@ -34,7 +34,7 @@ async function api(path, { method = 'GET', cookie, body, ip } = {}) {
 // tested guard) doesn't trip during the suite.
 let ipCounter = 0;
 async function register(name, email) {
-  const r = await api('/api/auth/register', { method: 'POST', body: { name, email, password: 'secret6' }, ip: `10.0.0.${++ipCounter}` });
+  const r = await api('/api/auth/register', { method: 'POST', body: { name, email, password: 'secret6', accept_terms: true }, ip: `10.0.0.${++ipCounter}` });
   return r.cookie;
 }
 async function addBook(cookie, title, price) {
@@ -42,11 +42,63 @@ async function addBook(cookie, title, price) {
   return r.json.book.id;
 }
 
+
+// `next dev` hands the listening socket to a `next-server` process that
+// re-parents itself to init, so killing the spawned process group can leave it
+// running. A survivor holds the port, the next run's server fails to start,
+// and the tests then talk to a stale server whose database has been deleted —
+// which looks exactly like a product bug. Find the holder through /proc so it
+// can be killed by port rather than by name (no pkill: that would take out a
+// developer's own dev server).
+function pidsOnPort(port) {
+  const hex = port.toString(16).toUpperCase().padStart(4, '0');
+  const inodes = new Set();
+  for (const table of ['/proc/net/tcp', '/proc/net/tcp6']) {
+    let lines;
+    try { lines = readFileSync(table, 'utf8').split('\n').slice(1); } catch { continue; }
+    for (const line of lines) {
+      const f = line.trim().split(/\s+/);
+      // st === '0A' is LISTEN; field 9 is the socket inode.
+      if (f.length > 9 && f[1]?.endsWith(':' + hex) && f[3] === '0A') inodes.add(f[9]);
+    }
+  }
+  if (inodes.size === 0) return [];
+  const pids = [];
+  for (const pid of readdirSync('/proc')) {
+    if (!/^\d+$/.test(pid)) continue;
+    let fds;
+    try { fds = readdirSync(`/proc/${pid}/fd`); } catch { continue; }
+    for (const fd of fds) {
+      try {
+        const m = readlinkSync(`/proc/${pid}/fd/${fd}`).match(/^socket:\[(\d+)\]$/);
+        if (m && inodes.has(m[1])) { pids.push(Number(pid)); break; }
+      } catch { /* fd vanished */ }
+    }
+  }
+  return pids;
+}
+
+async function freePort(port) {
+  for (const pid of pidsOnPort(port)) {
+    try { process.kill(pid, 'SIGKILL'); } catch { /* already gone */ }
+  }
+  // Give the kernel a moment to release the socket.
+  for (let i = 0; i < 20 && pidsOnPort(port).length > 0; i++) {
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
 before(async () => {
+  // A server left behind by an earlier run would answer every request.
+  await freePort(PORT);
   rmSync(DB, { force: true });
   execSync(`printf 'TURSO_DATABASE_URL=file:${DB}\\nSESSION_SECRET=test\\n' > .env.local`, { shell: '/bin/bash' });
   execSync('npm run db:init', { stdio: 'ignore' });
-  server = spawn('npx', ['next', 'dev', '-p', String(PORT)], { stdio: 'ignore', env: process.env });
+  // Detached, so the whole process group can be torn down below. `next dev`
+  // spawns helper processes of its own; killing only the wrapper leaves one
+  // holding the port, and the next run then talks to a stale server whose
+  // database has already been deleted.
+  server = spawn('npx', ['next', 'dev', '-p', String(PORT)], { stdio: 'ignore', env: process.env, detached: true });
   // Wait for readiness.
   for (let i = 0; i < 60; i++) {
     try { const r = await fetch(BASE + '/'); if (r.ok) break; } catch { /* not up yet */ }
@@ -54,8 +106,11 @@ before(async () => {
   }
 });
 
-after(() => {
-  server?.kill('SIGKILL');
+after(async () => {
+  if (server?.pid) {
+    try { process.kill(-server.pid, 'SIGKILL'); } catch { /* already gone */ }
+  }
+  await freePort(PORT);
   rmSync(DB, { force: true });
   rmSync('.env.local', { force: true });
 });

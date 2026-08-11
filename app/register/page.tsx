@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const [classNo, setClassNo] = useState('');
   const [contact, setContact] = useState('');
   const [availability, setAvailability] = useState<string[]>([]);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -47,6 +48,7 @@ export default function RegisterPage() {
         setPassword(d.password ?? ''); setConfirmPassword(d.confirmPassword ?? '');
         setGrade(d.grade ?? ''); setClassNo(d.classNo ?? ''); setContact(d.contact ?? '');
         setAvailability(Array.isArray(d.availability) ? d.availability : []);
+        setAcceptTerms(d.acceptTerms === true);
       }
     } catch { /* ignore corrupt draft */ }
   }, []);
@@ -57,14 +59,18 @@ export default function RegisterPage() {
   useEffect(() => {
     if (firstSave.current) { firstSave.current = false; return; }
     try {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ name, realName, email, password, confirmPassword, grade, classNo, contact, availability }));
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ name, realName, email, password, confirmPassword, grade, classNo, contact, availability, acceptTerms }));
     } catch { /* storage full / unavailable */ }
-  }, [name, realName, email, password, confirmPassword, grade, classNo, contact, availability]);
+  }, [name, realName, email, password, confirmPassword, grade, classNo, contact, availability, acceptTerms]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError(t('reg.passwordMismatch'));
+      return;
+    }
+    if (!acceptTerms) {
+      setError(t('reg.termsRequired'));
       return;
     }
     setLoading(true);
@@ -73,7 +79,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, grade, class_no: classNo, contact, real_name: realName, availability }),
+        body: JSON.stringify({ name, email, password, grade, class_no: classNo, contact, real_name: realName, availability, accept_terms: acceptTerms }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -82,7 +88,8 @@ export default function RegisterPage() {
         return;
       }
       setError(
-        data.error === 'email_domain' ? t('reg.emailDomain', { domain: data.domain })
+        data.error === 'terms_required' ? t('reg.termsRequired')
+        : data.error === 'email_domain' ? t('reg.emailDomain', { domain: data.domain })
         : data.error === 'rate_limited' ? t('err.rateLimited')
         : (data.error ?? t('reg.failed', { status: res.status }))
       );
@@ -222,10 +229,28 @@ export default function RegisterPage() {
 
             </div>
 
+            {/* Agreement. A ticked box the student has to reach for, rather
+                than fine print under the button they have already pressed. */}
+            <label className="flex gap-2.5 items-start p-3 rounded-xl cursor-pointer"
+              style={{ background: '#faf5ff', border: `1px solid ${error === t('reg.termsRequired') ? '#ef4444' : '#e9d5ff'}` }}>
+              <input
+                type="checkbox"
+                checked={acceptTerms}
+                onChange={e => setAcceptTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 flex-shrink-0 accent-[#7c3aed]"
+              />
+              <span className="text-xs text-[#4b5563] leading-relaxed">
+                {t('reg.agreeRead')}{' '}
+                <Link href="/rules" className="underline font-semibold text-[#7c3aed]">{t('rules.title')}</Link>
+                {' '}{t('reg.agreeAnd')}{' '}
+                <Link href="/privacy" className="underline font-semibold text-[#7c3aed]">{t('priv.title')}</Link>
+              </span>
+            </label>
+
             {error && <p className="text-sm text-red-400">{error}</p>}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !acceptTerms}
               className="w-full py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
             >
@@ -236,12 +261,6 @@ export default function RegisterPage() {
               <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
                 {t('login.signIn')}
               </Link>
-            </p>
-            <p className="text-center text-xs text-[#9ca3af]">
-              {t('reg.agree')}{' '}
-              <Link href="/rules" className="underline hover:text-[#7c3aed]">{t('rules.title')}</Link>
-              {' '}·{' '}
-              <Link href="/privacy" className="underline hover:text-[#7c3aed]">{t('priv.title')}</Link>
             </p>
           </form>
         </div>

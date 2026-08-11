@@ -89,7 +89,7 @@ let userColumnsEnsured = false;
 export async function ensureUserColumns() {
   if (userColumnsEnsured) return;
   await ensureCoreTables();
-  await addMissingColumns('users', ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT', 'banned INTEGER DEFAULT 0']);
+  await addMissingColumns('users', ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT', 'banned INTEGER DEFAULT 0', 'terms_accepted_at TEXT']);
   userColumnsEnsured = true;
 }
 
@@ -117,6 +117,7 @@ export async function initDb() {
         class_no TEXT,
         contact TEXT,
         real_name TEXT,
+        terms_accepted_at TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE IF NOT EXISTS books (

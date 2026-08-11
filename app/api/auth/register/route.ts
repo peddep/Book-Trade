@@ -21,10 +21,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   }
 
-  const { name, email, password, grade, class_no, contact, real_name, availability } = await req.json();
+  const { name, email, password, grade, class_no, contact, real_name, availability, accept_terms } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  // The form requires the checkbox, but the form is not what creates the
+  // account — an account with no recorded agreement must not exist, so the
+  // check belongs here too.
+  if (accept_terms !== true) {
+    return NextResponse.json({ error: 'terms_required' }, { status: 400 });
   }
 
   // When ALLOWED_EMAIL_DOMAIN is set (e.g. student.nssc.ac.th), only school
@@ -52,7 +59,9 @@ export async function POST(req: NextRequest) {
     const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
     const result = await db.execute({
-      sql: 'INSERT INTO users (name, email, password_hash, grade, class_no, contact, real_name, avatar_color, availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      // When they agreed is stored alongside the account, so the record of the
+      // agreement survives any later change to the wording of the pages.
+      sql: 'INSERT INTO users (name, email, password_hash, grade, class_no, contact, real_name, avatar_color, availability, terms_accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'))',
       args: [name, email, hash, grade ?? null, classNo, contactStr, realName, color, availabilityJson],
     });
 
