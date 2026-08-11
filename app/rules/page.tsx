@@ -8,7 +8,12 @@ export default function RulesPage() {
   const { t } = useI18n();
   const router = useRouter();
   const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'] as const;
-  const rules = ['meet', 'noCash', 'noSchoolBooks', 'honest', 'decline', 'respect', 'report'] as const;
+  // Ordered as a set of terms reads: who may use it, their obligations, then
+  // what happens when they are broken.
+  const rules = [
+    'eligibility', 'account', 'meet', 'noCash', 'noSchoolBooks', 'honest',
+    'decline', 'respect', 'prohibited', 'report', 'enforcement', 'liability', 'changes',
+  ] as const;
 
   return (
     <>
@@ -16,7 +21,8 @@ export default function RulesPage() {
       <main className="max-w-2xl mx-auto px-4 py-8">
         <button onClick={() => router.back()} className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</button>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mt-2 mb-1">📋 {t('rules.title')}</h1>
-        <p className="text-sm text-[#6b7280] mb-6">{t('rules.intro')}</p>
+        <p className="text-xs mb-3" style={{ color: '#9ca3af' }}>{t('rules.updated')}</p>
+        <p className="text-sm text-[#4b5563] leading-relaxed mb-6">{t('rules.intro')}</p>
 
         {/* The rules */}
         <ol className="flex flex-col gap-3 mb-8">
