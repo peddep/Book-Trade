@@ -238,8 +238,8 @@ export default function Home() {
             {cta}
           </div>
           <div className="max-w-2xl mx-auto mt-8 flex justify-center gap-6 text-xs" style={{ color: MUTED }}>
-            <Link href="/rules" className="hover:underline">{t('home.linkRules')}</Link>
-            <Link href="/privacy" className="hover:underline">{t('home.linkPrivacy')}</Link>
+            <Link href="/rules" className="hover:underline">{t('rules.title')}</Link>
+            <Link href="/privacy" className="hover:underline">{t('priv.title')}</Link>
           </div>
         </section>
       </main>

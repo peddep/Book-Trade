@@ -50,8 +50,6 @@ const STRINGS: Dict = {
   'home.conditionSub': { th: 'บอกสภาพหนังสือตามจริง เพื่อนจะได้รู้ว่าจะได้อะไร', en: 'Describe your book honestly so the other person knows what they are getting.' },
   'home.finalTitle': { th: 'หนังสือที่อ่านจบแล้ว รอเพื่อนอยู่นะ', en: 'That book you finished is someone else\'s next read' },
   'home.finalDesc': { th: 'ลงหนังสือเล่มแรกใช้เวลาไม่ถึงนาที แล้วนัดเจอกันที่ห้องสมุดตอนพักกลางวัน', en: 'Listing your first book takes under a minute. Swap at the library during lunch.' },
-  'home.linkRules': { th: 'กติกาการแลกเปลี่ยน', en: 'Trading rules' },
-  'home.linkPrivacy': { th: 'ความเป็นส่วนตัว', en: 'Privacy' },
 
   // Conditions
   'cond.Like New': { th: 'เหมือนใหม่', en: 'Like New' },
@@ -464,8 +462,6 @@ const STRINGS: Dict = {
   'reg.confirmPassword': { th: 'ยืนยันรหัสผ่าน', en: 'Confirm password' },
   'reg.confirmPasswordHint': { th: 'พิมพ์รหัสผ่านอีกครั้ง', en: 'Type your password again' },
   'reg.passwordMismatch': { th: 'รหัสผ่านไม่ตรงกัน', en: 'Passwords do not match' },
-  'room2.rules': { th: '📋 กติกา', en: '📋 Rules' },
-  'room2.privacy': { th: '🔒 ความเป็นส่วนตัว', en: '🔒 Privacy' },
   'adm.export': { th: '⬇ ดาวน์โหลดข้อมูลทั้งหมด (JSON)', en: '⬇ Export all data (JSON)' },
   'shelf.inWonderbox': { th: 'ในกล่อง', en: 'In box' },
   'profile.fVolume': { th: 'เล่มที่', en: 'Vol.' },
