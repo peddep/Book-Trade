@@ -9,6 +9,7 @@ interface Message {
   kind: string;
   body: string;
   created_at: string;
+  edited_at?: string | null;
   user_name: string | null;
   user_avatar: string | null;
 }
@@ -19,6 +20,11 @@ export default function ChatBox() {
   const [me, setMe] = useState<number | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  // Moderation, admin only. The server re-checks on every call, so this only
+  // decides whether the controls are drawn.
+  const [canModerate, setCanModerate] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editText, setEditText] = useState('');
   const [unread, setUnread] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const lastIdRef = useRef(0);
@@ -30,6 +36,7 @@ export default function ChatBox() {
     const d = await res.json();
     setMessages(d.messages ?? []);
     setMe(d.me ?? null);
+    setCanModerate(Boolean(d.is_admin));
   }, []);
 
   useEffect(() => {
@@ -63,6 +70,71 @@ export default function ChatBox() {
   function jumpToLatest() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
     setUnread(false);
+  }
+
+  function startEdit(m: Message) {
+    setEditingId(m.id);
+    setEditText(m.body);
+  }
+
+  async function saveEdit() {
+    const body = editText.trim();
+    if (!body || editingId === null) return;
+    const id = editingId;
+    setEditingId(null);
+    await fetch('/api/chat', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, body }),
+    });
+    await load();
+  }
+
+  async function remove(m: Message) {
+    if (!confirm(t('chat.deleteConfirm'))) return;
+    await fetch(`/api/chat?id=${m.id}`, { method: 'DELETE' });
+    await load();
+  }
+
+  // Pencil / bin pair shown beside a message for the admin.
+  function modControls(m: Message) {
+    if (!canModerate || editingId === m.id) return null;
+    return (
+      <span className="flex gap-1 flex-shrink-0 self-center">
+        <button onClick={() => startEdit(m)} aria-label={t('chat.edit')} title={t('chat.edit')}
+          className="text-[11px] px-1.5 py-0.5 rounded-md" style={{ background: '#f3e8ff', color: '#7c3aed' }}>✏️</button>
+        <button onClick={() => remove(m)} aria-label={t('chat.delete')} title={t('chat.delete')}
+          className="text-[11px] px-1.5 py-0.5 rounded-md" style={{ background: '#fee2e2', color: '#ef4444' }}>🗑</button>
+      </span>
+    );
+  }
+
+  // Replaces the bubble while an admin is rewriting it.
+  function editRow(m: Message) {
+    return (
+      <div className="flex gap-1.5 items-center w-full">
+        <input
+          value={editText}
+          onChange={e => setEditText(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+            if (e.key === 'Escape') setEditingId(null);
+          }}
+          autoFocus
+          maxLength={500}
+          className="flex-1 min-w-0 px-2 py-1 rounded-lg text-xs text-[#2e1065]"
+          style={{ background: '#ffffff', border: '1px solid #7c3aed', outline: 'none' }}
+        />
+        <button onClick={saveEdit} disabled={!editText.trim()}
+          className="text-[11px] font-bold px-2 py-1 rounded-lg text-white disabled:opacity-40" style={{ background: '#7c3aed' }}>
+          {t('chat.save')}
+        </button>
+        <button onClick={() => setEditingId(null)}
+          className="text-[11px] px-2 py-1 rounded-lg" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+          {t('chat.cancelEdit')}
+        </button>
+      </div>
+    );
   }
 
   async function send(e: React.FormEvent) {
@@ -104,14 +176,20 @@ export default function ChatBox() {
               // Donations posted before they had their own kind carry the label
               // inside the body; drop it so it isn't shown twice.
               const body = donation ? m.body.replace(/^💜\s*/, '') : m.body;
+              if (editingId === m.id) {
+                return <div key={m.id} className="px-1">{editRow(m)}</div>;
+              }
               return (
-                <div key={m.id} className="mx-auto text-center px-3 py-1.5 rounded-full max-w-[90%] bt-slide-in"
-                  style={donation
-                    ? { background: '#fce7f3', border: '1px solid #fbcfe8' }
-                    : { background: '#ede9fe', border: '1px solid #ddd6fe' }}>
-                  <p className="text-[11px] font-semibold" style={{ color: donation ? '#be185d' : '#7c3aed' }}>
-                    {donation ? `💜 ${t('chat.donate')}` : `🏆 ${t('chat.announce')}`} · {body}
-                  </p>
+                <div key={m.id} className="flex items-center justify-center gap-1.5 bt-slide-in">
+                  <div className="text-center px-3 py-1.5 rounded-full max-w-[80%]"
+                    style={donation
+                      ? { background: '#fce7f3', border: '1px solid #fbcfe8' }
+                      : { background: '#ede9fe', border: '1px solid #ddd6fe' }}>
+                    <p className="text-[11px] font-semibold" style={{ color: donation ? '#be185d' : '#7c3aed' }}>
+                      {donation ? `💜 ${t('chat.donate')}` : `🏆 ${t('chat.announce')}`} · {body}
+                    </p>
+                  </div>
+                  {modControls(m)}
                 </div>
               );
             }
@@ -124,13 +202,21 @@ export default function ChatBox() {
                 </span>
                 <div className={`max-w-[75%] ${mine ? 'text-right' : ''}`}>
                   <p className="text-[10px] text-[#9ca3af] px-1">{mine ? t('chat.you') : m.user_name}</p>
-                  <div className="px-3 py-1.5 rounded-2xl inline-block text-left"
-                    style={mine
-                      ? { background: '#7c3aed', color: '#ffffff', borderTopRightRadius: 4 }
-                      : { background: '#ffffff', color: '#2e1065', border: '1px solid #e9d5ff', borderTopLeftRadius: 4 }}>
-                    <p className="text-xs leading-snug break-words">{m.body}</p>
-                  </div>
+                  {editingId === m.id ? editRow(m) : (
+                    <div className="px-3 py-1.5 rounded-2xl inline-block text-left"
+                      style={mine
+                        ? { background: '#7c3aed', color: '#ffffff', borderTopRightRadius: 4 }
+                        : { background: '#ffffff', color: '#2e1065', border: '1px solid #e9d5ff', borderTopLeftRadius: 4 }}>
+                      <p className="text-xs leading-snug break-words">{m.body}</p>
+                      {/* The message still carries this student's name, so say
+                          plainly that the words are no longer only theirs. */}
+                      {m.edited_at && (
+                        <p className="text-[9px] mt-0.5" style={{ color: mine ? '#ddd6fe' : '#9ca3af' }}>{t('chat.edited')}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
+                {modControls(m)}
               </div>
             );
           })

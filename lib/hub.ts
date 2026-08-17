@@ -1,4 +1,4 @@
-import { getDb, ensureBookColumns } from './db';
+import { getDb, ensureBookColumns, addMissingColumns } from './db';
 
 // Premium Plan limits (this app runs everyone on the Premium Plan).
 export const PLAN = {
@@ -114,6 +114,9 @@ export async function ensureHubTables() {
   try {
     await db.execute("UPDATE messages SET kind = 'donation' WHERE kind = 'announcement' AND body LIKE '💜%'");
   } catch { /* older database without the messages table yet */ }
+  // Set when an admin edits a message. Shown in the chat, because a message
+  // still carries the student's name and avatar after it has been changed.
+  await addMissingColumns('messages', ['edited_at TEXT']);
   ensured = true;
 }
 

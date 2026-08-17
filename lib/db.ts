@@ -17,7 +17,7 @@ export function getDb(): Client {
 // Adds any missing columns to a table with a single PRAGMA check up front, so
 // warm-and-cold requests don't pay a round-trip per column. Returns the names
 // of columns that were actually added. Each `def` is "name TYPE ...".
-async function addMissingColumns(table: string, defs: string[]): Promise<string[]> {
+export async function addMissingColumns(table: string, defs: string[]): Promise<string[]> {
   const info = await getDb().execute(`PRAGMA table_info(${table})`);
   const existing = new Set(info.rows.map(r => String(r.name)));
   const added: string[] = [];
