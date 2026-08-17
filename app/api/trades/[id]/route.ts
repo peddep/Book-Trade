@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { announceTrade } from '@/lib/hub';
+import { announceTrade, priceDiffOk } from '@/lib/hub';
 import { notify, notifyBoth } from '@/lib/notify';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -44,6 +44,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
       });
     } else if (rConfirm === 'happened' && oConfirm === 'happened') {
+      // Never move a book that has since left the hands it was promised from.
+      // Accepting locks both books, so this should be unreachable — but the
+      // swap below writes owner_id unconditionally, and that is far too blunt
+      // an operation to run on an assumption.
+      const still = await db.execute({
+        sql: 'SELECT id, owner_id FROM books WHERE id IN (?, ?)',
+        args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
+      });
+      const owners = new Map(still.rows.map((r: any) => [Number(r.id), Number(r.owner_id)]));
+      if (
+        owners.get(Number(trade.offered_book_id)) !== Number(trade.requester_id) ||
+        owners.get(Number(trade.wanted_book_id)) !== Number(trade.owner_id)
+      ) {
+        await db.execute({ sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?", args: [id] });
+        return NextResponse.json({ error: 'books_changed' }, { status: 409 });
+      }
+
       // Both confirmed → the trade is complete; announce it in the community chat.
       await db.execute({ sql: "UPDATE trades SET status = 'completed', updated_at = datetime('now') WHERE id = ?", args: [id] });
       // The physical books changed hands, so swap owners in the app too and
@@ -76,7 +93,57 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Which statuses each transition may start from. Without this a settled
+  // trade could be moved back to 'accepted' months later and then confirmed
+  // again — re-running the ownership swap on books that have since been traded
+  // to somebody else, and taking them off that person's shelf.
+  const CAN_MOVE_FROM: Record<string, string[]> = {
+    accepted: ['pending'],
+    rejected: ['pending'],
+    // A requester may call off an offer before it is accepted, or back out of
+    // an agreed meet-up they no longer want.
+    cancelled: ['pending', 'accepted'],
+  };
+  if (!CAN_MOVE_FROM[status].includes(String(trade.status))) {
+    return NextResponse.json({ error: 'stale_trade', status: trade.status }, { status: 409 });
+  }
+
+  // Accepting reserves both books, so check they are still there to reserve:
+  // each must still belong to the side that put it up, and be free.
+  if (status === 'accepted') {
+    const state = await db.execute({
+      sql: 'SELECT id, owner_id, available, price FROM books WHERE id IN (?, ?)',
+      args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
+    });
+    const byId = new Map(state.rows.map((r: any) => [Number(r.id), r]));
+    const offeredNow = byId.get(Number(trade.offered_book_id)) as any;
+    const wantedNow = byId.get(Number(trade.wanted_book_id)) as any;
+    const usable = (b: any, expectedOwner: number) =>
+      b && Number(b.owner_id) === expectedOwner && Number(b.available) === 1;
+    if (!usable(offeredNow, Number(trade.requester_id)) || !usable(wantedNow, Number(trade.owner_id))) {
+      await db.execute({ sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?", args: [id] });
+      return NextResponse.json({ error: 'books_changed' }, { status: 409 });
+    }
+    // The price rule is checked when the offer is made, so editing a book's
+    // price afterwards would otherwise carry a trade past a limit it could
+    // never have been created under.
+    if (!priceDiffOk(offeredNow.price, wantedNow.price)) {
+      return NextResponse.json({ error: 'price_gap' }, { status: 400 });
+    }
+  }
+
+  const wasAccepted = String(trade.status) === 'accepted';
+
   await db.execute({ sql: "UPDATE trades SET status = ?, updated_at = datetime('now') WHERE id = ?", args: [status, id] });
+
+  // Backing out of an agreed trade has to release the books it was holding,
+  // or both sit reserved forever with no trade left to complete them.
+  if (status === 'cancelled' && wasAccepted) {
+    await db.execute({
+      sql: 'UPDATE books SET available = 1 WHERE id = ? OR id = ?',
+      args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
+    });
+  }
 
   // Tell whichever side did not press the button. Accept and reject are the
   // owner's doing, so the requester hears about them; a cancel is the

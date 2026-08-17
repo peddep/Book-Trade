@@ -180,3 +180,60 @@ test('a completed trade swaps book ownership and returns them to the market', as
   assert.equal(Number(aBooks[0].available), 1); // back on the market
   assert.equal(bBooks[0].title, 'Swap A');
 });
+
+test('a settled trade cannot be reopened and re-run', async () => {
+  // The dangerous version of this: B rejects A's offer, B later trades the
+  // same book away to C, then B reopens the dead offer and confirms it — which
+  // used to hand C's book to A.
+  const a = await register('RA', 'ra@s.edu');
+  const b = await register('RB', 'rb@s.edu');
+  const c = await register('RC', 'rc@s.edu');
+  const ba = await addBook(a, 'ReA', 100);
+  const bb = await addBook(b, 'ReB', 100);
+  const bc = await addBook(c, 'ReC', 100);
+
+  const dead = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${dead}`, { method: 'PATCH', cookie: b, body: { status: 'rejected' } });
+
+  // B genuinely trades the book to C instead.
+  const real = (await api('/api/trades', { method: 'POST', cookie: c, body: { offered_book_id: bc, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${real}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+  await api(`/api/trades/${real}`, { method: 'PATCH', cookie: c, body: { confirm: 'happened' } });
+  await api(`/api/trades/${real}`, { method: 'PATCH', cookie: b, body: { confirm: 'happened' } });
+
+  const reopen = await api(`/api/trades/${dead}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+  assert.equal(reopen.status, 409);
+  assert.equal(reopen.json.error, 'stale_trade');
+
+  // Even if both sides confirm anyway, C keeps the book they traded for.
+  await api(`/api/trades/${dead}`, { method: 'PATCH', cookie: a, body: { confirm: 'happened' } });
+  await api(`/api/trades/${dead}`, { method: 'PATCH', cookie: b, body: { confirm: 'happened' } });
+  const cBooks = (await api('/api/books?mine=1', { cookie: c })).json.books;
+  assert.deepEqual(cBooks.map(x => x.title), ['ReB']);
+});
+
+test('cancelling an accepted trade puts both books back on the market', async () => {
+  const a = await register('XA', 'xa@s.edu');
+  const b = await register('XB', 'xb@s.edu');
+  const ba = await addBook(a, 'XBookA', 100);
+  const bb = await addBook(b, 'XBookB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { status: 'cancelled' } });
+
+  // Both books are free again, so the same offer can be made afresh.
+  const again = await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } });
+  assert.equal(again.status, 201);
+});
+
+test('editing a price after offering cannot carry a trade past the ฿100 rule', async () => {
+  const a = await register('PXA', 'pxa@s.edu');
+  const b = await register('PXB', 'pxb@s.edu');
+  const ba = await addBook(a, 'PxA', 100);
+  const bb = await addBook(b, 'PxB', 150);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/books/${ba}`, { method: 'PATCH', cookie: a, body: { price: 1 } });
+  const acc = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+  assert.equal(acc.status, 400);
+  assert.equal(acc.json.error, 'price_gap');
+});
