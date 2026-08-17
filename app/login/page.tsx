@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -12,16 +12,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { user: sessionUser } = useSession();
   const router = useRouter();
 
   // Already signed in: signing in again as someone else would swap the session
   // out from under them with no warning. Send them to the app instead.
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then(r => (r.ok ? r.json() : { user: null }))
-      .then(d => { if (d.user) router.replace('/trade'); })
-      .catch(() => {});
-  }, [router]);
+    if (sessionUser) router.replace('/trade');
+  }, [router, sessionUser]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,7 +49,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <Navbar />
       <main className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">

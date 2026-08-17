@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
 
 export default function DonatePage() {
@@ -9,7 +8,6 @@ export default function DonatePage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-md mx-auto px-4 py-8">
         <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
 

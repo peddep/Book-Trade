@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import BookShelf, { type ShelfBook } from '@/components/BookShelf';
 import { useI18n } from '@/lib/i18n';
 
@@ -96,7 +95,6 @@ export default function WonderBoxPage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <div className="mt-2 mb-1">

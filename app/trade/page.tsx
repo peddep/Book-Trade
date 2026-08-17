@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import TopTabs from '@/components/TopTabs';
 import MyBooksManager from '@/components/MyBooksManager';
 import ChatBox from '@/components/ChatBox';
 import { useI18n } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 const OPTIONS = [
   { href: '/trade/wonderbox', icon: '✨', key: 'wonderbox', color: 'linear-gradient(135deg, #6366f1, #4f46e5)' },
@@ -30,16 +30,16 @@ export default function TradeHubPage() {
   const [totalTrades, setTotalTrades] = useState<number | null>(null);
   const [awaitingConfirm, setAwaitingConfirm] = useState(0);
   const [gifts, setGifts] = useState(0);
+  const { user, loading } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    // Fire all requests at once instead of waterfalling them.
-    Promise.all([
-      fetch('/api/auth/me').then(r => r.json()).catch(() => ({ user: null })),
-      fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })),
-    ]).then(([me, tr]) => {
-      if (!me.user) { router.push('/login'); return; }
-      const userId = me.user.id;
+    // Wait for the shared session rather than asking for it again; redirect only
+    // once we actually know there is nobody signed in.
+    if (loading) return;
+    if (!user) { router.push('/login'); return; }
+    const userId = user.id;
+    fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })).then(tr => {
       const all = tr.trades ?? [];
       setTotalTrades(all.filter((x: any) => x.status === 'accepted' || x.status === 'completed').length);
       setAwaitingConfirm(all.filter((x: any) => {
@@ -52,7 +52,7 @@ export default function TradeHubPage() {
     fetch('/api/wonderbox').then(r => (r.ok ? r.json() : { deposits: [] })).then(d =>
       setGifts((d.deposits ?? []).filter((x: any) => x.status === 'matched').length)
     );
-  }, [router]);
+  }, [router, user, loading]);
 
   const counter = String(totalTrades ?? 0).padStart(10, '0');
 
@@ -81,7 +81,6 @@ export default function TradeHubPage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <TopTabs />
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
 
 export default function RulesPage() {
@@ -17,7 +16,6 @@ export default function RulesPage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-2xl mx-auto px-4 py-8">
         <button onClick={() => router.back()} className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</button>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mt-2 mb-1">📋 {t('rules.title')}</h1>

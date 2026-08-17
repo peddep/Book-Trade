@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
 import BookShelf from '@/components/BookShelf';
 import TradeModal from '@/components/TradeModal';
@@ -39,12 +38,12 @@ export default function FriendTradePage() {
   const [pending, setPending] = useState(0);
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (!d.user) return;
-      fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).then(data =>
-        setPending((data.trades ?? []).filter((tr: any) => tr.owner_id === d.user.id && tr.status === 'pending').length)
-      );
-    });
+    // Straight to the count: this used to ask who I am, then pull every trade
+    // I have ever been in, to render one badge.
+    fetch('/api/trades?counts=1')
+      .then(r => (r.ok ? r.json() : { pending: 0 }))
+      .then(d => setPending(Number(d.pending) || 0))
+      .catch(() => {});
   }, []);
 
   const fetchBooks = useCallback(async () => {
@@ -71,7 +70,6 @@ export default function FriendTradePage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between gap-3">
           <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>

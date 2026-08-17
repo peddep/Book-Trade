@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 import AvailabilityGrid from '@/components/AvailabilityGrid';
 
 const DRAFT_KEY = 'register-draft';
@@ -26,17 +26,15 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { user: sessionUser } = useSession();
   const router = useRouter();
   const firstSave = useRef(true);
 
   // Already signed in: registering again would create a second account and
   // swap the session to it, leaving this student's books on the first one.
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then(r => (r.ok ? r.json() : { user: null }))
-      .then(d => { if (d.user) router.replace('/trade'); })
-      .catch(() => {});
-  }, [router]);
+    if (sessionUser) router.replace('/trade');
+  }, [router, sessionUser]);
 
   // Restore a saved draft (e.g. after visiting the Rules / Privacy pages).
   useEffect(() => {
@@ -102,7 +100,6 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Navbar />
       <main className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">

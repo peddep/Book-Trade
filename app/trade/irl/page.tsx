@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
+import { useSession } from '@/lib/session';
 import IrlGuide from '@/components/IrlGuide';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
@@ -117,6 +117,7 @@ export default function IrlTradePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'upcoming' | 'confirm' | 'history'>('upcoming');
+  const { user: sessionUser, loading: sessionLoading } = useSession();
   const router = useRouter();
 
   const fetchTrades = useCallback(async () => {
@@ -126,12 +127,11 @@ export default function IrlTradePage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (!d.user) { router.push('/login'); return; }
-      setUser(d.user);
-    });
+    if (sessionLoading) return;
+    if (!sessionUser) { router.push('/login'); return; }
+    setUser(sessionUser as User);
     fetchTrades();
-  }, [router, fetchTrades]);
+  }, [router, fetchTrades, sessionUser, sessionLoading]);
 
   async function confirm(id: number, value: 'happened' | 'not') {
     await fetch(`/api/trades/${id}`, {
@@ -142,7 +142,7 @@ export default function IrlTradePage() {
     fetchTrades();
   }
 
-  if (!user) return (<><Navbar /><Loading /></>);
+  if (!user) return (<Loading />);
 
   const inProgress = trades.filter(t => t.status === 'accepted');
   const history = trades.filter(t => t.status === 'completed' || t.status === 'cancelled');
@@ -161,7 +161,6 @@ export default function IrlTradePage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mt-2">🤝 {t('irl.title')}</h1>

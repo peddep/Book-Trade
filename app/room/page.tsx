@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import TopTabs from '@/components/TopTabs';
 import DonationCard from '@/components/DonationCard';
 import FeedbackCard from '@/components/FeedbackCard';
 import AvailabilityGrid from '@/components/AvailabilityGrid';
 import { useI18n, type Lang } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 interface User {
   id: number;
@@ -33,6 +33,7 @@ export default function RoomPage() {
   const [availability, setAvailability] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const { user: sessionUser, loading: sessionLoading, setUser: setSessionUser } = useSession();
   const router = useRouter();
 
   const AVATAR_COLORS = ['#6366f1', '#7c3aed', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6'];
@@ -57,6 +58,9 @@ export default function RoomPage() {
     if (res.ok) {
       const d = await res.json();
       setUser(d.user);
+      // Keep the shared session in step, or the navbar keeps showing the old
+      // name and avatar until a full reload.
+      setSessionUser(d.user);
       setEditing(false);
     } else {
       setFormError(t('profile2.nameRequired'));
@@ -65,19 +69,17 @@ export default function RoomPage() {
   }
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/auth/me').then(r => r.json()).catch(() => ({ user: null })),
-      fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })),
-    ]).then(([me, tr]) => {
-      if (!me.user) { router.push('/login'); return; }
-      setUser(me.user);
-      const all = tr.trades ?? [];
-      setTradesMade(all.filter((x: any) => x.status === 'accepted').length);
-      // Offers waiting on me to accept or reject.
-      setPendingOffers(all.filter((x: any) => x.owner_id === me.user.id && x.status === 'pending').length);
+    if (sessionLoading) return;
+    if (!sessionUser) { router.push('/login'); return; }
+    setUser(sessionUser as User);
+    // Two numbers, counted in the database, instead of every trade row this
+    // student has ever been part of.
+    fetch('/api/trades?counts=1').then(r => (r.ok ? r.json() : {})).catch(() => ({})).then((d: { pending?: number; accepted?: number }) => {
+      setTradesMade(Number(d.accepted) || 0);
+      setPendingOffers(Number(d.pending) || 0);
     });
     fetch('/api/books?mine=1').then(r => r.json()).then(d => setBooksListed((d.books ?? []).length));
-  }, [router]);
+  }, [router, sessionUser, sessionLoading]);
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -86,7 +88,6 @@ export default function RoomPage() {
 
   if (!user) return (
     <>
-      <Navbar />
       <Loading />
     </>
   );
@@ -111,7 +112,6 @@ export default function RoomPage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-6">
         <TopTabs />
 

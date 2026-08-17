@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 // Small book-shaped cover for the traded books.
 function MiniCover({ url, color, title }: { url?: string | null; color: string; title: string }) {
@@ -64,18 +64,18 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: strin
 export default function TradesPage() {
   const { t, bookTitle } = useI18n();
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [user, setUser] = useState<User | null>(null);
+  // Session comes from the shared provider; `loading` below is about the trade
+  // list this page fetches, which is a separate thing.
+  const { user, loading: sessionLoading } = useSession();
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'incoming' | 'outgoing'>('all');
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (!d.user) { router.push('/login'); return; }
-      setUser(d.user);
-    });
+    if (sessionLoading) return;
+    if (!user) { router.push('/login'); return; }
     fetchTrades();
-  }, [router]);
+  }, [router, user, sessionLoading]);
 
   async function fetchTrades() {
     setLoading(true);
@@ -104,14 +104,12 @@ export default function TradesPage() {
 
   if (!user) return (
     <>
-      <Navbar />
       <Loading />
     </>
   );
 
   return (
     <>
-      <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Link href="/trade/friend" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <div className="mt-2 mb-4">

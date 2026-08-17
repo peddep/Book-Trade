@@ -1,13 +1,16 @@
 'use client';
 
 import { I18nProvider } from '@/lib/i18n';
+import { SessionProvider } from '@/lib/session';
 import RotateLock from '@/components/RotateLock';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <I18nProvider>
-      <RotateLock />
-      {children}
+      <SessionProvider>
+        <RotateLock />
+        {children}
+      </SessionProvider>
     </I18nProvider>
   );
 }

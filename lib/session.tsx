@@ -1,0 +1,72 @@
+'use client';
+
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+
+// Who is signed in, fetched once for the whole app instead of per page.
+//
+// Every page used to ask /api/auth/me for itself, and the navbar asked again on
+// every navigation — so a single tap cost two identical round trips before the
+// page's own data was even requested. On a phone on school wifi, talking to a
+// database in another country, that is the delay you feel when switching pages.
+
+export interface SessionUser {
+  id: number;
+  name: string;
+  email: string;
+  grade: string | null;
+  class_no?: string | null;
+  avatar_color: string;
+  contact?: string | null;
+  availability?: string[];
+  is_admin?: boolean;
+}
+
+interface SessionValue {
+  user: SessionUser | null;
+  /** True until the first answer arrives. Pages must not redirect to /login
+   *  while this is true, or a signed-in student gets bounced on a slow link. */
+  loading: boolean;
+  /** Re-read the session from the server (after editing a profile, say). */
+  refresh: () => Promise<SessionUser | null>;
+  /** Apply a known-good user locally, avoiding a re-fetch. */
+  setUser: (u: SessionUser | null) => void;
+}
+
+const SessionContext = createContext<SessionValue>({
+  user: null,
+  loading: true,
+  refresh: async () => null,
+  setUser: () => {},
+});
+
+export function SessionProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      const d = res.ok ? await res.json() : { user: null };
+      setUser(d.user ?? null);
+      return (d.user ?? null) as SessionUser | null;
+    } catch {
+      // Offline or a dropped request: keep whoever we already had rather than
+      // reporting them signed out, which would redirect them to /login.
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return (
+    <SessionContext.Provider value={{ user, loading, refresh, setUser }}>
+      {children}
+    </SessionContext.Provider>
+  );
+}
+
+export function useSession() {
+  return useContext(SessionContext);
+}

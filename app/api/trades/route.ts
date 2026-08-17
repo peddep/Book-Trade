@@ -5,11 +5,28 @@ import { priceDiffOk, isBookBusy, ensureHubTables, isBanned } from '@/lib/hub';
 import { tooManyRecent } from '@/lib/ratelimit';
 import { notify } from '@/lib/notify';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = getDb();
+
+  // Badges and stat tiles only need counts. They used to pull the full list —
+  // six joins and every trade the student has ever been in — on every page
+  // they opened, to render one or two numbers.
+  if (new URL(req.url).searchParams.get('counts') === '1') {
+    await ensureTradeColumns();
+    const c = await db.execute({
+      sql: `SELECT
+              SUM(CASE WHEN owner_id = ? AND status = 'pending' THEN 1 ELSE 0 END) AS pending,
+              SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) AS accepted
+            FROM trades WHERE requester_id = ? OR owner_id = ?`,
+      args: [user.id, user.id, user.id],
+    });
+    const row = c.rows[0] as any;
+    return NextResponse.json({ pending: Number(row.pending ?? 0), accepted: Number(row.accepted ?? 0) });
+  }
+
   await Promise.all([ensureBookColumns(), ensureUserColumns(), ensureTradeColumns()]);
   const result = await db.execute({
     sql: `

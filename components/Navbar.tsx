@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 import NotificationBell from '@/components/NotificationBell';
 
 interface User {
@@ -16,29 +17,28 @@ interface User {
 }
 
 export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
+  // Shared session: fetched once for the whole app, so opening a page no longer
+  // re-asks who is signed in.
+  const { user, setUser } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [pending, setPending] = useState(0);
   const router = useRouter();
-  const pathname = usePathname();
   const { lang, setLang, t, gradeLabel } = useI18n();
 
-  useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user));
-  }, [pathname]);
-
-  // Count incoming trade requests still awaiting my response, and keep it fresh.
+  // Count incoming offers awaiting a reply. Deliberately not keyed on the
+  // pathname: the number does not change because the student changed page, and
+  // re-fetching it on every hop was making navigation wait on the network.
   useEffect(() => {
     if (!user) { setPending(0); return; }
     const check = () =>
-      fetch('/api/trades')
-        .then(r => (r.ok ? r.json() : { trades: [] }))
-        .then(d => setPending((d.trades ?? []).filter((tr: any) => tr.owner_id === user.id && tr.status === 'pending').length))
+      fetch('/api/trades?counts=1')
+        .then(r => (r.ok ? r.json() : { pending: 0 }))
+        .then(d => setPending(Number(d.pending) || 0))
         .catch(() => {});
     check();
     const id = setInterval(check, 20000);
     return () => clearInterval(id);
-  }, [user, pathname]);
+  }, [user]);
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });

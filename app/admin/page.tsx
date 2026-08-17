@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import AdminHarvestCard from '@/components/AdminHarvestCard';
 import { useI18n } from '@/lib/i18n';
@@ -162,14 +161,13 @@ export default function AdminPage() {
 
   if (denied) return (
     <>
-      <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-16 text-center">
         <div className="text-5xl mb-4">🔒</div>
         <p className="text-[#6b7280]">Admin only</p>
       </main>
     </>
   );
-  if (!data) return (<><Navbar /><Loading /></>);
+  if (!data) return (<Loading />);
 
   const stats = [
     { label: t('adm.openReports'), value: data.stats.openReports ?? 0 },
@@ -188,7 +186,6 @@ export default function AdminPage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-8">
         <Link href="/room" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <div className="flex items-center justify-between gap-3 mt-2 mb-5">

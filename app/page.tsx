@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import { useI18n } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 // Same purple-and-white palette as the rest of the site.
 const PAPER = '#faf5ff';
@@ -65,15 +65,15 @@ export default function Home() {
   // null = still checking. Signed-in students must not be shown sign-up or
   // sign-in buttons: following either one silently replaces their session, and
   // registering again would strand their books on the old account.
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const { user, loading: sessionLoading } = useSession();
 
   useEffect(() => {
     fetch('/api/stats').then(r => (r.ok ? r.json() : null)).then(setStats).catch(() => {});
-    fetch('/api/auth/me')
-      .then(r => (r.ok ? r.json() : { user: null }))
-      .then(d => setSignedIn(Boolean(d.user)))
-      .catch(() => setSignedIn(false));
   }, []);
+
+  // Null while the shared session is still loading, so the button row keeps its
+  // height instead of flipping between the two pairs.
+  const signedIn = sessionLoading ? null : Boolean(user);
 
   const steps = [
     { icon: '📖', title: t('home.step1Title'), desc: t('home.step1Desc') },
@@ -125,7 +125,6 @@ export default function Home() {
 
   return (
     <>
-      <Navbar />
       <main style={{ background: PAPER, color: INK }}>
         {/* Hero */}
         <section className="relative overflow-hidden">

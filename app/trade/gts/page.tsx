@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import BookPicker from '@/components/BookPicker';
 import BookThumb from '@/components/BookThumb';
 import TitleInput from '@/components/TitleInput';
@@ -122,7 +121,6 @@ export default function GtsPage() {
 
   return (
     <>
-      <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
         <h1 className="text-3xl font-bold text-[#2e1065] mt-2 mb-1">🌐 {t('hub.gts')}</h1>

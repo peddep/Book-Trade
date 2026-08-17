@@ -2,7 +2,6 @@
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import Loading from '@/components/Loading';
 import BookCard from '@/components/BookCard';
 import BookShelf from '@/components/BookShelf';
@@ -67,10 +66,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     setTimeout(() => setSuccess(''), 5000);
   }
 
-  if (loading) return (<><Navbar /><Loading /></>);
+  if (loading) return (<Loading />);
   if (notFound || !user) return (
     <>
-      <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-16 text-center">
         <div className="text-5xl mb-4">🤷</div>
         <p className="text-[#6b7280] text-lg">{t('user.notFound')}</p>
@@ -80,7 +78,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
   return (
     <>
-      <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-6">
         <button onClick={() => router.back()} className="text-sm text-[#6b7280] hover:text-[#2e1065] mb-3">← {t('hub.back').replace('← ', '')}</button>
 

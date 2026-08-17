@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Serif_Thai } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import Navbar from "@/components/Navbar";
 
 // Headings on the front page only. A Thai-capable serif is what makes that
 // page read as print rather than as an app; the rest of the site stays on the
@@ -47,7 +48,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Telling the test site apart from the real one at a glance is the
             difference between poking at a preview and editing students' data. */}
         <PreviewBanner />
-        <Providers>{children}</Providers>
+        {/* The navbar lives here rather than in each page, so switching pages
+            keeps the same header instead of tearing it down and building a new
+            one — which meant re-fetching the session, the notification list and
+            the offers badge on every single tap. */}
+        <Providers>
+          <Navbar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
