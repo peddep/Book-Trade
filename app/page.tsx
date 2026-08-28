@@ -155,7 +155,11 @@ export default function Home() {
             backgroundImage:
               'radial-gradient(circle at 15% 20%, #ddd6fe 0%, transparent 45%), radial-gradient(circle at 85% 10%, #ede9fe 0%, transparent 40%)',
           }} />
-          <div className="max-w-3xl mx-auto px-4 pt-16 pb-12 text-center relative z-10">
+          {/* Wider from lg so the heading sits on one line: it needs about 940px
+              set in English, and a 768px column forced "Your Classmates" onto
+              a second line on every desktop. The paragraph below keeps its own
+              narrower measure, since long lines of prose are harder to read. */}
+          <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-16 pb-12 text-center relative z-10">
             <h1 className="text-4xl sm:text-5xl font-bold leading-[1.25] mb-5 bt-fade-up" style={serif}>
               {t('home.title1')}{' '}
               <span style={{ color: ACCENT }}>{t('home.title2')}</span>
