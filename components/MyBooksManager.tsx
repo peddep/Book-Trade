@@ -436,10 +436,12 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       onDelete={deleteBook}
       onToggleAvailable={toggleAvailable}
       onChangeCover={changeCover}
-      maxHeight={compact ? '70vh' : '65vh'}
-      // The books page gives the shelf the whole width, so use it: three
-      // columns in a 448px strip left most of a desktop screen empty.
-      gridClass={compact ? 'grid-cols-3' : 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8'}
+      // Your books and the books you are browsing are the same kind of thing,
+      // so they get the same shelf: the same columns at the same widths, and
+      // the page scrolling rather than a shelf-sized window scrolling inside
+      // it, which is what made the two pages feel unrelated on a big screen.
+      maxHeight={compact ? '70vh' : 'none'}
+      gridClass={compact ? 'grid-cols-3' : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10'}
     />
   );
 

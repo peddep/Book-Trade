@@ -32,7 +32,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <main className="max-w-6xl 2xl:max-w-[100rem] mx-auto px-4 lg:px-8 py-6">
+      <main className="max-w-6xl 2xl:max-w-[110rem] mx-auto px-4 lg:px-8 py-6">
         <TopTabs />
         {user.is_admin && <AdminHarvestCard />}
         <MyBooksManager />
