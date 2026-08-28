@@ -1,20 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import BookCard from '@/components/BookCard';
+import BookShelf from '@/components/BookShelf';
+import TradeModal from '@/components/TradeModal';
 import TopTabs from '@/components/TopTabs';
-import MyBooksManager from '@/components/MyBooksManager';
-import ChatBox from '@/components/ChatBox';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 
-const OPTIONS = [
-  { href: '/trade/wonderbox', icon: '✨', key: 'wonderbox', color: 'linear-gradient(135deg, #6366f1, #4f46e5)' },
-  { href: '/trade/friend', icon: '🔍', key: 'browse', color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' },
-];
+import { SUBJECTS } from '@/lib/subjects';
 
-// Red count bubble pinned to a corner of a button/banner.
+interface Book {
+  id: number;
+  title: string;
+  title_en?: string | null;
+  author: string;
+  subject?: string;
+  grade_level?: string;
+  condition: string;
+  description?: string;
+  cover_color: string;
+  cover_url?: string | null;
+  price?: number | null;
+  available: number;
+  owner_name: string;
+  owner_avatar_color: string;
+  owner_grade?: string;
+}
+
+// Red count bubble pinned to a corner of a button.
 function Badge({ n }: { n: number }) {
   if (n <= 0) return null;
   return (
@@ -25,24 +41,36 @@ function Badge({ n }: { n: number }) {
   );
 }
 
-export default function TradeHubPage() {
+// The trade page IS browsing other students' books. It used to be a menu of
+// ways to trade, with browsing one banner among them; everything else on it
+// either had no takers or has been retired, so the menu was a step in front of
+// the only thing anyone came here to do. Wonder Box, in-person meet-ups and
+// incoming offers keep their place as buttons at the top.
+export default function TradePage() {
   const { t } = useI18n();
-  const [totalTrades, setTotalTrades] = useState<number | null>(null);
+  const { user, loading: sessionLoading } = useSession();
+  const router = useRouter();
+  const [books, setBooks] = useState<Book[]>([]);
+  const [query, setQuery] = useState('');
+  const [subject, setSubject] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [tradeBook, setTradeBook] = useState<Book | null>(null);
+  const [success, setSuccess] = useState('');
+  const [pending, setPending] = useState(0);
   const [awaitingConfirm, setAwaitingConfirm] = useState(0);
   const [gifts, setGifts] = useState(0);
-  const { user, loading } = useSession();
-  const router = useRouter();
 
   useEffect(() => {
-    // Wait for the shared session rather than asking for it again; redirect only
-    // once we actually know there is nobody signed in.
-    if (loading) return;
+    if (sessionLoading) return;
     if (!user) { router.push('/login'); return; }
     const userId = user.id;
+    fetch('/api/trades?counts=1')
+      .then(r => (r.ok ? r.json() : {}))
+      .then((d: { pending?: number }) => setPending(Number(d.pending) || 0))
+      .catch(() => {});
+    // Meet-ups still waiting on this student to say whether the swap happened.
     fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })).then(tr => {
-      const all = tr.trades ?? [];
-      setTotalTrades(all.filter((x: any) => x.status === 'accepted' || x.status === 'completed').length);
-      setAwaitingConfirm(all.filter((x: any) => {
+      setAwaitingConfirm((tr.trades ?? []).filter((x: any) => {
         if (x.status !== 'accepted') return false;
         const mine = x.requester_id === userId ? x.requester_confirm : x.owner_confirm;
         return mine !== 'happened';
@@ -51,74 +79,130 @@ export default function TradeHubPage() {
     // Gift boxes waiting to be opened in the Wonder Box.
     fetch('/api/wonderbox').then(r => (r.ok ? r.json() : { deposits: [] })).then(d =>
       setGifts((d.deposits ?? []).filter((x: any) => x.status === 'matched').length)
-    );
-  }, [router, user, loading]);
+    ).catch(() => {});
+  }, [router, user, sessionLoading]);
 
-  const counter = String(totalTrades ?? 0).padStart(10, '0');
+  const fetchBooks = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (subject) params.set('subject', subject);
+    const res = await fetch(`/api/books?${params}`);
+    const data = await res.json();
+    setBooks(data.books ?? []);
+    setLoading(false);
+  }, [query, subject]);
 
-  const banners = (
-    <div className="flex flex-col gap-3">
-      <ChatBox />
-      {OPTIONS.map((o, i) => (
-        <div key={o.key} className="relative">
-          <Badge n={o.key === 'wonderbox' ? gifts : 0} />
-          <Link
-            href={o.href}
-            className="flex items-center gap-4 px-6 py-5 rounded-full transition-transform hover:scale-[1.02] bt-press bt-fade-up bt-stagger"
-            style={{ background: o.color, boxShadow: '0 4px 14px rgba(0,0,0,0.35)', '--i': i } as React.CSSProperties}
-          >
-            <span className="text-3xl w-10 text-center flex-shrink-0">{o.icon}</span>
-            <span className="flex-1">
-              <span className="block font-bold text-[#2e1065] text-lg leading-tight">{t(`hub.${o.key}`)}</span>
-              <span className="block text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.75)' }}>{t(`hub.${o.key}Desc`)}</span>
-            </span>
-            {o.key === 'wonderbox' && gifts > 0 && <span className="text-2xl flex-shrink-0">🎁</span>}
-          </Link>
-        </div>
-      ))}
-    </div>
-  );
+  useEffect(() => {
+    const id = setTimeout(fetchBooks, 300);
+    return () => clearTimeout(id);
+  }, [fetchBooks]);
+
+  function handleTradeSuccess() {
+    setTradeBook(null);
+    setSuccess(t('books.tradeSent'));
+    setTimeout(() => setSuccess(''), 5000);
+  }
 
   return (
     <>
-      <main className="max-w-5xl xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-6xl 2xl:max-w-[110rem] mx-auto px-4 lg:px-8 py-6">
         <TopTabs />
 
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-[#2e1065]">{t('hub.title')}</h1>
-          <span className="relative inline-block">
-            <Badge n={awaitingConfirm} />
-            <Link
-              href="/trade/irl"
-              className="inline-block text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full transition-transform hover:scale-105"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#ffffff' }}
-            >
-              🤝 {t('hub.irl')}
-            </Link>
-          </span>
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mb-1">🔍 {t('hub.browse')}</h1>
+            <p className="text-[#6b7280] text-sm">{t('books.subtitle')}</p>
+          </div>
+
+          {/* The other three places a trade can be: a surprise swap, the
+              meet-ups already agreed, and offers waiting on an answer. */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="relative inline-block">
+              <Badge n={gifts} />
+              <Link href="/trade/wonderbox"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full text-white bt-press"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+                ✨ {t('hub.wonderbox')}
+              </Link>
+            </span>
+            <span className="relative inline-block">
+              <Badge n={awaitingConfirm} />
+              <Link href="/trade/irl"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full text-white bt-press"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                🤝 {t('hub.irl')}
+              </Link>
+            </span>
+            <span className="relative inline-block">
+              <Badge n={pending} />
+              <Link href="/trades"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full bt-press"
+                style={{ background: '#ffffff', color: '#6d28d9', border: '1px solid #e9d5ff' }}>
+                🔔 {t('nav.trades')}
+              </Link>
+            </span>
+          </div>
         </div>
 
-        {/* Total trades counter (Pokémon HOME style) */}
-        <div
-          className="flex items-center justify-between px-4 py-2.5 rounded-xl mb-6"
-          style={{ background: '#ede9fe', border: '1px solid #7c3aed' }}
-        >
-          <span className="text-sm font-semibold" style={{ color: '#7c3aed' }}>{t('hub.totalTrades')}</span>
-          <span className="font-mono text-lg tracking-widest" style={{ color: '#6d28d9' }}>{counter}</span>
+        {success && (
+          <div className="mb-6 p-4 rounded-xl text-sm font-semibold" style={{ background: '#dcfce7', color: '#10b981', border: '1px solid #10b981' }}>
+            ✓ {success}
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <input
+            type="text"
+            placeholder={t('books.searchPlaceholder')}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="flex-1 p-3 rounded-xl text-sm"
+            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+          />
+          <select
+            value={subject}
+            onChange={e => setSubject(e.target.value)}
+            className="sm:w-48 p-3 rounded-xl text-sm"
+            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: subject ? '#2e1065' : '#9ca3af', outline: 'none' }}
+          >
+            <option value="">{t('books.allSubjects')}</option>
+            {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}
+          </select>
         </div>
 
-        {/* Desktop (16:9): books + add on the left, trade options on the right.
-            Phone: just the trade banners (books live in the Your Books tab). */}
-        <div className="md:grid md:grid-cols-2 md:gap-6 md:items-start">
-          <aside className="hidden md:block">
-            <div className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-              <MyBooksManager compact />
+        {loading ? (
+          <div className="text-center py-20 text-[#6b7280]">{t('books.loading')}</div>
+        ) : books.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-5xl mb-4">🔍</div>
+            <p className="text-[#6b7280] text-lg">{t('books.noneFound')}</p>
+            <p className="text-[#9ca3af] text-sm mt-1">{t('books.noneFoundHint')}</p>
+          </div>
+        ) : (
+          <>
+            {/* Phone: 3-column thumbnail shelf, tap a book to offer a trade */}
+            <div className="sm:hidden">
+              <BookShelf
+                books={books}
+                selectMode
+                onSelect={id => { const b = books.find(x => x.id === id); if (b) setTradeBook(b); }}
+                maxHeight="none"
+              />
             </div>
-          </aside>
-
-          <div className="flex flex-col justify-center gap-4 md:sticky md:top-20">{banners}</div>
-        </div>
+            {/* Larger screens: detailed cards */}
+            <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              {books.map(book => (
+                <BookCard key={book.id} book={book} onTrade={() => setTradeBook(book)} />
+              ))}
+            </div>
+          </>
+        )}
       </main>
+
+      {tradeBook && (
+        <TradeModal targetBook={tradeBook} onClose={() => setTradeBook(null)} onSuccess={handleTradeSuccess} />
+      )}
     </>
   );
 }
