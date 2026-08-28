@@ -21,8 +21,8 @@ const STRINGS: Dict = {
   'home.title1': { th: 'แลกเปลี่ยนหนังสือกับ', en: 'Trade Books With' },
   'home.title2': { th: 'เพื่อนร่วมโรงเรียน', en: 'Your Classmates' },
   'home.subtitle': {
-    th: 'เหมือน Pokémon Home แต่สำหรับหนังสือเรียนและนิยาย ลงรายการหนังสือของคุณ ดูว่าคนอื่นมีอะไร แล้วแลกเปลี่ยนกันที่โรงเรียน',
-    en: 'Like Pokémon Home, but for textbooks and novels. List your books, discover what others have, and trade right at school.',
+    th: 'ลงรายการหนังสือเรียนและนิยายที่คุณอ่านจบแล้ว ดูว่าเพื่อน ๆ มีเล่มไหน แล้วนัดแลกเปลี่ยนกันที่ห้องสมุดโรงเรียน',
+    en: 'List the textbooks and novels you have finished, see what other students have, and swap them at the school library.',
   },
   'home.startTrading': { th: 'เริ่มแลกเปลี่ยน →', en: 'Start Trading →' },
   'home.browseBooks': { th: 'ดูหนังสือ', en: 'Browse Books' },
