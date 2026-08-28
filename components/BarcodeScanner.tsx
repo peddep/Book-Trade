@@ -18,10 +18,28 @@ interface Props {
   foundTitle?: string | null;
 }
 
+// Both ISBN forms carry a check digit. Verifying it is what separates "this is
+// a book" from "this is a ten-digit number that happened to be on the cover" —
+// a price label or a shop's own code would otherwise be accepted as an ISBN and
+// then, of course, find nothing.
+function ean13Ok(d: string): boolean {
+  const n = d.split('').map(Number);
+  const sum = n.slice(0, 12).reduce((a, v, i) => a + v * (i % 2 === 0 ? 1 : 3), 0);
+  return (10 - (sum % 10)) % 10 === n[12];
+}
+
+function isbn10Ok(d: string): boolean {
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += Number(d[i]) * (10 - i);
+  const last = d[9].toUpperCase();
+  sum += last === 'X' ? 10 : Number(last);
+  return sum % 11 === 0;
+}
+
 function isIsbn(text: string): string | null {
   const t = text.replace(/[^0-9Xx]/g, '');
-  if (t.length === 13 && /^97[89]/.test(t)) return t;
-  if (t.length === 10) return t;
+  if (t.length === 13 && /^97[89]/.test(t) && ean13Ok(t)) return t;
+  if (t.length === 10 && /^[0-9]{9}[0-9Xx]$/.test(t) && isbn10Ok(t)) return t;
   return null;
 }
 
@@ -37,6 +55,16 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
   // scan when the lookup came up empty.
   const [phase, setPhase] = useState<'scan' | 'looking' | 'cover'>('scan');
   const [retryMsg, setRetryMsg] = useState('');
+  // A barcode was read clearly but is not an ISBN — almost always the price or
+  // shop code printed next to it. Saying so beats looking broken.
+  const [wrongCode, setWrongCode] = useState(false);
+  // Torch, where the device offers one. A school library is not a well-lit
+  // studio, and dim light is the usual reason a scan will not take.
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchable, setTorchable] = useState(false);
+  const trackRef = useRef<MediaStreamTrack | null>(null);
+  // The last ISBN we looked up, so a failed lookup can be retried deliberately.
+  const lastIsbnRef = useRef<string | null>(null);
   // Gates decoding. Set while a lookup is in flight so the same barcode isn't
   // read over and over, cleared to resume scanning.
   const doneRef = useRef(false);
@@ -104,17 +132,43 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     let cancelled = false;
 
     function found(text: string) {
+      if (doneRef.current) return false;
       const isbn = isIsbn(text);
+      if (!isbn) {
+        // We are decoding something — it is just not a book number. Tell the
+        // student, instead of leaving them pointing at a barcode that reads
+        // perfectly well and produces nothing.
+        setWrongCode(true);
+        return false;
+      }
       // Ignore a barcode we've already looked up, so resuming after a miss
       // doesn't immediately re-read the one still sitting in front of the lens.
-      if (!isbn || doneRef.current || triedRef.current.has(isbn)) return false;
+      if (triedRef.current.has(isbn)) return false;
       doneRef.current = true;
       triedRef.current.add(isbn);
+      lastIsbnRef.current = isbn;
+      setWrongCode(false);
       setRetryMsg('');
       // Hold the camera here until the parent's lookup reports back.
       setPhase('looking');
       onDetected(isbn);
       return true;
+    }
+
+    // Continuous autofocus where the camera supports it, and note whether it
+    // has a torch. Fixed focus at close range is the single biggest reason a
+    // barcode reads on one phone and not on another.
+    async function tuneCamera(s: MediaStream) {
+      const track = s.getVideoTracks()[0];
+      if (!track) return;
+      trackRef.current = track;
+      try {
+        const caps: any = track.getCapabilities?.() ?? {};
+        if (Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+          await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] });
+        }
+        if ('torch' in caps) setTorchable(true);
+      } catch { /* the camera does not take these; carry on without them */ }
     }
 
     async function start() {
@@ -149,12 +203,18 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
           if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
           video.srcObject = stream;
           await video.play();
+          await tuneCamera(stream);
           // The loop keeps running for the life of the scanner and simply
           // skips decoding while a lookup is in flight, so scanning can resume
           // after a miss without restarting the camera.
-          const tick = async () => {
+          // Decoding every frame pins the CPU on a cheap phone, which drops
+          // frames and blurs the very image being decoded. Ten looks a second
+          // is far more than enough to catch a barcode held in front of a lens.
+          let lastRun = 0;
+          const tick = async (now: number) => {
             if (cancelled) return;
-            if (!doneRef.current) {
+            if (!doneRef.current && now - lastRun > 100) {
+              lastRun = now;
               try {
                 const codes = await detector.detect(video);
                 for (const c of codes) if (found(c.rawValue)) break;
@@ -185,6 +245,9 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
         zxingControls = await reader.decodeFromConstraints(constraints, video, result => {
           if (result) found(result.getText());
         });
+        // ZXing opened the camera itself, so pick the track up from the video.
+        const zxStream = video.srcObject as MediaStream | null;
+        if (zxStream) await tuneCamera(zxStream);
       } catch {
         if (!cancelled) setError(t('scan.cameraError'));
       }
@@ -200,6 +263,28 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function toggleTorch() {
+    const track = trackRef.current;
+    if (!track) return;
+    const next = !torchOn;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: next } as any] });
+      setTorchOn(next);
+    } catch { setTorchable(false); }
+  }
+
+  // A lookup that came back empty is remembered, so the same barcode is not
+  // read again on a loop. When the miss was a dropped request rather than an
+  // unknown book, this is how the student tries the very same book again.
+  function retryLast() {
+    const isbn = lastIsbnRef.current;
+    if (!isbn) return;
+    triedRef.current.delete(isbn);
+    doneRef.current = false;
+    setRetryMsg('');
+    setWrongCode(false);
+  }
 
   const coverPhase = phase === 'cover';
   const lookingPhase = phase === 'looking';
@@ -218,7 +303,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     ? t('scan.coverHint')
     : lookingPhase
       ? t('scan.holdSteady')
-      : retryMsg || t('scan.hint');
+      : retryMsg || (wrongCode ? t('scan.notIsbn') : t('scan.hint'));
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-4" style={{ background: 'rgba(17, 6, 41, 0.92)' }}>
@@ -246,9 +331,21 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
           </div>
         )}
       </div>
-      <p className="text-xs mt-3 text-center" style={{ color: retryMsg && !lookingPhase && !coverPhase ? '#fca5a5' : '#ddd6fe' }}>{hint}</p>
+      <p className="text-xs mt-3 text-center max-w-sm" style={{ color: (retryMsg || wrongCode) && !lookingPhase && !coverPhase ? '#fca5a5' : '#ddd6fe' }}>{hint}</p>
       {error && <p className="text-sm mt-2 text-red-300">{error}</p>}
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
+        {!coverPhase && torchable && (
+          <button onClick={toggleTorch} className="px-4 py-2.5 rounded-xl font-semibold text-sm"
+            style={{ background: torchOn ? '#fbbf24' : 'rgba(255,255,255,0.15)', color: torchOn ? '#2e1065' : '#ffffff' }}>
+            🔦 {t('scan.torch')}
+          </button>
+        )}
+        {!coverPhase && !lookingPhase && retryMsg && lastIsbnRef.current && (
+          <button onClick={retryLast} className="px-4 py-2.5 rounded-xl font-semibold text-sm"
+            style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff' }}>
+            ↻ {t('scan.retrySame')}
+          </button>
+        )}
         {coverPhase && (
           <button onClick={capture} className="px-6 py-2.5 rounded-xl font-bold text-sm text-white"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
