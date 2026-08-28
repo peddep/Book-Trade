@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 
@@ -15,6 +16,17 @@ const ACCENT = '#7c3aed';
 const BAND = '#f3e8ff';
 
 const serif = { fontFamily: 'var(--font-serif), Georgia, serif' } as const;
+
+// What /api/showcase gives out: enough to see the shelf is real, and nothing
+// that identifies whose book it is.
+interface ShowcaseBook {
+  id: number;
+  title: string;
+  title_en?: string | null;
+  cover_url?: string | null;
+  cover_color: string;
+  price?: number | null;
+}
 
 // Decorative shelf. Deliberately not real listings — the front page shows
 // totals only, so these are just spines, not anyone's books.
@@ -62,13 +74,23 @@ function Stat({ n, label }: { n: number | null; label: string }) {
 export default function Home() {
   const { t } = useI18n();
   const [stats, setStats] = useState<{ books: number; trades: number; students: number } | null>(null);
+  const [shelf, setShelf] = useState<ShowcaseBook[]>([]);
+  // Set when a signed-out visitor taps a book: they can look all they like,
+  // but trading needs an account, and finding that out by being bounced to a
+  // login form explains nothing.
+  const [gateOpen, setGateOpen] = useState(false);
   // null = still checking. Signed-in students must not be shown sign-up or
   // sign-in buttons: following either one silently replaces their session, and
   // registering again would strand their books on the old account.
   const { user, loading: sessionLoading } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     fetch('/api/stats').then(r => (r.ok ? r.json() : null)).then(setStats).catch(() => {});
+    fetch('/api/showcase')
+      .then(r => (r.ok ? r.json() : { books: [] }))
+      .then(d => setShelf(d.books ?? []))
+      .catch(() => {});
   }, []);
 
   // Null while the shared session is still loading, so the button row keeps its
@@ -175,6 +197,51 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Real books, currently up for trade. A visitor deciding whether to
+            join can see the shelves are real instead of taking a number's word
+            for it. Covers and titles only — never who owns them. */}
+        {shelf.length > 0 && (
+          <section className="max-w-5xl mx-auto px-4 pb-14">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-2" style={serif}>{t('home.shelfTitle')}</h2>
+            <p className="text-sm text-center mb-8" style={{ color: MUTED }}>{t('home.shelfSub')}</p>
+
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-9 gap-x-3 gap-y-4">
+              {shelf.map((bk, i) => (
+                <button
+                  key={bk.id}
+                  onClick={() => { if (signedIn) { router.push('/trade'); } else { setGateOpen(true); } }}
+                  className="flex flex-col text-left bt-fade-up bt-stagger group"
+                  style={{ '--i': Math.min(i, 11) } as React.CSSProperties}
+                >
+                  <span
+                    className="relative block w-full rounded-r-md rounded-l-sm overflow-hidden transition-transform group-hover:-translate-y-1"
+                    style={{ aspectRatio: '2 / 3', background: bk.cover_color, boxShadow: '0 4px 10px rgba(46,16,101,0.25)' }}
+                  >
+                    {bk.cover_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={bk.cover_url} alt={bk.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
+                        onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    ) : (
+                      <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1.5 text-center">
+                        <span className="text-2xl">📖</span>
+                        <span className="text-[10px] font-semibold leading-tight line-clamp-3" style={{ color: 'rgba(255,255,255,0.95)' }}>{bk.title}</span>
+                      </span>
+                    )}
+                    {/* Spine shading, matching the shelves inside the app */}
+                    <span className="absolute left-0 top-0 bottom-0 w-2" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0))' }} />
+                    {bk.price != null && (
+                      <span className="absolute bottom-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fbbf24' }}>
+                        {bk.price > 0 ? `฿${bk.price}` : t('card.free')}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[11px] mt-1.5 leading-tight line-clamp-2 text-center" style={{ color: MUTED }}>{bk.title}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* How it works */}
         <section className="max-w-4xl mx-auto px-4 pb-16">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-2" style={serif}>{t('home.howItWorks')}</h2>
@@ -242,6 +309,35 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      {/* Tapping a book when signed out. Says what the site is and why an
+          account is needed, rather than dropping them on a password box. */}
+      {gateOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+          style={{ background: 'rgba(46,16,101,0.55)' }}
+          onClick={() => setGateOpen(false)} role="dialog" aria-modal="true">
+          <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl p-6 bt-pop-in"
+            style={{ background: SURFACE, border: `1px solid ${RULE}` }}
+            onClick={e => e.stopPropagation()}>
+            <div className="text-4xl text-center mb-3">📚</div>
+            <h2 className="text-xl font-bold text-center mb-2" style={{ ...serif, color: INK }}>{t('home.gateTitle')}</h2>
+            <p className="text-sm text-center leading-relaxed mb-6" style={{ color: MUTED }}>{t('home.gateBody')}</p>
+            <div className="flex flex-col gap-2">
+              <Link href="/register" className="w-full py-2.5 rounded-xl font-bold text-white text-center"
+                style={{ background: 'linear-gradient(135deg, #5b21b6, #7c3aed)' }}>
+                {t('home.startTrading')}
+              </Link>
+              <Link href="/login" className="w-full py-2.5 rounded-xl font-bold text-center"
+                style={{ background: SURFACE, color: INK, border: `1px solid ${RULE}` }}>
+                {t('nav.signIn')}
+              </Link>
+              <button onClick={() => setGateOpen(false)} className="w-full py-2 text-sm" style={{ color: MUTED }}>
+                {t('home.gateLater')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
