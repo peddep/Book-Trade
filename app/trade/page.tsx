@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import BookCard from '@/components/BookCard';
 import BookShelf from '@/components/BookShelf';
 import TradeModal from '@/components/TradeModal';
 import TopTabs from '@/components/TopTabs';
@@ -180,23 +179,16 @@ export default function TradePage() {
             <p className="text-[#9ca3af] text-sm mt-1">{t('books.noneFoundHint')}</p>
           </div>
         ) : (
-          <>
-            {/* Phone: 3-column thumbnail shelf, tap a book to offer a trade */}
-            <div className="sm:hidden">
-              <BookShelf
-                books={books}
-                selectMode
-                onSelect={id => { const b = books.find(x => x.id === id); if (b) setTradeBook(b); }}
-                maxHeight="none"
-              />
-            </div>
-            {/* Larger screens: detailed cards */}
-            <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-              {books.map(book => (
-                <BookCard key={book.id} book={book} onTrade={() => setTradeBook(book)} />
-              ))}
-            </div>
-          </>
+          /* The same shelf of covers at every size — a desktop just gets more
+             of them across. Tapping a book opens the offer, where its details
+             are laid out in full. */
+          <BookShelf
+            books={books}
+            selectMode
+            onSelect={id => { const b = books.find(x => x.id === id); if (b) setTradeBook(b); }}
+            maxHeight="none"
+            gridClass="grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10"
+          />
         )}
       </main>
 
