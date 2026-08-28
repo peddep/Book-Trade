@@ -49,31 +49,60 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
       className="rounded-2xl overflow-hidden flex flex-col"
       style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
     >
-      {/* Book cover */}
+      {/* Book cover. Portrait, and the artwork is contained rather than cropped:
+          a real cover is 2:3, so filling a squat landscape box cut the title
+          off the top and the author off the bottom of nearly every book. The
+          leftover space either side is the book's own colour, so the card still
+          reads as one object. */}
       <div
-        className="relative flex items-center justify-center p-6 overflow-hidden"
-        style={{ background: book.cover_color, minHeight: '160px' }}
+        className="relative flex items-center justify-center overflow-hidden aspect-[3/4]"
+        style={{ background: book.cover_color }}
       >
         {book.cover_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={book.cover_url}
-            alt={bookTitle(book.title, book.title_en)}
-            className="absolute inset-0 w-full h-full object-cover"
-            loading="lazy"
-            onError={e => { e.currentTarget.style.display = 'none'; }}
-          />
+          <>
+            {/* The same cover, blown up and blurred, fills whatever the
+                contained image leaves at the sides — so the gaps look like part
+                of the book rather than a mistake. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={book.cover_url}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-lg opacity-70"
+              loading="lazy"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={book.cover_url}
+              alt={bookTitle(book.title, book.title_en)}
+              className="absolute inset-0 w-full h-full object-contain"
+              loading="lazy"
+              onError={e => { e.currentTarget.style.display = 'none'; }}
+            />
+          </>
         ) : (
-          <div className="absolute inset-0 opacity-20"
-            style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px)' }}
-          />
+          <>
+            <div className="absolute inset-0 opacity-20"
+              style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px)' }}
+            />
+            {/* No cover photo: print the title on the jacket, the way the phone
+                shelf does. A tall block of flat colour told you nothing about
+                which book it was. */}
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
+              <span className="text-3xl">📖</span>
+              <span className="text-sm font-bold leading-snug line-clamp-4" style={{ color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.35)' }}>
+                {bookTitle(book.title, book.title_en)}
+              </span>
+            </span>
+          </>
         )}
-        <div className="text-center relative z-10">
-          {!book.cover_url && <div className="text-4xl mb-2">📖</div>}
-          {!book.available && (
-            <span className="text-xs font-bold bg-black/60 text-[#2e1065] px-2 py-1 rounded-full">{t('card.traded')}</span>
-          )}
-        </div>
+        {/* Spine shading, so a card reads as a book rather than a swatch. */}
+        <span className="absolute left-0 top-0 bottom-0 w-2.5 z-10" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0))' }} />
+        {!book.available && (
+          <span className="absolute top-2 left-1/2 -translate-x-1/2 z-20 text-xs font-bold px-2 py-1 rounded-full" style={{ background: 'rgba(0,0,0,0.65)', color: '#ffffff' }}>
+            {t('card.traded')}
+          </span>
+        )}
         {isOwner && onChangeCover && (
           <label className="absolute bottom-2 right-2 z-20 text-[11px] font-semibold px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(0,0,0,0.6)', color: '#fff' }}>
             {book.cover_url ? t('card.changeCover') : t('card.addCover')}
@@ -83,7 +112,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
       </div>
 
       {/* Info */}
-      <div className="p-4 flex flex-col gap-2 flex-1">
+      <div className="p-3.5 flex flex-col gap-1.5 flex-1">
         <div>
           <h3 className="font-bold text-[#2e1065] leading-tight line-clamp-2">
             {bookTitle(book.title, book.title_en)}
@@ -93,9 +122,9 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
           {book.publisher && <p className="text-xs text-[#9ca3af]">{book.publisher}</p>}
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {book.subject && book.subject.split(',').filter(Boolean).map(tag => (
-            <span key={tag} className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
+            <span key={tag} className="text-[11px] px-1.5 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
               {t(`subj.${tag}`)}
             </span>
           ))}
@@ -105,13 +134,13 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
             </span>
           )}
           <span
-            className="text-xs px-2 py-0.5 rounded-full font-semibold"
+            className="text-[11px] px-1.5 py-0.5 rounded-full font-semibold"
             style={{ background: CONDITION_COLORS[book.condition] + '22', color: CONDITION_COLORS[book.condition] }}
           >
             {t(`cond.${book.condition}`)}
           </span>
           {book.price != null && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: '#fef9c3', color: '#b45309' }}>
+            <span className="text-[11px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: '#fef9c3', color: '#b45309' }}>
               {book.price > 0 ? `฿${book.price}` : t('card.free')}
             </span>
           )}
@@ -122,14 +151,14 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
         )}
 
         {book.owner_name && !isOwner && !hideOwner && (
-          <div className="flex items-center gap-2 mt-auto pt-2">
+          <div className="flex items-center gap-1.5 mt-auto pt-2 min-w-0">
             <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[#2e1065] text-xs font-bold"
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[#2e1065] text-[10px] font-bold flex-shrink-0"
               style={{ background: book.owner_avatar_color }}
             >
               {book.owner_name[0].toUpperCase()}
             </div>
-            <span className="text-xs text-[#6b7280]">{book.owner_name}{book.owner_grade ? `, Gr. ${book.owner_grade}` : ''}</span>
+            <span className="text-xs text-[#6b7280] truncate">{book.owner_name}{book.owner_grade ? `, Gr. ${book.owner_grade}` : ''}</span>
           </div>
         )}
 
