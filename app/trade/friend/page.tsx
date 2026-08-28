@@ -70,7 +70,7 @@ export default function FriendTradePage() {
 
   return (
     <>
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl 2xl:max-w-[110rem] mx-auto px-4 lg:px-8 py-6">
         <div className="flex items-center justify-between gap-3">
           <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
           <Link
@@ -137,7 +137,7 @@ export default function FriendTradePage() {
               />
             </div>
             {/* Larger screens: detailed cards */}
-            <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {books.map(book => (
                 <BookCard key={book.id} book={book} onTrade={() => setTradeBook(book)} />
               ))}

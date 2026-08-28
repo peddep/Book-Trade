@@ -31,12 +31,15 @@ interface Props {
   disabledIds?: Set<number>;
   // Short label shown on disabled covers explaining why.
   disabledLabel?: string;
+  // Column classes. Three suits a phone and the narrow columns this sits in
+  // inside modals; a page that gives the shelf the full width passes more.
+  gridClass?: string;
 }
 
 // A 3-column scrollable shelf. Each item looks like a book (portrait cover with
 // a spine). Tapping a cover reveals its title and edit actions below it — or, in
 // selectMode, simply selects the book.
-export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, onChangeCover, maxHeight = '28rem', selectMode = false, selectedId = null, onSelect, disabledIds, disabledLabel }: Props) {
+export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, onChangeCover, maxHeight = '28rem', selectMode = false, selectedId = null, onSelect, disabledIds, disabledLabel, gridClass = 'grid-cols-3' }: Props) {
   const { t, bookTitle } = useI18n();
   const [openId, setOpenId] = useState<number | null>(null);
 
@@ -46,7 +49,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
 
   return (
     <div className="overflow-y-auto pr-1 relative" style={{ maxHeight }}>
-      <div className="grid grid-cols-3 gap-x-3 gap-y-4">
+      <div className={`grid ${gridClass} gap-x-3 gap-y-4`}>
         {books.map((b, i) => {
           const open = openId === b.id;
           const selected = selectMode && selectedId === b.id;

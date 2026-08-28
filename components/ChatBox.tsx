@@ -153,7 +153,7 @@ export default function ChatBox() {
   }
 
   return (
-    <div className="relative rounded-2xl overflow-hidden flex flex-col" style={{ background: '#ffffff', border: '1px solid #e9d5ff', height: 340 }}>
+    <div className="relative rounded-2xl overflow-hidden flex flex-col h-[340px] lg:h-[440px]" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
       {unread && (
         <button onClick={jumpToLatest}
           className="absolute left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-lg animate-bounce"

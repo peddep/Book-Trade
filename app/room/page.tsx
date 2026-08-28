@@ -112,7 +112,7 @@ export default function RoomPage() {
 
   return (
     <>
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl xl:max-w-6xl mx-auto px-4 lg:px-8 py-6">
         <TopTabs />
 
         {/* User card */}

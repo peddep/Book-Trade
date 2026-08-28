@@ -81,7 +81,7 @@ export default function TradeHubPage() {
 
   return (
     <>
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+      <main className="max-w-5xl xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <TopTabs />
 
         <div className="flex items-center justify-between mb-4">
@@ -109,14 +109,14 @@ export default function TradeHubPage() {
 
         {/* Desktop (16:9): books + add on the left, trade options on the right.
             Phone: just the trade banners (books live in the Your Books tab). */}
-        <div className="md:grid md:grid-cols-2 md:gap-6">
+        <div className="md:grid md:grid-cols-2 md:gap-6 md:items-start">
           <aside className="hidden md:block">
             <div className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
               <MyBooksManager compact />
             </div>
           </aside>
 
-          <div className="flex flex-col justify-center gap-4">{banners}</div>
+          <div className="flex flex-col justify-center gap-4 md:sticky md:top-20">{banners}</div>
         </div>
       </main>
     </>

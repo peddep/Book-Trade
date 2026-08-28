@@ -294,7 +294,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       </div>
       {scanMsg && <p className="text-xs font-semibold" style={{ color: scanMsg.startsWith('✓') ? '#10b981' : '#7c3aed' }}>{scanMsg}</p>}
       {/* Which book is this? Title first, then the details a scan fills in. */}
-      <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}>
+      <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'}>
         <div className={compact ? '' : 'sm:col-span-2'}>
           <div className="flex gap-3">
             <div className="flex-1 min-w-0">
@@ -437,6 +437,9 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       onToggleAvailable={toggleAvailable}
       onChangeCover={changeCover}
       maxHeight={compact ? '70vh' : '65vh'}
+      // The books page gives the shelf the whole width, so use it: three
+      // columns in a 448px strip left most of a desktop screen empty.
+      gridClass={compact ? 'grid-cols-3' : 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8'}
     />
   );
 
@@ -493,7 +496,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       </div>
       {bookForm}
       {sortControl}
-      <div className="max-w-md">{shelf}</div>
+      <div className="max-w-md sm:max-w-none">{shelf}</div>
       {scanner}
     </div>
   );

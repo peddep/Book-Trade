@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import NotificationBell from '@/components/NotificationBell';
@@ -16,6 +16,13 @@ interface User {
   avatar_color: string;
 }
 
+const NAV = [
+  { href: '/trade', key: 'tabs.trade' },
+  { href: '/room', key: 'tabs.room' },
+  { href: '/profile', key: 'tabs.books' },
+  { href: '/trades', key: 'nav.trades' },
+];
+
 export default function Navbar() {
   // Shared session: fetched once for the whole app, so opening a page no longer
   // re-asks who is signed in.
@@ -23,6 +30,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pending, setPending] = useState(0);
   const router = useRouter();
+  const pathname = usePathname();
   const { lang, setLang, t, gradeLabel } = useI18n();
 
   // Count incoming offers awaiting a reply. Deliberately not keyed on the
@@ -49,10 +57,41 @@ export default function Navbar() {
   return (
     <nav style={{ background: '#ffffff', borderBottom: '1px solid #e9d5ff' }} className="sticky top-0 z-50">
       <div className="w-full px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl">📚</span>
-          <span className="font-bold text-xl" style={{ color: '#7c3aed' }}>BookTrade</span>
-        </Link>
+        <div className="flex items-center gap-8 min-w-0">
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-2xl">📚</span>
+            <span className="font-bold text-xl" style={{ color: '#7c3aed' }}>BookTrade</span>
+          </Link>
+
+          {/* Desktop navigation. On a phone these three live in the tab strip on
+              the page itself; on a big screen there was nothing at all — the way
+              to any of them was to notice the avatar was a menu. */}
+          {user && (
+            <div className="hidden md:flex items-center gap-1">
+              {NAV.map(item => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="relative px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                    style={active
+                      ? { background: '#f3e8ff', color: '#6d28d9' }
+                      : { color: '#6b7280' }}
+                  >
+                    {t(item.key)}
+                    {item.href === '/trades' && pending > 0 && (
+                      <span className="ml-1.5 inline-flex min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white items-center justify-center align-middle"
+                        style={{ background: '#ef4444' }}>
+                        {pending}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
           <button
@@ -98,15 +137,19 @@ export default function Navbar() {
                     <p className="font-semibold text-sm">{user.name}</p>
                     {user.grade && <p className="text-xs text-[#6b7280]">{gradeLabel(user.grade, user.class_no)}</p>}
                   </div>
-                  <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]" style={{ color: '#7c3aed' }}>✨ {t('tabs.trade')}</Link>
-                  <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.room')}</Link>
-                  <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.books')}</Link>
-                  <Link href="/trades" className="flex items-center justify-between px-4 py-2 text-sm hover:bg-[#f5f3ff]">
-                    <span>{t('nav.trades')}</span>
-                    {pending > 0 && (
-                      <span className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: '#ef4444' }}>{pending}</span>
-                    )}
-                  </Link>
+                  {/* Between sm and md the inline links are not shown yet, so
+                      keep them reachable here. */}
+                  <div className="md:hidden">
+                    <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]" style={{ color: '#7c3aed' }}>✨ {t('tabs.trade')}</Link>
+                    <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.room')}</Link>
+                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.books')}</Link>
+                    <Link href="/trades" className="flex items-center justify-between px-4 py-2 text-sm hover:bg-[#f5f3ff]">
+                      <span>{t('nav.trades')}</span>
+                      {pending > 0 && (
+                        <span className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: '#ef4444' }}>{pending}</span>
+                      )}
+                    </Link>
+                  </div>
                   <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#f5f3ff]">
                     {t('nav.signOut')}
                   </button>
