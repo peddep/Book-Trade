@@ -20,7 +20,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (sessionLoading) return;
-    if (!sessionUser) { router.push('/login'); return; }
+    if (!sessionUser) { router.replace('/'); return; }
     setUser(sessionUser as User);
   }, [router, sessionUser, sessionLoading]);
 

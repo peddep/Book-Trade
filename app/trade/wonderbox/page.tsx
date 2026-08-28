@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import BookShelf, { type ShelfBook } from '@/components/BookShelf';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
+import { useSession } from '@/lib/session';
 
 interface Deposit {
   id: number;
@@ -30,6 +32,8 @@ export default function WonderBoxPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [myBooks, setMyBooks] = useState<ShelfBook[]>([]);
+  const { user: sessionUser, loading: sessionLoading } = useSession();
+  const router = useRouter();
 
   const load = useCallback(async () => {
     const res = await fetch('/api/wonderbox');
@@ -40,7 +44,14 @@ export default function WonderBoxPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Signed out, this page rendered an empty box that could not be used. Send
+  // them to the front page — which explains what BookTrade is and offers a way
+  // in — rather than leaving them there or dropping them on a login form.
+  useEffect(() => {
+    if (sessionLoading) return;
+    if (!sessionUser) { router.replace('/'); return; }
+    load();
+  }, [load, router, sessionUser, sessionLoading]);
 
   function openPicker() {
     setError('');

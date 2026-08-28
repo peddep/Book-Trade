@@ -73,7 +73,7 @@ export default function TradesPage() {
 
   useEffect(() => {
     if (sessionLoading) return;
-    if (!user) { router.push('/login'); return; }
+    if (!user) { router.replace('/'); return; }
     fetchTrades();
   }, [router, user, sessionLoading]);
 

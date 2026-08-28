@@ -61,7 +61,7 @@ export default function TradePage() {
 
   useEffect(() => {
     if (sessionLoading) return;
-    if (!user) { router.push('/login'); return; }
+    if (!user) { router.replace('/'); return; }
     const userId = user.id;
     fetch('/api/trades?counts=1')
       .then(r => (r.ok ? r.json() : {}))

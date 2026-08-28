@@ -128,7 +128,7 @@ export default function IrlTradePage() {
 
   useEffect(() => {
     if (sessionLoading) return;
-    if (!sessionUser) { router.push('/login'); return; }
+    if (!sessionUser) { router.replace('/'); return; }
     setUser(sessionUser as User);
     fetchTrades();
   }, [router, fetchTrades, sessionUser, sessionLoading]);

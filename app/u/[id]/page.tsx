@@ -50,7 +50,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     fetch(`/api/users/${id}`).then(async r => {
-      if (r.status === 401) { router.push('/login'); return; }
+      if (r.status === 401) { router.replace('/'); return; }
       if (!r.ok) { setNotFound(true); setLoading(false); return; }
       const d = await r.json();
       setUser(d.user);

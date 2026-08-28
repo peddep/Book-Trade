@@ -153,7 +153,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetch('/api/admin').then(async r => {
-      if (r.status === 401) { router.push('/login'); return; }
+      if (r.status === 401) { router.replace('/'); return; }
       if (!r.ok) { setDenied(true); return; }
       setData(await r.json());
     });

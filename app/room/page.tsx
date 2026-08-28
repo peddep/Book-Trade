@@ -70,7 +70,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     if (sessionLoading) return;
-    if (!sessionUser) { router.push('/login'); return; }
+    if (!sessionUser) { router.replace('/'); return; }
     setUser(sessionUser as User);
     // Two numbers, counted in the database, instead of every trade row this
     // student has ever been part of.
