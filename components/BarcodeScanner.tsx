@@ -50,6 +50,9 @@ function isIsbn(text: string): string | null {
 export default function BarcodeScanner({ onDetected, onClose, onCapture, status = 'idle', foundTitle }: Props) {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
+  // The dashed cover guide, measured at capture time so what is saved is what
+  // the student framed.
+  const frameRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState('');
   // scan → looking (barcode read, waiting on the lookup) → cover, or back to
   // scan when the lookup came up empty.
@@ -96,8 +99,15 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, status]);
 
-  // Grabs the current video frame, cropped to a portrait book-cover shape and
-  // scaled to roughly the size an uploaded photo ends up at.
+  // Grabs what is inside the dashed frame — exactly that, and nothing else.
+  //
+  // Getting there takes a little arithmetic, because two different croppings
+  // sit between the camera and the guide the student is aiming with. The video
+  // is drawn with object-fit: cover, so the preview is already a cropped,
+  // scaled view of the camera frame; and the guide is inset within that
+  // preview. Cropping the raw camera frame to a centred rectangle, as this used
+  // to, therefore saved a different picture from the one being framed — wider,
+  // and including things above and below the guide.
   function capture() {
     const video = videoRef.current;
     if (!video || !onCapture) return;
@@ -106,12 +116,38 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     if (!vw || !vh) return;
 
     const RATIO = 2 / 3; // width : height of a typical book cover
-    let sw = vw;
-    let sh = vh;
-    if (vw / vh > RATIO) sw = Math.round(vh * RATIO);
-    else sh = Math.round(vw / RATIO);
-    const sx = Math.round((vw - sw) / 2);
-    const sy = Math.round((vh - sh) / 2);
+    let sx: number, sy: number, sw: number, sh: number;
+
+    const frame = frameRef.current;
+    const box = video.getBoundingClientRect();
+    if (frame && box.width && box.height) {
+      const g = frame.getBoundingClientRect();
+      // object-fit: cover scales the frame up until it covers the box, so the
+      // overflow is split evenly and falls outside on one axis.
+      const scale = Math.max(box.width / vw, box.height / vh);
+      const offsetX = (box.width - vw * scale) / 2;
+      const offsetY = (box.height - vh * scale) / 2;
+      // The guide, in the video element's own coordinates, mapped back through
+      // that scale into pixels of the camera frame.
+      sx = (g.left - box.left - offsetX) / scale;
+      sy = (g.top - box.top - offsetY) / scale;
+      sw = g.width / scale;
+      sh = g.height / scale;
+      // A guide that hangs over the edge of the frame would ask for pixels the
+      // camera never gave us.
+      sx = Math.max(0, Math.min(sx, vw));
+      sy = Math.max(0, Math.min(sy, vh));
+      sw = Math.min(sw, vw - sx);
+      sh = Math.min(sh, vh - sy);
+    } else {
+      // No guide on screen: fall back to a centred book-shaped crop.
+      sw = vw;
+      sh = vh;
+      if (vw / vh > RATIO) sw = vh * RATIO;
+      else sh = vw / RATIO;
+      sx = (vw - sw) / 2;
+      sy = (vh - sh) / 2;
+    }
 
     const outW = 400;
     const outH = Math.round(outW / RATIO);
@@ -120,7 +156,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     canvas.height = outH;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
+    ctx.drawImage(video, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh), 0, 0, outW, outH);
     onCapture(canvas.toDataURL('image/jpeg', 0.72));
     onClose();
   }
@@ -315,7 +351,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
         {coverPhase ? (
           // Dimming everything outside the frame keeps the guide readable
           // against a white book cover, where a white outline would vanish.
-          <div className="absolute inset-y-4 left-1/2 -translate-x-1/2 rounded-lg pointer-events-none"
+          <div ref={frameRef} className="absolute inset-y-4 left-1/2 -translate-x-1/2 rounded-lg pointer-events-none"
             style={{ aspectRatio: '2 / 3', border: '3px dashed #c4b5fd', boxShadow: '0 0 0 9999px rgba(17, 6, 41, 0.45)' }} />
         ) : (
           <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-16 rounded-lg pointer-events-none"
