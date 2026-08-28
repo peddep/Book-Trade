@@ -78,28 +78,30 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
   return (
     <>
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl 2xl:max-w-[100rem] mx-auto px-4 lg:px-8 py-6">
         <button onClick={() => router.back()} className="text-sm text-[#6b7280] hover:text-[#2e1065] mb-3">← {t('hub.back').replace('← ', '')}</button>
 
-        {/* Profile header */}
-        <div className="flex items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, #ffffff, #ede9fe)', border: '1px solid #e9d5ff' }}>
+        {/* Profile header. Everything about this student sits together on the
+            left; the shelf count is the one number worth pulling out. */}
+        <div className="flex flex-wrap items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, #ffffff, #ede9fe)', border: '1px solid #e9d5ff' }}>
           <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0" style={{ background: user.avatar_color }}>
             {user.name[0].toUpperCase()}
           </div>
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-[#2e1065] truncate">{user.name}</h1>
-            {user.grade && <p className="text-sm mt-0.5" style={{ color: '#7c3aed' }}>{gradeLabel(user.grade, user.class_no)}</p>}
-            {user.contact && (
-              <p className="text-sm mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', color: '#6b7280' }}>
-                📱 <span className="font-semibold text-[#2e1065]">{user.contact}</span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+              {user.grade && <p className="text-sm" style={{ color: '#7c3aed' }}>{gradeLabel(user.grade, user.class_no)}</p>}
+              <p className="text-sm text-[#6b7280]">
+                <span className="font-bold text-[#2e1065]">{books.length}</span> {t('profile.booksListed')}
               </p>
-            )}
+              {user.contact && (
+                <span className="text-sm inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', color: '#6b7280' }}>
+                  📱 <span className="font-semibold text-[#2e1065]">{user.contact}</span>
+                </span>
+              )}
+            </div>
           </div>
-          <div className="ml-auto text-right">
-            <p className="text-2xl font-bold text-[#2e1065]">{books.length}</p>
-            <p className="text-xs text-[#6b7280]">{t('profile.booksListed')}</p>
-            {!isMe && <div className="mt-2"><ReportButton targetType="user" targetId={user.id} variant="text" /></div>}
-          </div>
+          {!isMe && <div className="ml-auto self-start"><ReportButton targetType="user" targetId={user.id} variant="text" /></div>}
         </div>
 
         {success && (
@@ -123,9 +125,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
               />
             </div>
             {/* Larger screens: detailed cards */}
-            <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-4">
               {books.map(book => (
-                <BookCard key={book.id} book={book} onTrade={isMe ? undefined : () => setTradeBook(book)} />
+                <BookCard key={book.id} book={book} hideOwner onTrade={isMe ? undefined : () => setTradeBook(book)} />
               ))}
             </div>
           </>

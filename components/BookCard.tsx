@@ -30,6 +30,9 @@ interface Props {
   onToggleAvailable?: () => void;
   onChangeCover?: (file: File | undefined) => void;
   isOwner?: boolean;
+  /** Suppress the owner row. On a profile page every card is the same person,
+   *  so repeating their name and avatar is noise, not information. */
+  hideOwner?: boolean;
 }
 
 const CONDITION_COLORS: Record<string, string> = {
@@ -39,7 +42,7 @@ const CONDITION_COLORS: Record<string, string> = {
   'Poor': '#ef4444',
 };
 
-export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, onChangeCover, isOwner }: Props) {
+export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, onChangeCover, isOwner, hideOwner }: Props) {
   const { t, bookTitle } = useI18n();
   return (
     <div
@@ -118,7 +121,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
           <p className="text-xs text-[#6b7280] line-clamp-2">{book.description}</p>
         )}
 
-        {book.owner_name && !isOwner && (
+        {book.owner_name && !isOwner && !hideOwner && (
           <div className="flex items-center gap-2 mt-auto pt-2">
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-[#2e1065] text-xs font-bold"
