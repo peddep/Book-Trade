@@ -43,11 +43,25 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   return verifySession(token);
 }
 
-// Admin = the account whose email matches ADMIN_EMAIL, or (when ADMIN_EMAIL
-// is not set) the very first account created on the site (id 1).
+// Admin = any account whose email is listed in ADMIN_EMAIL, or (when that is
+// not set) the very first account created on the site (id 1).
+//
+// The list may hold more than one address, separated by commas, semicolons or
+// spaces — one person should not be the only one who can unstick a trade or
+// deal with a report, and being that person is a poor reason to hand your
+// password to somebody else. Kept in the environment rather than in a column
+// so that becoming an admin is a deliberate act by whoever owns the
+// deployment, and never something one admin can grant another from inside the
+// app.
 export function isAdmin(user: SessionUser | null): boolean {
   if (!user) return false;
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail) return user.email.toLowerCase() === adminEmail.toLowerCase();
+  const configured = process.env.ADMIN_EMAIL;
+  if (configured) {
+    const allowed = configured
+      .split(/[,;\s]+/)
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean);
+    return allowed.includes(user.email.trim().toLowerCase());
+  }
   return user.id === 1;
 }

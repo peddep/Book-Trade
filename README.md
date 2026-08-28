@@ -112,7 +112,7 @@ Copy `.env.example` to `.env.local` and fill it in.
 | `TURSO_AUTH_TOKEN` | for Turso | Not needed for a local file. |
 | `SESSION_SECRET` | yes | Signs login cookies. Long and random. |
 | `GOOGLE_BOOKS_API_KEY` | strongly recommended | Without it, barcode scans and title lookups return nothing — Google gives anonymous callers a daily quota of zero. Enable the **Books API** on the project, not just a key. |
-| `ADMIN_EMAIL` | no | Who sees the admin dashboard. Defaults to account #1. |
+| `ADMIN_EMAIL` | no | Who sees the admin dashboard. Accepts several addresses separated by commas, e.g. `a@student.nssc.ac.th, b@student.nssc.ac.th`. Defaults to account #1. |
 | `ALLOWED_EMAIL_DOMAIN` | no | Restricts sign-ups, e.g. `student.nssc.ac.th`. |
 | `CRON_SECRET` | no | Vercel Cron sends it as a bearer token to the harvest route. |
 
