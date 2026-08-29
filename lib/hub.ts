@@ -153,6 +153,69 @@ export async function announceTrade(tradeId: number) {
   });
 }
 
+
+// Removing a book, for the owner and for the admin alike.
+//
+// Two things make this more than a DELETE. The trades table points at books, so
+// the database refuses to delete a row a finished trade still refers to — and
+// that trade is the other student's history, which is not ours to tear a hole
+// in. And a book may be sitting in a box or a room, or be the subject of offers
+// that have not been answered.
+//
+// Returns what happened: 'deleted' when the row itself went, 'hidden' when a
+// trade still refers to it and it was marked removed instead, or
+// 'in_agreed_trade' when somebody is expecting to be handed it and force was
+// not given.
+export async function removeBook(bookId: number, opts: { force?: boolean } = {}): Promise<'deleted' | 'hidden' | 'in_agreed_trade'> {
+  const db = getDb();
+  await ensureBookColumns();
+  await ensureHubTables();
+
+  const agreed = await db.execute({
+    sql: "SELECT 1 FROM trades WHERE status = 'accepted' AND (offered_book_id = ? OR wanted_book_id = ?) LIMIT 1",
+    args: [bookId, bookId],
+  });
+  if (agreed.rows.length > 0 && !opts.force) return 'in_agreed_trade';
+
+  // Offers and meet-ups involving this book end with it. When an agreed one is
+  // cancelled the other book goes back on the market — it should not be left
+  // reserved for a trade that can no longer happen.
+  const live = await db.execute({
+    sql: "SELECT offered_book_id, wanted_book_id FROM trades WHERE status IN ('pending','accepted') AND (offered_book_id = ? OR wanted_book_id = ?)",
+    args: [bookId, bookId],
+  });
+  await db.execute({
+    sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE status IN ('pending','accepted') AND (offered_book_id = ? OR wanted_book_id = ?)",
+    args: [bookId, bookId],
+  });
+  for (const row of live.rows as any[]) {
+    const other = Number(row.offered_book_id) === bookId ? Number(row.wanted_book_id) : Number(row.offered_book_id);
+    await db.execute({ sql: 'UPDATE books SET available = 1 WHERE id = ?', args: [other] });
+  }
+
+  for (const sql of [
+    'DELETE FROM wonder_box WHERE book_id = ?',
+    'DELETE FROM gts_deposits WHERE book_id = ?',
+    'DELETE FROM room_members WHERE book_id = ?',
+  ]) {
+    try { await db.execute({ sql, args: [bookId] }); } catch { /* table not there yet */ }
+  }
+
+  const referenced = await db.execute({
+    sql: 'SELECT 1 FROM trades WHERE offered_book_id = ? OR wanted_book_id = ? LIMIT 1',
+    args: [bookId, bookId],
+  });
+  if (referenced.rows.length > 0) {
+    await db.execute({
+      sql: "UPDATE books SET deleted_at = datetime('now'), available = 0 WHERE id = ?",
+      args: [bookId],
+    });
+    return 'hidden';
+  }
+  await db.execute({ sql: 'DELETE FROM books WHERE id = ?', args: [bookId] });
+  return 'deleted';
+}
+
 // A book is "busy" when it's already committed to some trade avenue.
 export async function isBookBusy(bookId: number): Promise<boolean> {
   const db = getDb();

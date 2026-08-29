@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
-import { ensureHubTables } from '@/lib/hub';
+import { ensureHubTables, removeBook } from '@/lib/hub';
 
 export const runtime = 'nodejs';
 
@@ -132,14 +132,12 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
 
-  // Delete a book listing (and any pending trades / wonder-box deposits it's in).
+  // Remove a book listing. Forced: an admin doing this is moderating, and an
+  // agreed meet-up between two students should not stand in the way — the
+  // offers are cancelled and the other book goes back on the market.
   if (body.action === 'delete_book' && body.book_id) {
-    const db = getDb();
-    const id = Number(body.book_id);
-    await db.execute({ sql: "DELETE FROM trades WHERE (offered_book_id = ? OR wanted_book_id = ?) AND status IN ('pending','accepted')", args: [id, id] });
-    await db.execute({ sql: 'DELETE FROM wonder_box WHERE book_id = ?', args: [id] });
-    await db.execute({ sql: 'DELETE FROM books WHERE id = ?', args: [id] });
-    return NextResponse.json({ ok: true });
+    const outcome = await removeBook(Number(body.book_id), { force: true });
+    return NextResponse.json({ ok: true, outcome });
   }
 
   // Ban / unban a user. A banned user can't log in or post; the admin can't ban themselves.

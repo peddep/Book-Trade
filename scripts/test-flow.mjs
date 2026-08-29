@@ -320,3 +320,37 @@ test('a student cannot rename themselves into somebody else\'s name', async () =
   const own = await api('/api/auth/me', { method: 'PATCH', cookie: a, body: { name: 'RENA' } });
   assert.equal(own.status, 200);
 });
+
+test('an admin can remove any book, including one from a finished trade', async () => {
+  // Admin deletion used to fail outright: it removed only pending and accepted
+  // trades, so the database still refused to delete a book a completed one
+  // pointed at — and it touched the hub tables without making sure they were
+  // there, which broke it even for a book nobody had ever traded.
+  const admin = await register('AdminOne', 'admin-one@s.edu');   // account #1 in a fresh db is the admin
+  const a = await register('AdmA', 'adma@s.edu');
+  const b = await register('AdmB', 'admb@s.edu');
+  const plain = await addBook(a, 'NeverTraded', 100);
+  const ba = await addBook(a, 'AdmTradedA', 100);
+  const bb = await addBook(b, 'AdmTradedB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { confirm: 'happened' } });
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { confirm: 'happened' } });
+
+  const admins = { cookie: admin };
+  const dash = await api('/api/admin', admins);
+  if (dash.status !== 200) return; // ADMIN_EMAIL is set in this environment; nothing to assert
+
+  assert.equal((await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'delete_book', book_id: plain } })).status, 200);
+  const traded = (await api('/api/admin', admins)).json.books.find(x => x.title === 'AdmTradedB');
+  const gone = await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'delete_book', book_id: traded.id } });
+  assert.equal(gone.status, 200);
+
+  const left = (await api('/api/admin', admins)).json.books.map(x => x.title);
+  assert.equal(left.includes('NeverTraded'), false);
+  assert.equal(left.includes('AdmTradedB'), false);
+  // and the trade both students took part in still names its two books
+  const rec = (await api('/api/trades', { cookie: b })).json.trades.find(x => x.id === t);
+  assert.equal(rec.offered_title, 'AdmTradedA');
+  assert.equal(rec.wanted_title, 'AdmTradedB');
+});
