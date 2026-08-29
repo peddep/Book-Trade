@@ -6,7 +6,6 @@ import TitleInput from '@/components/TitleInput';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { useI18n } from '@/lib/i18n';
 import { catalogTitleParts } from '@/lib/books-catalog';
-import { fileToCoverDataUrl } from '@/lib/image';
 
 import { SUBJECTS } from '@/lib/subjects';
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Poor'];
@@ -169,6 +168,8 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
 
   async function submitBook(e: React.FormEvent) {
     e.preventDefault();
+    // A listing with no picture is one nobody can recognise on the shelf.
+    if (!editingId && !form.cover_url) { setPhotographing('form'); return; }
     setSubmitting(true);
     if (editingId) {
       // Text fields only; cover is edited via the shelf's cover control.
@@ -267,22 +268,23 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     }));
   }
 
-  async function onPickCover(file: File | undefined) {
-    if (!file) return;
-    try {
-      const dataUrl = await fileToCoverDataUrl(file);
-      setForm(prev => ({ ...prev, cover_url: dataUrl, cover_source: 'upload' }));
-    } catch {
-      // ignore unreadable images
-    }
-  }
+  // Covers are photographed, not chosen from the gallery: the picture should be
+  // of the book actually being listed, taken by whoever is listing it. When
+  // this is set the camera opens; a number means "and save it to that book".
+  const [photographing, setPhotographing] = useState<'form' | number | null>(null);
 
-  // Upload / replace the cover of an existing book (immediate save).
-  async function changeCover(bookId: number, file: File | undefined) {
-    if (!file) return;
+  // Save a freshly taken cover, either into the form being filled in or
+  // straight onto a book that is already listed.
+  async function onPhoto(dataUrl: string) {
+    const target = photographing;
+    setPhotographing(null);
+    if (target === 'form') {
+      setForm(prev => ({ ...prev, cover_url: dataUrl, cover_source: 'camera' }));
+      return;
+    }
+    if (typeof target !== 'number') return;
     try {
-      const dataUrl = await fileToCoverDataUrl(file);
-      await fetch(`/api/books/${bookId}`, {
+      await fetch(`/api/books/${target}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cover_url: dataUrl }),
@@ -362,7 +364,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       {/* Cover upload — only when adding; existing books change cover from the shelf */}
       {!editingId && (
         <div>
-          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.cover')}</label>
+          <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.cover')} *</label>
           <div className="flex items-center gap-3">
             <div className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: '#e9d5ff' }}>
               {form.cover_url ? (
@@ -372,17 +374,19 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
                 <span className="text-2xl">📖</span>
               )}
             </div>
-            <label className="px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: '#e9d5ff', color: '#2e1065' }}>
-              {form.cover_url ? t('profile.changeCover') : t('profile.addCover')}
-              <input type="file" accept="image/*" className="hidden" onChange={e => onPickCover(e.target.files?.[0])} />
-            </label>
+            <button type="button" onClick={() => setPhotographing('form')}
+              className="px-3 py-2 rounded-xl text-sm font-semibold" style={{ background: '#e9d5ff', color: '#2e1065' }}>
+              📷 {form.cover_url ? t('profile.retakeCover') : t('profile.takeCover')}
+            </button>
             {form.cover_url && (
               <button type="button" onClick={() => setForm(prev => ({ ...prev, cover_url: '' }))} className="text-xs px-2.5 py-1 rounded-full" style={{ background: '#fee2e2', color: '#ef4444' }}>
                 {t('profile.removeCover')}
               </button>
             )}
           </div>
-          <p className="text-[11px] mt-1.5" style={{ color: '#9ca3af' }}>{t('profile.coverHint')}</p>
+          <p className="text-[11px] mt-1.5" style={{ color: form.cover_url ? '#9ca3af' : '#ef4444' }}>
+            {form.cover_url ? t('profile.coverHint') : t('profile.coverRequired')}
+          </p>
         </div>
       )}
 
@@ -420,7 +424,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         <button type="button" onClick={closeForm} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: '#e9d5ff', color: '#6b7280' }}>
           {t('profile.cancel')}
         </button>
-        <button type="submit" disabled={submitting} className="px-6 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+        <button type="submit" disabled={submitting || (!editingId && !form.cover_url)} className="px-6 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
           {editingId ? (submitting ? t('profile.saving') : t('profile.saveBtn')) : (submitting ? t('profile.adding') : t('profile.addBtn'))}
         </button>
       </div>
@@ -448,7 +452,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       onEdit={startEdit}
       onDelete={deleteBook}
       onToggleAvailable={toggleAvailable}
-      onChangeCover={changeCover}
+      onChangeCover={(id: number) => setPhotographing(id)}
       // Your books and the books you are browsing are the same kind of thing,
       // so they get the same shelf: the same columns at the same widths, and
       // the page scrolling rather than a shelf-sized window scrolling inside
@@ -477,6 +481,15 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     </div>
   );
 
+  const coverCamera = photographing !== null && (
+    <BarcodeScanner
+      mode="cover"
+      onDetected={() => {}}
+      onClose={() => setPhotographing(null)}
+      onCapture={onPhoto}
+    />
+  );
+
   const scanner = scanning && (
     <BarcodeScanner
       onDetected={onIsbn}
@@ -499,6 +512,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         {sortControl}
         {shelf}
         {scanner}
+        {coverCamera}
       </div>
     );
   }
@@ -513,6 +527,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       {sortControl}
       <div className="max-w-md sm:max-w-none">{shelf}</div>
       {scanner}
+      {coverCamera}
     </div>
   );
 }

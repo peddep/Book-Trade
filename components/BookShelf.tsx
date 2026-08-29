@@ -21,7 +21,9 @@ interface Props {
   onEdit?: (id: number) => void;
   onDelete?: (id: number) => void;
   onToggleAvailable?: (id: number, next: boolean) => void;
-  onChangeCover?: (id: number, file: File | undefined) => void;
+  // Asks the page to photograph a new cover for this book. Deliberately not a
+  // file input: a cover should be a picture of the book being listed.
+  onChangeCover?: (id: number) => void;
   maxHeight?: string;
   // Selection mode: clicking a cover selects it (no star / edit actions).
   selectMode?: boolean;
@@ -144,10 +146,9 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   <button onClick={() => onEdit?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                     ✏️ {t('shelf.edit')}
                   </button>
-                  <label className="w-full py-1 rounded-lg text-[11px] font-semibold text-center cursor-pointer" style={{ background: '#e9d5ff', color: '#2e1065' }}>
+                  <button onClick={() => onChangeCover?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#e9d5ff', color: '#2e1065' }}>
                     {b.cover_url ? t('card.changeCover') : t('card.addCover')}
-                    <input type="file" accept="image/*" className="hidden" onChange={e => onChangeCover?.(b.id, e.target.files?.[0])} />
-                  </label>
+                  </button>
                   <button onClick={() => onDelete?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#fee2e2', color: '#ef4444' }}>
                     {t('card.remove')}
                   </button>

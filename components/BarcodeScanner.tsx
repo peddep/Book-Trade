@@ -16,6 +16,10 @@ interface Props {
   status?: 'idle' | 'looking' | 'foundCover' | 'foundNoCover' | 'notFound';
   // Shown over the camera once we know what the book is.
   foundTitle?: string | null;
+  // 'cover' opens straight into the framed cover shot, with no barcode
+  // reading at all — for photographing a book that is already listed, or one
+  // whose details were typed in by hand.
+  mode?: 'scan' | 'cover';
 }
 
 // Both ISBN forms carry a check digit. Verifying it is what separates "this is
@@ -47,7 +51,7 @@ function isIsbn(text: string): string | null {
 // BarcodeDetector (fast and reliable on Android/Chrome); falls back to ZXing.
 // Always requests the BACK camera at a usable resolution — the previous
 // version often got the front camera, which is why scanning was hit-or-miss.
-export default function BarcodeScanner({ onDetected, onClose, onCapture, status = 'idle', foundTitle }: Props) {
+export default function BarcodeScanner({ onDetected, onClose, onCapture, status = 'idle', foundTitle, mode = 'scan' }: Props) {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   // The dashed cover guide, measured at capture time so what is saved is what
@@ -56,7 +60,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
   const [error, setError] = useState('');
   // scan → looking (barcode read, waiting on the lookup) → cover, or back to
   // scan when the lookup came up empty.
-  const [phase, setPhase] = useState<'scan' | 'looking' | 'cover'>('scan');
+  const [phase, setPhase] = useState<'scan' | 'looking' | 'cover'>(mode === 'cover' ? 'cover' : 'scan');
   const [retryMsg, setRetryMsg] = useState('');
   // A barcode was read clearly but is not an ISBN — almost always the price or
   // shop code printed next to it. Saying so beats looking broken.
@@ -220,6 +224,21 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
         },
         audio: false,
       };
+
+      // Photographing a cover only: open the camera, focus it, and leave the
+      // decoding paths alone entirely.
+      if (mode === 'cover') {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+          video.srcObject = stream;
+          await video.play();
+          await tuneCamera(stream);
+        } catch {
+          if (!cancelled) setError(t('scan.cameraError'));
+        }
+        return;
+      }
 
       // Path 1: native BarcodeDetector (Chrome/Android — fast and reliable).
       const BD = (window as any).BarcodeDetector;
@@ -389,7 +408,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
           </button>
         )}
         <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#ffffff', color: '#2e1065' }}>
-          {coverPhase ? t('scan.skipCover') : t('scan.close')}
+          {coverPhase && mode === 'scan' ? t('scan.skipCover') : t('scan.close')}
         </button>
       </div>
     </div>
