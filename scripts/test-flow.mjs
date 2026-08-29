@@ -237,3 +237,50 @@ test('editing a price after offering cannot carry a trade past the ฿100 rule',
   assert.equal(acc.status, 400);
   assert.equal(acc.json.error, 'price_gap');
 });
+
+test('a traded book can be removed without erasing the other side\'s history', async () => {
+  // Deleting a book that a completed trade points at used to fail outright:
+  // the foreign key refused, the request 500'd, and the book stayed on the
+  // shelf. It must now go, while the trade it was part of stays intact for
+  // the other student.
+  const a = await register('DA', 'dela@s.edu');
+  const b = await register('DB', 'delb@s.edu');
+  const ba = await addBook(a, 'DelA', 100);
+  const bb = await addBook(b, 'DelB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { confirm: 'happened' } });
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { confirm: 'happened' } });
+
+  const mine = (await api('/api/books?mine=1', { cookie: a })).json.books;
+  const got = mine.find(x => x.title === 'DelB');
+  const del = await api(`/api/books/${got.id}`, { method: 'DELETE', cookie: a });
+  assert.equal(del.status, 200);
+
+  // Gone from the owner's shelf...
+  const after = (await api('/api/books?mine=1', { cookie: a })).json.books;
+  assert.equal(after.some(x => x.title === 'DelB'), false);
+  // ...and from what anyone else can browse.
+  const browse = (await api('/api/books', { cookie: b })).json.books;
+  assert.equal(browse.some(x => x.title === 'DelB'), false);
+  // But the completed trade still names both books on the other side.
+  const rec = (await api('/api/trades', { cookie: b })).json.trades.find(x => x.id === t);
+  assert.equal(rec.status, 'completed');
+  assert.equal(rec.offered_title, 'DelA');
+  assert.equal(rec.wanted_title, 'DelB');
+});
+
+test('a book in an agreed meet-up cannot be removed from under the other student', async () => {
+  const a = await register('GA', 'ga@s.edu');
+  const b = await register('GB', 'gb@s.edu');
+  const ba = await addBook(a, 'AgreedA', 100);
+  const bb = await addBook(b, 'AgreedB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+
+  const res = await api(`/api/books/${ba}`, { method: 'DELETE', cookie: a });
+  assert.equal(res.status, 409);
+  assert.equal(res.json.error, 'in_agreed_trade');
+  const mine = (await api('/api/books?mine=1', { cookie: a })).json.books;
+  assert.equal(mine.some(x => x.title === 'AgreedA'), true);
+});

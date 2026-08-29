@@ -224,6 +224,8 @@ const STRINGS: Dict = {
   'profile.loading': { th: 'กำลังโหลดหนังสือของคุณ...', en: 'Loading your books...' },
   'profile.none': { th: 'ยังไม่มีหนังสือที่ลงไว้', en: 'No books listed yet' },
   'profile.noneHint': { th: 'เพิ่มหนังสือที่คุณต้องการแลกเปลี่ยน!', en: 'Add books you want to trade!' },
+  'profile.removeAgreed': { th: 'เอาออกไม่ได้ เพราะหนังสือเล่มนี้อยู่ในนัดแลกเปลี่ยนที่ตกลงกันแล้ว — ยกเลิกนัดก่อน แล้วค่อยเอาออก', en: 'This book is part of a trade you have already agreed to. Cancel that meet-up first, then remove it.' },
+  'profile.removeFailed': { th: 'เอาหนังสือออกไม่สำเร็จ ลองใหม่อีกครั้ง', en: 'Could not remove the book. Please try again.' },
   'profile.confirmRemove': { th: 'ลบหนังสือเล่มนี้?', en: 'Remove this book?' },
   'sort.by': { th: 'เรียงตาม', en: 'Sort by' },
   'sort.recent': { th: 'ล่าสุด', en: 'Recent' },

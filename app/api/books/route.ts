@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
       EXISTS(SELECT 1 FROM wonder_box wb2 WHERE wb2.book_id = b.id AND wb2.status IN ('waiting','matched')) AS in_wonderbox
     FROM books b
     JOIN users u ON b.owner_id = u.id
-    WHERE 1=1
+    WHERE b.deleted_at IS NULL
   `;
   const args: unknown[] = [];
 

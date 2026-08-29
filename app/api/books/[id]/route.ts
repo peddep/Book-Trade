@@ -21,7 +21,53 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   if (Number(book.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  await db.execute({ sql: 'DELETE FROM books WHERE id = ?', args: [id] });
+  await ensureBookColumns();
+  const bookId = Number(id);
+
+  // An agreed meet-up is a promise to another student, who is expecting to be
+  // handed this book. Removing it out from under them would leave them turning
+  // up for nothing, so say what to do instead.
+  const live = await db.execute({
+    sql: "SELECT 1 FROM trades WHERE status = 'accepted' AND (offered_book_id = ? OR wanted_book_id = ?) LIMIT 1",
+    args: [bookId, bookId],
+  });
+  if (live.rows.length > 0) {
+    return NextResponse.json({ error: 'in_agreed_trade' }, { status: 409 });
+  }
+
+  // Offers nobody has agreed to yet simply go away with the book.
+  await db.execute({
+    sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE status = 'pending' AND (offered_book_id = ? OR wanted_book_id = ?)",
+    args: [bookId, bookId],
+  });
+  // And it leaves any box or room it was waiting in.
+  for (const sql of [
+    'DELETE FROM wonder_box WHERE book_id = ?',
+    'DELETE FROM gts_deposits WHERE book_id = ?',
+    'DELETE FROM room_members WHERE book_id = ?',
+  ]) {
+    try { await db.execute({ sql, args: [bookId] }); } catch { /* table not created yet */ }
+  }
+
+  // A book that has been through a completed trade is part of that trade's
+  // record, on both students' history — deleting the row would either fail
+  // against the foreign key (which is what used to happen: removing a traded
+  // book returned an error and the book stayed put) or tear a hole in somebody
+  // else's history. Keep the row, mark it gone, and take it off the market:
+  // every listing already filters on available, so this is enough to remove it
+  // everywhere it can be seen.
+  const referenced = await db.execute({
+    sql: 'SELECT 1 FROM trades WHERE offered_book_id = ? OR wanted_book_id = ? LIMIT 1',
+    args: [bookId, bookId],
+  });
+  if (referenced.rows.length > 0) {
+    await db.execute({
+      sql: "UPDATE books SET deleted_at = datetime('now'), available = 0 WHERE id = ?",
+      args: [bookId],
+    });
+  } else {
+    await db.execute({ sql: 'DELETE FROM books WHERE id = ?', args: [bookId] });
+  }
   return NextResponse.json({ ok: true });
 }
 

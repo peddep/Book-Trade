@@ -228,7 +228,11 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     setBooks(prev => prev.filter(b => b.id !== id));
     try {
       const res = await fetch(`/api/books/${id}`, { method: 'DELETE' });
-      if (!res.ok) setBooks(before); // put it back; it is still there
+      if (!res.ok) {
+        setBooks(before); // put it back; it is still there
+        const d = await res.json().catch(() => ({}));
+        alert(d.error === 'in_agreed_trade' ? t('profile.removeAgreed') : t('profile.removeFailed'));
+      }
     } catch {
       setBooks(before);
     }

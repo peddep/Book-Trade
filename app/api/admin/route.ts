@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
        ORDER BY copies DESC, b.id DESC LIMIT 200`
     : `SELECT b.id, b.title, b.title_en, b.volume, b.publisher, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
          b.cover_url, u.name AS owner_name
-       FROM books b JOIN users u ON b.owner_id = u.id ORDER BY b.id DESC LIMIT 200`;
+       FROM books b JOIN users u ON b.owner_id = u.id WHERE b.deleted_at IS NULL ORDER BY b.id DESC LIMIT 200`;
   const [users, books, trades, wonderbox, messages, reports, catalog, donations, feedback] = await Promise.all([
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
