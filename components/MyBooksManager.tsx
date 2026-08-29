@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import BookShelf from '@/components/BookShelf';
 import TitleInput from '@/components/TitleInput';
 import BarcodeScanner from '@/components/BarcodeScanner';
@@ -155,11 +155,15 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     return b.id - a.id;
   });
 
+  // Only the very first load shows the loading state. Later refreshes happen
+  // behind an already-drawn shelf, so nothing blinks out and back.
+  const loadedOnce = useRef(false);
   const fetchBooks = useCallback(async () => {
-    setLoading(true);
+    if (!loadedOnce.current) setLoading(true);
     const res = await fetch('/api/books?mine=1');
     const data = await res.json();
     setBooks(data.books ?? []);
+    loadedOnce.current = true;
     setLoading(false);
     onChange?.();
   }, [onChange]);
@@ -171,26 +175,53 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
     // A listing with no picture is one nobody can recognise on the shelf.
     if (!editingId && !form.cover_url) { setPhotographing('form'); return; }
     setSubmitting(true);
-    if (editingId) {
-      // Text fields only; cover is edited via the shelf's cover control.
-      await fetch(`/api/books/${editingId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    try {
+      if (editingId) {
+        const id = editingId;
+        const edits = {
           title: form.title, title_en: form.title_en, price: form.price, volume: form.volume, publisher: form.publisher, author: form.author, subject: form.subject,
           grade_level: form.grade_level, condition: form.condition, description: form.description,
-        }),
-      });
-    } else {
-      await fetch('/api/books', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+        };
+        const res = await fetch(`/api/books/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(edits),
+        });
+        if (!res.ok) { setSubmitting(false); alert(t('profile.saveFailed')); return; }
+        // The server keeps only what it was sent, so the same values can be
+        // put on the shelf here instead of re-reading every book to find out.
+        setBooks(prev => prev.map(b => (b.id === id ? {
+          ...b,
+          title: edits.title,
+          title_en: edits.title_en || null,
+          price: edits.price === '' ? null : Number(edits.price),
+          volume: edits.volume || null,
+          publisher: edits.publisher || null,
+          author: edits.author,
+          subject: edits.subject,
+          grade_level: edits.grade_level,
+          condition: edits.condition,
+          description: edits.description,
+        } : b)));
+      } else {
+        const res = await fetch('/api/books', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok || !d.book) { setSubmitting(false); alert(t('profile.saveFailed')); return; }
+        // Straight onto the shelf, with the row the server just created.
+        setBooks(prev => [d.book, ...prev]);
+        onChange?.();
+      }
+    } catch {
+      setSubmitting(false);
+      alert(t('profile.saveFailed'));
+      return;
     }
     closeForm();
     setSubmitting(false);
-    fetchBooks();
   }
 
   function closeForm() {
@@ -283,15 +314,20 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       return;
     }
     if (typeof target !== 'number') return;
+    const before = books;
+    // Show the new cover at once; a photo the student has just taken and can
+    // see on screen should not take a round trip to appear on the shelf.
+    setBooks(prev => prev.map(b => (b.id === target ? { ...b, cover_url: dataUrl, cover_source: 'camera' } : b)));
     try {
-      await fetch(`/api/books/${target}`, {
+      const res = await fetch(`/api/books/${target}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cover_url: dataUrl }),
       });
-      fetchBooks();
+      if (!res.ok) { setBooks(before); alert(t('profile.saveFailed')); }
     } catch {
-      // ignore
+      setBooks(before);
+      alert(t('profile.saveFailed'));
     }
   }
 
