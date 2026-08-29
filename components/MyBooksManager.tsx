@@ -334,7 +334,6 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
             onChange={e => setForm({ ...form, author: e.target.value })}
             className="w-full p-2.5 rounded-xl text-sm" style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
             placeholder={t('profile.fAuthorPlaceholder')} />
-          <p className="text-xs text-[#9ca3af] mt-1">{t('profile.fAuthorHint')}</p>
         </div>
         <div>
           <label className="text-sm text-[#4b5563] mb-1.5 block">{t('profile.fPublisher')}</label>
@@ -384,9 +383,6 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
               </button>
             )}
           </div>
-          <p className="text-[11px] mt-1.5" style={{ color: form.cover_url ? '#9ca3af' : '#ef4444' }}>
-            {form.cover_url ? t('profile.coverHint') : t('profile.coverRequired')}
-          </p>
         </div>
       )}
 
