@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Loading from '@/components/Loading';
@@ -77,23 +77,50 @@ export default function TradesPage() {
     fetchTrades();
   }, [router, user, sessionLoading]);
 
-  async function fetchTrades() {
-    setLoading(true);
+  // Only the first read shows the loading state. A refresh that follows an
+  // action the student has already seen take effect must not blank the list
+  // and rebuild it underneath them.
+  const loadedOnce = useRef(false);
+  async function fetchTrades(quiet = false) {
+    if (!quiet && !loadedOnce.current) setLoading(true);
     const res = await fetch('/api/trades');
     if (res.ok) {
       const data = await res.json();
       setTrades(data.trades ?? []);
     }
+    loadedOnce.current = true;
     setLoading(false);
   }
 
   async function updateStatus(id: number, status: string) {
-    await fetch(`/api/trades/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    fetchTrades();
+    // Show the answer at once: accepting or declining is a decision the
+    // student has already made, and watching the whole list reload before it
+    // takes effect makes the button feel like it did not register.
+    const before = trades;
+    setTrades(prev => prev.map(t => (t.id === id ? { ...t, status } : t)));
+    try {
+      const res = await fetch(`/api/trades/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        setTrades(before);
+        const d = await res.json().catch(() => ({}));
+        alert(d.error === 'books_changed' ? t('trades.booksChanged')
+          : d.error === 'price_gap' ? t('err.priceGap')
+          : d.error === 'stale_trade' ? t('trades.alreadySettled')
+          : t('trades.actionFailed'));
+        return;
+      }
+      // Accepting also cancels the other offers for the same book, which only
+      // the server knows about — pick those up quietly, behind the list that
+      // is already showing the right answer for this one.
+      fetchTrades(true);
+    } catch {
+      setTrades(before);
+      alert(t('trades.actionFailed'));
+    }
   }
 
   const filtered = trades.filter(t => {
