@@ -8,6 +8,9 @@ import { notify } from '@/lib/notify';
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // A ban applies to reading too: the session cookie is signed rather than
+  // stored, so it stays valid until it expires unless something checks.
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const db = getDb();
 

@@ -354,3 +354,34 @@ test('an admin can remove any book, including one from a finished trade', async 
   assert.equal(rec.offered_title, 'AdmTradedA');
   assert.equal(rec.wanted_title, 'AdmTradedB');
 });
+
+test('a ban signs the student out and shuts the door behind them', async () => {
+  const admin = await register('BanAdmin', 'banadmin@s.edu');   // account #1 is the admin
+  const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.8.${++ipCounter}`, body: { name: 'ToBan', email: 'toban@s.edu', password: 'secret6', accept_terms: true } });
+  const cookie = reg.cookie;
+  const id = reg.json.user.id;
+
+  // signed in and reading normally
+  assert.equal((await api('/api/auth/me', { cookie })).json.user.id, id);
+  assert.equal((await api('/api/books', { cookie })).status, 200);
+
+  const banned = await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'ban_user', user_id: id } });
+  if (banned.status !== 200) return; // ADMIN_EMAIL points elsewhere in this environment
+
+  // The session cookie is signed, not stored, so it is still cryptographically
+  // valid — the account behind it is what has changed.
+  const me = await api('/api/auth/me', { cookie });
+  assert.equal(me.json.user, null, 'the session must report nobody');
+  assert.equal(me.json.banned, true, 'and say why, so the page can explain it');
+
+  // Reading is closed too, not only writing.
+  for (const path of ['/api/books', '/api/trades', '/api/chat']) {
+    assert.equal((await api(path, { cookie })).status, 403, `${path} should refuse a banned account`);
+  }
+  // And they cannot simply sign in again.
+  assert.equal((await api('/api/auth/login', { method: 'POST', body: { email: 'toban@s.edu', password: 'secret6' } })).status, 403);
+
+  // Lifting the ban puts everything back.
+  await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'unban_user', user_id: id } });
+  assert.equal((await api('/api/auth/login', { method: 'POST', body: { email: 'toban@s.edu', password: 'secret6' } })).status, 200);
+});

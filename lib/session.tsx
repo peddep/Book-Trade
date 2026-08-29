@@ -42,11 +42,16 @@ const SessionContext = createContext<SessionValue>({
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [banned, setBanned] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me');
       const d = res.ok ? await res.json() : { user: null };
+      // A ban takes effect while the student is sitting on the page: the
+      // server has already cleared the cookie, so drop them here too rather
+      // than leaving a signed-in-looking site that refuses everything.
+      if (d.banned) setBanned(true);
       setUser(d.user ?? null);
       return (d.user ?? null) as SessionUser | null;
     } catch {
@@ -64,6 +69,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // changed elsewhere — another tab, an expired cookie — does not leave this
   // one showing the wrong site until a reload. Throttled, because switching
   // tabs is not news.
+  // Re-check on a timer as well as on focus. Somebody who has been banned
+  // should stop being signed in while they are looking at the page, not the
+  // next time they happen to switch tabs.
+  useEffect(() => {
+    const id = setInterval(() => { refresh(); }, 30_000);
+    return () => clearInterval(id);
+  }, [refresh]);
+
   useEffect(() => {
     let last = Date.now();
     const onVisible = () => {
@@ -78,6 +91,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionContext.Provider value={{ user, loading, refresh, setUser }}>
+      {/* Said plainly, once: being signed out with no explanation is worse
+          than being told why. */}
+      {banned && (
+        <div className="sticky top-0 z-[60]" style={{ background: '#7f1d1d', color: '#fff', textAlign: 'center', padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>
+          บัญชีนี้ถูกระงับการใช้งาน — ติดต่อผู้ดูแลถ้าคิดว่าผิดพลาด · This account has been suspended. Contact the admin if you think this is a mistake.
+        </div>
+      )}
       {children}
     </SessionContext.Provider>
   );

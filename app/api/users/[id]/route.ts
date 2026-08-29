@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns, ensureUserColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { isBanned } from '@/lib/hub';
 
 // Public profile of a user + their available books (requires being logged in).
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // A ban applies to reading too: the session cookie is signed rather than
+  // stored, so it stays valid until it expires unless something checks.
+  if (await isBanned(me.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const { id } = await params;
   const db = getDb();

@@ -8,18 +8,37 @@ export async function GET() {
   if (!user) return NextResponse.json({ user: null });
   // availability and contact live only in the database, not in the session
   // cookie, so read them here — the profile editor needs them to prefill.
+  // The ban comes from the same row, which is what lets a ban take effect on
+  // somebody who is already signed in: the session cookie is signed, not
+  // stored, so it stays valid until it expires. This is where the app finds
+  // out, and it is asked for on a timer.
   let extra: { availability: string[]; contact: string | null } = { availability: [], contact: null };
+  let banned = false;
   try {
     await ensureUserColumns();
-    const r = await getDb().execute({ sql: 'SELECT availability, contact FROM users WHERE id = ?', args: [user.id] });
+    const r = await getDb().execute({ sql: 'SELECT availability, contact, banned FROM users WHERE id = ?', args: [user.id] });
     const row = r.rows[0] as any;
-    if (row) {
-      extra = {
-        availability: (() => { try { const a = JSON.parse(row.availability ?? '[]'); return Array.isArray(a) ? a : []; } catch { return []; } })(),
-        contact: row.contact ?? null,
-      };
+    if (!row) {
+      // The account is gone. Whatever the cookie says, there is nobody here.
+      const res = NextResponse.json({ user: null });
+      res.cookies.set('session', '', { maxAge: 0, path: '/' });
+      return res;
     }
+    banned = Number(row.banned) === 1;
+    extra = {
+      availability: (() => { try { const a = JSON.parse(row.availability ?? '[]'); return Array.isArray(a) ? a : []; } catch { return []; } })(),
+      contact: row.contact ?? null,
+    };
   } catch { /* older database */ }
+
+  if (banned) {
+    // Signed out here and now: the cookie is cleared in the same response, so
+    // the next request from this browser carries nothing.
+    const res = NextResponse.json({ user: null, banned: true });
+    res.cookies.set('session', '', { maxAge: 0, path: '/' });
+    return res;
+  }
+
   return NextResponse.json({ user: { ...user, ...extra, is_admin: isAdmin(user) } });
 }
 

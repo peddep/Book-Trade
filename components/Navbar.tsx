@@ -26,7 +26,7 @@ const NAV = [
 export default function Navbar() {
   // Shared session: fetched once for the whole app, so opening a page no longer
   // re-asks who is signed in.
-  const { user, setUser } = useSession();
+  const { user, setUser, refresh } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [pending, setPending] = useState(0);
   const router = useRouter();
@@ -40,13 +40,19 @@ export default function Navbar() {
     if (!user) { setPending(0); return; }
     const check = () =>
       fetch('/api/trades?counts=1')
-        .then(r => (r.ok ? r.json() : { pending: 0 }))
+        .then(r => {
+          // Refused: the account has been banned since this page loaded. Ask
+          // the session who we are now — that clears the cookie and signs them
+          // out, without waiting for the session's own slower timer.
+          if (r.status === 403) { refresh(); return { pending: 0 }; }
+          return r.ok ? r.json() : { pending: 0 };
+        })
         .then(d => setPending(Number(d.pending) || 0))
         .catch(() => {});
     check();
     const id = setInterval(check, 20000);
     return () => clearInterval(id);
-  }, [user]);
+  }, [user, refresh]);
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
