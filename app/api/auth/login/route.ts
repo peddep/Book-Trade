@@ -7,7 +7,10 @@ export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
 
   const db = getDb();
-  const result = await db.execute({ sql: 'SELECT * FROM users WHERE email = ?', args: [email] });
+  const result = await db.execute({
+    sql: 'SELECT * FROM users WHERE lower(email) = ?',
+    args: [typeof email === 'string' ? email.trim().toLowerCase() : ''],
+  });
   const user = result.rows[0] as any;
   if (!user) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });

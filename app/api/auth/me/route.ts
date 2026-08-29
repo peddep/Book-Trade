@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getDb, ensureUserColumns } from '@/lib/db';
+import { getDb, ensureUserColumns, ensureUniqueAccounts } from '@/lib/db';
 import { getCurrentUser, isAdmin, signSession } from '@/lib/auth';
 
 export async function GET() {
@@ -38,6 +38,14 @@ export async function PATCH(req: NextRequest) {
     : (user.class_no ?? null);
 
   if (!name) return NextResponse.json({ error: 'name_required' }, { status: 400 });
+
+  // A student may rename themselves, but not into somebody else's name.
+  await ensureUniqueAccounts();
+  const clash = await getDb().execute({
+    sql: 'SELECT 1 FROM users WHERE lower(name) = lower(?) AND id != ? LIMIT 1',
+    args: [name, user.id],
+  });
+  if (clash.rows.length > 0) return NextResponse.json({ error: 'name_taken' }, { status: 409 });
 
   const nextUser = {
     id: user.id,

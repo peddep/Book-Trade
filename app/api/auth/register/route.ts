@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getDb, ensureUserColumns } from '@/lib/db';
+import { getDb, ensureUserColumns, ensureUniqueAccounts } from '@/lib/db';
 import { signSession, getCurrentUser } from '@/lib/auth';
 import { ipRateLimit } from '@/lib/ratelimit';
 
@@ -21,7 +21,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   }
 
-  const { name, email, password, grade, class_no, contact, real_name, availability, accept_terms } = await req.json();
+  const body = await req.json();
+  const { password, grade, class_no, contact, real_name, availability, accept_terms } = body;
+  // Trimmed, and the email lower-cased. Addresses are not case-sensitive in
+  // practice, so "Somchai@..." and "somchai@..." are one person — stored one
+  // way so they cannot become two accounts, and so signing in works whichever
+  // way it is typed.
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -50,9 +57,19 @@ export async function POST(req: NextRequest) {
   try {
     const db = getDb();
     await ensureUserColumns();
-    const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
+    await ensureUniqueAccounts();
+    // One account per address, and one student per username. Compared without
+    // regard to case, or the same name in different capitals would read as two
+    // different people to everyone browsing.
+    const existing = await db.execute({
+      sql: 'SELECT lower(email) = ? AS same_email, lower(name) = lower(?) AS same_name FROM users WHERE lower(email) = ? OR lower(name) = lower(?)',
+      args: [email, name, email, name],
+    });
+    if (existing.rows.some((r: any) => Number(r.same_email) === 1)) {
+      return NextResponse.json({ error: 'email_taken' }, { status: 409 });
+    }
     if (existing.rows.length > 0) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+      return NextResponse.json({ error: 'name_taken' }, { status: 409 });
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -72,6 +89,10 @@ export async function POST(req: NextRequest) {
     res.cookies.set('session', token, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
     return res;
   } catch (err) {
+    // The unique index caught a signup that raced past the check above.
+    if (String(err).includes('UNIQUE constraint failed')) {
+      return NextResponse.json({ error: String(err).includes('name') ? 'name_taken' : 'email_taken' }, { status: 409 });
+    }
     console.error('Register failed:', err);
     return NextResponse.json(
       { error: 'Database error — check that the Turso env vars are set in Vercel and the tables were created.' },

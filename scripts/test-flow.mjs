@@ -284,3 +284,39 @@ test('a book in an agreed meet-up cannot be removed from under the other student
   const mine = (await api('/api/books?mine=1', { cookie: a })).json.books;
   assert.equal(mine.some(x => x.title === 'AgreedA'), true);
 });
+
+test('an email or a username can only be used once', async () => {
+  const email = 'unique@s.edu';
+  const first = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: 'Uniq', email, password: 'secret6', accept_terms: true } });
+  assert.equal(first.status, 200);
+
+  // The same address in different capitals, or with stray spaces, is the same
+  // address — it used to make a second account.
+  for (const variant of [email, email.toUpperCase(), `  ${email}  `]) {
+    const r = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: 'Someone' + Math.random(), email: variant, password: 'secret6', accept_terms: true } });
+    assert.equal(r.status, 409, `expected ${variant} to be refused`);
+    assert.equal(r.json.error, 'email_taken');
+  }
+
+  // And one student per username, whatever the capitals.
+  for (const variant of ['Uniq', 'UNIQ', 'uniq']) {
+    const r = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: variant, email: `x${Math.random()}@s.edu`, password: 'secret6', accept_terms: true } });
+    assert.equal(r.status, 409, `expected the name ${variant} to be refused`);
+    assert.equal(r.json.error, 'name_taken');
+  }
+
+  // Signing in should not care how the address is typed.
+  const login = await api('/api/auth/login', { method: 'POST', body: { email: email.toUpperCase(), password: 'secret6' } });
+  assert.equal(login.status, 200);
+});
+
+test('a student cannot rename themselves into somebody else\'s name', async () => {
+  const a = await register('RenA', 'rena@s.edu');
+  await register('RenB', 'renb@s.edu');
+  const taken = await api('/api/auth/me', { method: 'PATCH', cookie: a, body: { name: 'renb' } });
+  assert.equal(taken.status, 409);
+  assert.equal(taken.json.error, 'name_taken');
+  // Their own name, in any capitals, is still theirs.
+  const own = await api('/api/auth/me', { method: 'PATCH', cookie: a, body: { name: 'RENA' } });
+  assert.equal(own.status, 200);
+});

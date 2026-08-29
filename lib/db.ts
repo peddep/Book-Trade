@@ -96,6 +96,35 @@ export async function ensureUserColumns() {
   userColumnsEnsured = true;
 }
 
+// One account per address, one student per username — enforced by the database
+// rather than only by the check in the signup route, which two people
+// registering at the same moment can both slip past.
+//
+// Indexed on lower(...) because the table's own UNIQUE(email) compares exactly:
+// it treats "Somchai@..." and "somchai@..." as different addresses, which is
+// how the same student could end up with two accounts.
+//
+// Creating either index fails if the data already contains duplicates. That is
+// left alone deliberately: dropping or renaming somebody's existing account is
+// not something to do quietly on a deploy. The route's own check still applies,
+// so no new duplicates can be created either way.
+let uniqueAccountsEnsured = false;
+export async function ensureUniqueAccounts() {
+  if (uniqueAccountsEnsured) return;
+  await ensureCoreTables();
+  for (const sql of [
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email))',
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name_lower ON users(lower(name))',
+  ]) {
+    try {
+      await getDb().execute(sql);
+    } catch (err) {
+      console.warn('Could not enforce unique accounts (existing duplicates?):', String(err));
+    }
+  }
+  uniqueAccountsEnsured = true;
+}
+
 // Adds the IRL-meetup confirmation columns to older trade tables.
 let tradeColumnsEnsured = false;
 export async function ensureTradeColumns() {

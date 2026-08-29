@@ -63,7 +63,8 @@ export default function RoomPage() {
       setSessionUser(d.user);
       setEditing(false);
     } else {
-      setFormError(t('profile2.nameRequired'));
+      const d = await res.json().catch(() => ({}));
+      setFormError(d.error === 'name_taken' ? t('profile2.nameTaken') : t('profile2.nameRequired'));
     }
     setSaving(false);
   }

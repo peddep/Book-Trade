@@ -92,6 +92,8 @@ export default function RegisterPage() {
       }
       setError(
         data.error === 'terms_required' ? t('reg.termsRequired')
+        : data.error === 'email_taken' ? t('reg.emailTaken')
+        : data.error === 'name_taken' ? t('reg.nameTaken')
         : data.error === 'email_domain' ? t('reg.emailDomain', { domain: data.domain })
         : data.error === 'rate_limited' ? t('err.rateLimited')
         : (data.error ?? t('reg.failed', { status: res.status }))
