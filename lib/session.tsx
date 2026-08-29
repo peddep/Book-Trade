@@ -60,6 +60,22 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // Coming back to the tab re-checks who is signed in, so a session that
+  // changed elsewhere — another tab, an expired cookie — does not leave this
+  // one showing the wrong site until a reload. Throttled, because switching
+  // tabs is not news.
+  useEffect(() => {
+    let last = Date.now();
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - last < 30_000) return;
+      last = Date.now();
+      refresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refresh]);
+
   return (
     <SessionContext.Provider value={{ user, loading, refresh, setUser }}>
       {children}

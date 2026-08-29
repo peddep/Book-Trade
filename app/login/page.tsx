@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user: sessionUser } = useSession();
+  const { user: sessionUser, setUser, refresh } = useSession();
   const router = useRouter();
 
   // Already signed in: signing in again as someone else would swap the session
@@ -33,6 +33,11 @@ export default function LoginPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        // Hand the new session straight to the provider. Without this the app
+        // still believes nobody is signed in, /trade bounces back to the front
+        // page, and the student has to reload before the site will let them in.
+        setUser(data.user ?? null);
+        if (!data.user) await refresh();
         router.push('/trade');
         return;
       }

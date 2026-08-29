@@ -26,7 +26,7 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user: sessionUser } = useSession();
+  const { user: sessionUser, setUser, refresh } = useSession();
   const router = useRouter();
   const firstSave = useRef(true);
 
@@ -82,6 +82,11 @@ export default function RegisterPage() {
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+        // The account exists and the cookie is set, but the app only learns
+        // that if we tell it — otherwise the new student lands back on the
+        // front page as though nothing happened.
+        setUser(data.user ?? null);
+        if (!data.user) await refresh();
         router.push('/trade');
         return;
       }

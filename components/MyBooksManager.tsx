@@ -221,8 +221,17 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
 
   async function deleteBook(id: number) {
     if (!confirm(t('profile.confirmRemove'))) return;
-    await fetch(`/api/books/${id}`, { method: 'DELETE' });
-    fetchBooks();
+    // Take it off the shelf straight away. Waiting for the round trip and then
+    // re-fetching the whole list left the book sitting there for a second,
+    // looking as though the tap had not registered.
+    const before = books;
+    setBooks(prev => prev.filter(b => b.id !== id));
+    try {
+      const res = await fetch(`/api/books/${id}`, { method: 'DELETE' });
+      if (!res.ok) setBooks(before); // put it back; it is still there
+    } catch {
+      setBooks(before);
+    }
   }
 
   async function toggleAvailable(id: number, next: boolean) {

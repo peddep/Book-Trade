@@ -83,6 +83,9 @@ export default function RoomPage() {
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
+    // Clear the shared session as well, or the app carries on showing the
+    // signed-in site to somebody who has just signed out of it.
+    setSessionUser(null);
     router.push('/');
   }
 
