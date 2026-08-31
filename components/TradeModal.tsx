@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import BookShelf, { type ShelfBook } from '@/components/BookShelf';
 import { useI18n } from '@/lib/i18n';
+import { coverSrc } from '@/lib/cover';
 import { MAX_PRICE_DIFF, priceDiffOk } from '@/lib/price';
 
 interface Book {
@@ -16,6 +17,7 @@ interface Book {
   volume?: string | null;
   cover_color: string;
   cover_url?: string | null;
+  cover_len?: number | null;
 }
 
 interface Props {
@@ -74,9 +76,9 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#f5f3ff', border: '1px solid #e9d5ff' }}>
           {/* Book-shaped cover of the book being requested */}
           <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0" style={{ width: 56, aspectRatio: '2 / 3', background: targetBook.cover_color, boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }}>
-            {targetBook.cover_url ? (
+            {coverSrc(targetBook) ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={targetBook.cover_url} alt={bookTitle(targetBook.title, targetBook.title_en)} className="absolute inset-0 w-full h-full object-cover"
+              <img src={coverSrc(targetBook)!} alt={bookTitle(targetBook.title, targetBook.title_en)} className="absolute inset-0 w-full h-full object-cover"
                 onError={e => { e.currentTarget.style.display = 'none'; }} />
             ) : (
               <span className="absolute inset-0 flex items-center justify-center text-2xl">📖</span>

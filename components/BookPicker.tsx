@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import BookThumb from '@/components/BookThumb';
 import { useI18n } from '@/lib/i18n';
+import { coverSrc } from '@/lib/cover';
 
 export interface PickerBook {
   id: number;
@@ -11,6 +12,7 @@ export interface PickerBook {
   subject?: string;
   cover_color: string;
   cover_url?: string | null;
+  cover_len?: number | null;
   available: number;
 }
 
@@ -56,7 +58,7 @@ export default function BookPicker({ excludeIds = [], selected, onSelect, filter
             border: `1px solid ${selected === b.id ? '#8b5cf6' : '#e9d5ff'}`,
           }}
         >
-          <BookThumb coverUrl={b.cover_url} coverColor={b.cover_color} />
+          <BookThumb coverUrl={coverSrc(b)} coverColor={b.cover_color} />
           <div>
             <p className="text-sm font-semibold text-[#2e1065]">{b.title}</p>
             <p className="text-xs text-[#6b7280]">{b.author}</p>

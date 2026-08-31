@@ -90,8 +90,17 @@ export async function GET(req: NextRequest) {
   // When set, hide books already committed to another trade avenue.
   const excludeBusy = searchParams.get('exclude_busy') === '1';
 
+  // Everything except the cover itself. Covers are data URLs on the row, so
+  // "SELECT b.*" put every picture into the list — 180 books came to 6MB of
+  // JSON, downloaded again on every visit because a JSON response of listings
+  // cannot be cached like an image can. The length is enough for the page to
+  // build a URL for each cover and let the browser keep it.
   let sql = `
-    SELECT b.*, u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade,
+    SELECT b.id, b.owner_id, b.title, b.title_en, b.price, b.volume, b.publisher,
+      b.author, b.subject, b.grade_level, b.condition, b.description,
+      b.cover_color, b.available, b.created_at, b.isbn, b.cover_source,
+      length(b.cover_url) AS cover_len,
+      u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade,
       ${BUSY_EXPR} AS busy,
       EXISTS(SELECT 1 FROM wonder_box wb2 WHERE wb2.book_id = b.id AND wb2.status IN ('waiting','matched')) AS in_wonderbox
     FROM books b

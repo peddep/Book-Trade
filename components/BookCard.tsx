@@ -2,6 +2,7 @@
 
 import { useI18n } from '@/lib/i18n';
 import ReportButton from '@/components/ReportButton';
+import { coverSrc } from '@/lib/cover';
 
 interface Book {
   id: number;
@@ -13,6 +14,7 @@ interface Book {
   description?: string;
   cover_color: string;
   cover_url?: string | null;
+  cover_len?: number | null;
   title_en?: string | null;
   price?: number | null;
   volume?: string | null;
@@ -44,6 +46,7 @@ const CONDITION_COLORS: Record<string, string> = {
 
 export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, onChangeCover, isOwner, hideOwner }: Props) {
   const { t, bookTitle } = useI18n();
+  const cover = coverSrc(book);
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
@@ -58,14 +61,14 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
         className="relative flex items-center justify-center overflow-hidden aspect-[3/4]"
         style={{ background: book.cover_color }}
       >
-        {book.cover_url ? (
+        {cover ? (
           <>
             {/* The same cover, blown up and blurred, fills whatever the
                 contained image leaves at the sides — so the gaps look like part
                 of the book rather than a mistake. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={book.cover_url}
+              src={cover}
               alt=""
               aria-hidden
               className="absolute inset-0 w-full h-full object-cover scale-110 blur-lg opacity-70"
@@ -73,7 +76,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={book.cover_url}
+              src={cover}
               alt={bookTitle(book.title, book.title_en)}
               className="absolute inset-0 w-full h-full object-contain"
               loading="lazy"
@@ -105,7 +108,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
         )}
         {isOwner && onChangeCover && (
           <label className="absolute bottom-2 right-2 z-20 text-[11px] font-semibold px-2 py-1 rounded-full cursor-pointer" style={{ background: 'rgba(0,0,0,0.6)', color: '#fff' }}>
-            {book.cover_url ? t('card.changeCover') : t('card.addCover')}
+            {cover ? t('card.changeCover') : t('card.addCover')}
             <input type="file" accept="image/*" className="hidden" onChange={e => onChangeCover(e.target.files?.[0])} />
           </label>
         )}

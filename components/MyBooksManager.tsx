@@ -23,6 +23,8 @@ interface Book {
   description?: string;
   cover_color: string;
   cover_url?: string | null;
+  // Set when the cover lives behind /api/books/:id/cover instead of on the row.
+  cover_len?: number | null;
   price?: number | null;
   volume?: string | null;
   publisher?: string | null;

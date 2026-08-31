@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
+import { coverSrc } from '@/lib/cover';
 
 export interface ShelfBook {
   id: number;
@@ -10,6 +11,7 @@ export interface ShelfBook {
   author: string;
   cover_color: string;
   cover_url?: string | null;
+  cover_len?: number | null;
   price?: number | null;
   volume?: string | null;
   available: number;
@@ -76,9 +78,9 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                     cursor: disabled ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {b.cover_url ? (
+                  {coverSrc(b) ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={b.cover_url} alt={bookTitle(b.title, b.title_en)} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
+                    <img src={coverSrc(b)!} alt={bookTitle(b.title, b.title_en)} className="absolute inset-0 w-full h-full object-cover" loading="lazy"
                       onError={e => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
                     <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1.5 text-center">
@@ -147,7 +149,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                     ✏️ {t('shelf.edit')}
                   </button>
                   <button onClick={() => onChangeCover?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#e9d5ff', color: '#2e1065' }}>
-                    {b.cover_url ? t('card.changeCover') : t('card.addCover')}
+                    {coverSrc(b) ? t('card.changeCover') : t('card.addCover')}
                   </button>
                   <button onClick={() => onDelete?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#fee2e2', color: '#ef4444' }}>
                     {t('card.remove')}

@@ -22,6 +22,7 @@ interface Book {
   description?: string;
   cover_color: string;
   cover_url?: string | null;
+  cover_len?: number | null;
   price?: number | null;
   available: number;
   owner_name: string;
