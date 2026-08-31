@@ -69,7 +69,7 @@ export default function TradePage() {
       .then((d: { pending?: number }) => setPending(Number(d.pending) || 0))
       .catch(() => {});
     // Meet-ups still waiting on this student to say whether the swap happened.
-    fetch('/api/trades').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })).then(tr => {
+    fetch('/api/trades?status=accepted').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })).then(tr => {
       setAwaitingConfirm((tr.trades ?? []).filter((x: any) => {
         if (x.status !== 'accepted') return false;
         const mine = x.requester_id === userId ? x.requester_confirm : x.owner_confirm;

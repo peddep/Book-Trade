@@ -31,6 +31,16 @@ export async function GET(req: NextRequest) {
   }
 
   await Promise.all([ensureBookColumns(), ensureUserColumns(), ensureTradeColumns()]);
+
+  // A page can ask for only the statuses it shows. The meet-up page lists
+  // agreed trades; its history is a separate tab most students never open, and
+  // sending years of finished trades to draw a list of this week's meet-ups is
+  // most of the wait before that page appears.
+  const ALLOWED = ['pending', 'accepted', 'rejected', 'cancelled', 'completed'];
+  const wanted = (new URL(req.url).searchParams.get('status') ?? '')
+    .split(',').map(s => s.trim()).filter(s => ALLOWED.includes(s));
+  const statusFilter = wanted.length ? ` AND t.status IN (${wanted.map(() => '?').join(', ')})` : '';
+
   const result = await db.execute({
     sql: `
       SELECT t.*,
@@ -51,10 +61,10 @@ export async function GET(req: NextRequest) {
       JOIN books wb ON t.wanted_book_id = wb.id
       JOIN users ru ON t.requester_id = ru.id
       JOIN users ou ON t.owner_id = ou.id
-      WHERE t.requester_id = ? OR t.owner_id = ?
+      WHERE (t.requester_id = ? OR t.owner_id = ?)${statusFilter}
       ORDER BY t.created_at DESC
     `,
-    args: [user.id, user.id],
+    args: [user.id, user.id, ...wanted],
   });
 
   return NextResponse.json({ trades: result.rows });

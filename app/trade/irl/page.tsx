@@ -123,38 +123,78 @@ export default function IrlTradePage() {
   const { user: sessionUser, loading: sessionLoading } = useSession();
   const router = useRouter();
 
+  // Only the agreed meet-ups to begin with. Finished trades live behind the
+  // history tab, and a student who has traded all year has far more of those
+  // than of this week's meet-ups — waiting for them all is most of the delay
+  // before this page appears.
   const fetchTrades = useCallback(async () => {
-    const res = await fetch('/api/trades');
+    const res = await fetch('/api/trades?status=accepted');
     if (res.ok) setTrades((await res.json()).trades ?? []);
     setLoading(false);
   }, []);
+
+  const [history, setHistory] = useState<Trade[] | null>(null);
+  const fetchHistory = useCallback(async () => {
+    const res = await fetch('/api/trades?status=completed,cancelled');
+    if (res.ok) setHistory((await res.json()).trades ?? []);
+  }, []);
+
+  // Ask for the meet-ups straight away rather than waiting to be told who is
+  // signed in: the cookie the browser sends answers that, and waiting cost a
+  // whole round trip on the school's wifi before the request even left.
+  useEffect(() => { fetchTrades(); }, [fetchTrades]);
 
   useEffect(() => {
     if (sessionLoading) return;
     if (!sessionUser) { router.replace('/'); return; }
     setUser(sessionUser as User);
-    fetchTrades();
-  }, [router, fetchTrades, sessionUser, sessionLoading]);
+  }, [router, sessionUser, sessionLoading]);
+
+  // Fetched the first time the history tab is opened, and again after a
+  // confirmation, which may have moved a meet-up into it.
+  useEffect(() => {
+    if (tab === 'history' && history === null) fetchHistory();
+  }, [tab, history, fetchHistory]);
 
   async function confirm(id: number, value: 'happened' | 'not') {
-    await fetch(`/api/trades/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirm: value }),
-    });
-    fetchTrades();
+    // Say so at once. Reporting the swap is something the student has just
+    // done in person; watching the whole list reload before the card admits it
+    // makes the button feel like it did not register.
+    const before = trades;
+    const mineIs = (tr: Trade) => (tr.requester_id === user?.id ? 'requester_confirm' : 'owner_confirm');
+    setTrades(prev => prev.map(tr => (tr.id === id ? { ...tr, [mineIs(tr)]: value } : tr)));
+    try {
+      const res = await fetch(`/api/trades/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: value }),
+      });
+      if (!res.ok) {
+        setTrades(before);
+        alert(t('trades.actionFailed'));
+        return;
+      }
+      // Whether this finished the trade is the server's to say — pick that up
+      // quietly, behind a card already showing the right answer.
+      fetchTrades();
+      setHistory(null);
+    } catch {
+      setTrades(before);
+      alert(t('trades.actionFailed'));
+    }
   }
 
   if (!user) return (<Loading />);
 
   const inProgress = trades.filter(t => t.status === 'accepted');
-  const history = trades.filter(t => t.status === 'completed' || t.status === 'cancelled');
-  const shown = tab === 'history' ? history : inProgress;
+  const shown = tab === 'history' ? (history ?? []) : inProgress;
 
   const TABS = [
     { key: 'upcoming', label: 'irl.tabUpcoming', icon: '📅', n: inProgress.length },
     { key: 'confirm', label: 'irl.tabConfirm', icon: '🤝', n: inProgress.length },
-    { key: 'history', label: 'irl.tabHistory', icon: '📜', n: history.length },
+    // The count is unknown until the tab is opened, so the tab simply says what
+    // it is rather than promising a number it has not fetched.
+    { key: 'history', label: 'irl.tabHistory', icon: '📜', n: history?.length ?? 0 },
   ] as const;
 
   function slotLabel(key: string) {
@@ -182,7 +222,7 @@ export default function IrlTradePage() {
           ))}
         </div>
 
-        {loading ? (
+        {loading || (tab === 'history' && history === null) ? (
           <div className="text-center py-16 text-[#6b7280]">…</div>
         ) : shown.length === 0 ? (
           <div className="text-center py-16">
