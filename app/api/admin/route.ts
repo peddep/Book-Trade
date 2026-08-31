@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { ensureHubTables, removeBook } from '@/lib/hub';
+import { meetingFor } from '@/lib/meeting';
 
 export const runtime = 'nodejs';
 
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
     : `SELECT b.id, b.title, b.title_en, b.volume, b.publisher, b.author, b.subject, b.condition, b.price, b.available, b.created_at,
          b.cover_url, u.name AS owner_name
        FROM books b JOIN users u ON b.owner_id = u.id WHERE b.deleted_at IS NULL ORDER BY b.id DESC LIMIT 200`;
-  const [users, books, trades, wonderbox, messages, reports, catalog, donations, feedback] = await Promise.all([
+  const [users, books, trades, meetups, wonderbox, messages, reports, catalog, donations, feedback] = await Promise.all([
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
                   (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
@@ -74,6 +75,19 @@ export async function GET(req: NextRequest) {
                 JOIN books ob ON t.offered_book_id = ob.id
                 JOIN books wb ON t.wanted_book_id = wb.id
                 ORDER BY t.id DESC LIMIT 200`),
+    db.execute(`SELECT t.id, t.created_at, t.updated_at, t.requester_confirm, t.owner_confirm,
+                  ru.name AS requester_name, ru.real_name AS requester_real, ru.grade AS requester_grade,
+                  ru.class_no AS requester_class, ru.contact AS requester_contact, ru.availability AS requester_availability,
+                  ou.name AS owner_name, ou.real_name AS owner_real, ou.grade AS owner_grade,
+                  ou.class_no AS owner_class, ou.contact AS owner_contact, ou.availability AS owner_availability,
+                  ob.title AS offered_title, wb2.title AS wanted_title
+                FROM trades t
+                JOIN users ru ON t.requester_id = ru.id
+                JOIN users ou ON t.owner_id = ou.id
+                JOIN books ob ON t.offered_book_id = ob.id
+                JOIN books wb2 ON t.wanted_book_id = wb2.id
+                WHERE t.status = 'accepted'
+                ORDER BY t.updated_at DESC, t.id DESC LIMIT 200`),
     db.execute(`SELECT wb.id, wb.status, wb.created_at, u.name AS user_name, b.title
                 FROM wonder_box wb JOIN users u ON wb.user_id = u.id JOIN books b ON wb.book_id = b.id
                 ORDER BY wb.id DESC LIMIT 100`),
@@ -101,6 +115,16 @@ export async function GET(req: NextRequest) {
                 ORDER BY (f.status = 'open') DESC, f.id DESC LIMIT 200`).catch(() => ({ rows: [] })),
   ]);
 
+  // Soonest first: this is a list of what is about to happen, so the meet-up
+  // in the next free period matters more than the one agreed most recently.
+  // Pairs whose timetables never line up have no date and go last.
+  const meetupRows = meetups.rows
+    .map((r: any) => {
+      const m = meetingFor(r.requester_availability as string | null, r.owner_availability as string | null);
+      return { ...r, meet_at: m ? m.date.toISOString() : null, meet_slot: m?.slot ?? null };
+    })
+    .sort((a, b) => (a.meet_at ?? '\uffff').localeCompare(b.meet_at ?? '\uffff'));
+
   return NextResponse.json({
     stats: {
       users: users.rows.length,
@@ -109,12 +133,14 @@ export async function GET(req: NextRequest) {
       completed: (await db.execute("SELECT COUNT(*) AS n FROM trades WHERE status = 'completed'")).rows[0].n,
       messages: (await db.execute('SELECT COUNT(*) AS n FROM messages')).rows[0].n,
       openReports: (await db.execute("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'")).rows[0].n,
+      meetups: meetupRows.length,
       openFeedback: (await db.execute("SELECT COUNT(*) AS n FROM feedback WHERE status = 'open'").catch(() => ({ rows: [{ n: 0 }] }))).rows[0].n,
       catalog: (await db.execute('SELECT COUNT(*) AS n FROM catalog_books').catch(() => ({ rows: [{ n: 0 }] }))).rows[0].n,
     },
     users: users.rows,
     books: books.rows,
     trades: trades.rows,
+    meetups: meetupRows,
     wonderbox: wonderbox.rows,
     messages: messages.rows,
     reports: reports.rows,

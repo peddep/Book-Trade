@@ -6,28 +6,33 @@ import Link from 'next/link';
 import Loading from '@/components/Loading';
 import AdminHarvestCard from '@/components/AdminHarvestCard';
 import { useI18n } from '@/lib/i18n';
+import { SLOT_KEYS } from '@/lib/meeting';
 import { fileToCoverDataUrl } from '@/lib/image';
 
 type Row = Record<string, unknown>;
 
 interface AdminData {
-  stats: { users: number; books: number; trades: number; completed: number; messages: number; openReports: number; catalog: number };
+  stats: { users: number; books: number; trades: number; completed: number; messages: number; openReports: number; catalog: number; meetups: number };
   users: Row[];
   books: Row[];
   trades: Row[];
   wonderbox: Row[];
   messages: Row[];
   reports: Row[];
+  meetups: Row[];
   catalog: Row[];
   donations: Row[];
   feedback: Row[];
 }
 
-const TABS = ['reports', 'feedback', 'donations', 'users', 'books', 'catalog', 'trades', 'wonderbox', 'messages'] as const;
+const TABS = ['meetups', 'reports', 'feedback', 'donations', 'users', 'books', 'catalog', 'trades', 'wonderbox', 'messages'] as const;
 type Tab = (typeof TABS)[number];
 
 // Columns shown per table (order matters).
 const COLUMNS: Record<Tab, string[]> = {
+  // Swaps that have been agreed and are waiting to happen in the library: when,
+  // who to expect, what they are handing over, and who has yet to confirm.
+  meetups: ['when', 'students', 'class', 'contact', 'books', 'waiting for', 'agreed'],
   reports: ['id', 'status', 'target_type', 'target_label', 'reason', 'reporter_name', 'created_at'],
   donations: ['id', 'user_name', 'bank_name', 'amount', 'status', 'created_at'],
   feedback: ['id', 'kind', 'status', 'body', 'user_name', 'user_email', 'created_at'],
@@ -40,10 +45,10 @@ const COLUMNS: Record<Tab, string[]> = {
 };
 
 export default function AdminPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [data, setData] = useState<AdminData | null>(null);
   const [denied, setDenied] = useState(false);
-  const [tab, setTab] = useState<Tab>('reports');
+  const [tab, setTab] = useState<Tab>('meetups');
   const [tempPw, setTempPw] = useState<{ name: string; password: string } | null>(null);
   const [catalogLines, setCatalogLines] = useState('');
   const [catalogResult, setCatalogResult] = useState('');
@@ -170,14 +175,44 @@ export default function AdminPage() {
   if (!data) return (<Loading />);
 
   const stats = [
+    { label: t('adm.meetups'), value: data.stats.meetups ?? 0 },
     { label: t('adm.openReports'), value: data.stats.openReports ?? 0 },
     { label: t('adm.users'), value: data.stats.users },
     { label: t('adm.books'), value: data.stats.books },
-    { label: t('adm.catalog'), value: data.stats.catalog ?? 0 },
     { label: t('adm.trades'), value: data.stats.trades },
   ];
 
-  const rows = data[tab] ?? [];
+  // The meet-up rows are made readable here rather than in the table: a name
+  // with a year and room beside it, and the two books the students will be
+  // carrying, are what a teacher in the library needs to match people up.
+  const who = (r: Row, side: 'requester' | 'owner') => {
+    const name = String(r[`${side}_name`] ?? '');
+    const real = r[`${side}_real`];
+    return real ? `${name} (${real})` : name;
+  };
+  const room = (r: Row, side: 'requester' | 'owner') =>
+    r[`${side}_grade`] ? `${t('grade.prefix')}${r[`${side}_grade`]}/${r[`${side}_class`] ?? '?'}` : '—';
+  const meetupRows: Row[] = (data.meetups ?? []).map(r => {
+    const at = r.meet_at ? new Date(String(r.meet_at)) : null;
+    const waiting = [
+      r.requester_confirm ? null : String(r.requester_name),
+      r.owner_confirm ? null : String(r.owner_name),
+    ].filter(Boolean);
+    return {
+      id: r.id,
+      when: at
+        ? `${at.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short' })} · ${at.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })}${r.meet_slot ? ` (${t(SLOT_KEYS[String(r.meet_slot)])})` : ''}`
+        : t('adm.noSharedTime'),
+      students: `${who(r, 'requester')} ⇄ ${who(r, 'owner')}`,
+      class: `${room(r, 'requester')} ⇄ ${room(r, 'owner')}`,
+      contact: [r.requester_contact, r.owner_contact].filter(Boolean).join(' · ') || '—',
+      books: `${r.offered_title} ⇄ ${r.wanted_title}`,
+      'waiting for': waiting.length === 0 ? t('adm.bothConfirmed') : waiting.join(', '),
+      agreed: r.updated_at ?? r.created_at,
+    };
+  });
+
+  const rows = tab === 'meetups' ? meetupRows : (data[tab] ?? []);
   // The cover-curation view shows a narrower, more useful set of columns:
   // `copies` is how many students list that same title.
   const cols = tab === 'books' && missingCover

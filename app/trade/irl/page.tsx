@@ -8,32 +8,8 @@ import IrlGuide from '@/components/IrlGuide';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { coverFor } from '@/lib/cover';
+import { meetingFor, SLOT_KEYS } from '@/lib/meeting';
 
-const SLOT_KEYS: Record<string, string> = { p4: 'reg.slotP4', p5: 'reg.slotP5', after: 'reg.slotAfter' };
-const SLOT_ORDER = ['p4', 'p5', 'after'];
-// Clock time each slot starts at (school schedule).
-const SLOT_TIME: Record<string, [number, number]> = { p4: [11, 40], p5: [12, 30], after: [15, 30] };
-
-// The soonest upcoming date+time both users share, based on their weekly grids.
-function nextMeeting(shared: string[]): { date: Date; slot: string } | null {
-  const now = new Date();
-  let best: { date: Date; slot: string } | null = null;
-  for (const key of shared) {
-    const [slot, dayStr] = key.split('-');
-    const targetDow = Number(dayStr) + 1; // grid day 0 = Monday; JS Sunday = 0
-    const [hh, mm] = SLOT_TIME[slot] ?? [12, 0];
-    for (let add = 0; add <= 7; add++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() + add);
-      d.setHours(hh, mm, 0, 0);
-      if (d.getDay() === targetDow && d.getTime() > now.getTime()) {
-        if (!best || d < best.date) best = { date: d, slot };
-        break;
-      }
-    }
-  }
-  return best;
-}
 
 interface Trade {
   id: number;
@@ -82,35 +58,6 @@ function MiniCover({ url, color, title }: { url?: string | null; color: string; 
       <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.3), rgba(0,0,0,0))' }} />
     </div>
   );
-}
-
-function parseAvail(raw?: string | null): string[] {
-  if (!raw) return [];
-  try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; }
-}
-
-// Every slot in the grid, used when someone says they are free any time.
-const ALL_SLOTS = SLOT_ORDER.flatMap(s => [0, 1, 2, 3, 4].map(d => `${s}-${d}`));
-
-// Shared slot keys, sorted by slot then day for stable display. Someone marked
-// flexible matches whatever the other person picked, so a pair whose grids
-// genuinely never line up — different years eat lunch at different times — is
-// not told there is no time when one of them is happy to fit in.
-function overlap(a?: string | null, b?: string | null): string[] {
-  const listA = parseAvail(a);
-  const listB = parseAvail(b);
-  const anyA = listA.includes('any');
-  const anyB = listB.includes('any');
-  const realA = anyA ? ALL_SLOTS : listA;
-  const realB = anyB ? ALL_SLOTS : listB;
-  // Both flexible: nothing to narrow it down, so offer the whole grid.
-  const setB = new Set(realB);
-  return realA
-    .filter(k => k !== 'any' && setB.has(k))
-    .sort((x, y) => {
-      const [sx, dx] = x.split('-'); const [sy, dy] = y.split('-');
-      return SLOT_ORDER.indexOf(sx) - SLOT_ORDER.indexOf(sy) || Number(dx) - Number(dy);
-    });
 }
 
 export default function IrlTradePage() {
@@ -242,8 +189,7 @@ export default function IrlTradePage() {
               const myConfirm = isRequester ? trade.requester_confirm : trade.owner_confirm;
               const otherConfirm = isRequester ? trade.owner_confirm : trade.requester_confirm;
               const otherContact = isRequester ? trade.owner_contact : trade.requester_contact;
-              const shared = overlap(trade.requester_availability, trade.owner_availability);
-              const meeting = nextMeeting(shared);
+              const meeting = meetingFor(trade.requester_availability, trade.owner_availability);
               // Same room every day: working out a free period is beside the
               // point, so say so instead of making them read a timetable.
               const sameClass = Boolean(
