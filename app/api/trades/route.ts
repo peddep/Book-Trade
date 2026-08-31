@@ -82,6 +82,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Cannot trade with yourself' }, { status: 400 });
   }
 
+  // The other student is suspended: they cannot accept, so the offer would sit
+  // there unanswered. Their books are hidden from browsing, but a page loaded
+  // before the suspension would still have them on screen.
+  if (await isBanned(Number(wantedBook.owner_id))) {
+    return NextResponse.json({ error: 'owner_unavailable' }, { status: 400 });
+  }
+
   // Neither book may already be committed to another trade avenue (e.g. Wonder Box).
   if (await isBookBusy(Number(offered_book_id)) || await isBookBusy(Number(wanted_book_id))) {
     return NextResponse.json({ error: 'book_busy' }, { status: 400 });

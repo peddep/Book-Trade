@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
-import { removeBook } from '@/lib/hub';
+import { isBanned, removeBook } from '@/lib/hub';
 
 const MAX_COVER_LEN = 400_000;
 function sanitizeCover(cover: unknown): string | null {
@@ -14,6 +14,8 @@ function sanitizeCover(cover: unknown): string | null {
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Adding a book was already refused while suspended; removing one was not.
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const { id } = await params;
   const db = getDb();
@@ -33,6 +35,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Same for editing: a suspended account should not be able to rename its
+  // listings or put new pictures on them. The admin is unaffected — this asks
+  // whether the person pressing the button is suspended, and an admin cannot
+  // be suspended by themselves.
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const { id } = await params;
   const db = getDb();

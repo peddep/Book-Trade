@@ -113,8 +113,10 @@ export async function GET(req: NextRequest) {
     sql += ' AND b.owner_id = ?';
     args.push(user.id);
   } else {
-    // The public browse list never shows books committed elsewhere.
-    sql += ` AND b.available = 1 AND NOT ${BUSY_EXPR}`;
+    // The public browse list never shows books committed elsewhere, nor books
+    // belonging to a suspended student: offering for one is a wasted offer,
+    // since that account cannot answer it.
+    sql += ` AND b.available = 1 AND COALESCE(u.banned, 0) = 0 AND NOT ${BUSY_EXPR}`;
     if (user) {
       sql += ' AND b.owner_id != ?';
       args.push(user.id);

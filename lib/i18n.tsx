@@ -578,6 +578,8 @@ const STRINGS: Dict = {
   'gts.exactHint': { th: 'จะแลกได้เฉพาะหนังสือที่ชื่อตรงกันเท่านั้น (ชื่อไทย/อังกฤษของเล่มเดียวกันนับว่าตรง)', en: 'Only a book with this exact title can complete the trade (Thai/English names of the same book count).' },
   'gts.noMatchingBook': { th: 'คุณไม่มีหนังสือที่ตรงตามที่เขาต้องการ', en: 'You don\'t have a book matching their wish' },
   'err.priceGap': { th: 'ราคาหนังสือต่างกันเกิน 100 บาท จึงแลกเปลี่ยนกันไม่ได้', en: 'Book prices differ by more than ฿100, so they can\'t be traded' },
+  'err.ownerUnavailable': { th: 'ตอนนี้เจ้าของหนังสือเล่มนี้แลกเปลี่ยนไม่ได้ ลองเล่มอื่นดูนะ', en: 'The owner of this book can\'t trade right now — try another book.' },
+  'err.bookBusy': { th: 'หนังสือเล่มนี้ติดการแลกเปลี่ยนอื่นอยู่แล้ว', en: 'This book is already committed to another trade' },
   'gts.wantedSubject': { th: 'วิชาที่อยากได้', en: 'Wanted subject' },
   'gts.anySubject': { th: 'วิชาใดก็ได้', en: 'Any subject' },
   'gts.anything': { th: 'เล่มใดก็ได้', en: 'Anything' },

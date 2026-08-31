@@ -56,6 +56,8 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
       setError(
         data.error === 'price_gap' ? t('err.priceGap')
         : data.error === 'rate_limited' ? t('err.rateLimited')
+        : data.error === 'owner_unavailable' ? t('err.ownerUnavailable')
+        : data.error === 'book_busy' ? t('err.bookBusy')
         : (data.error ?? t('modal.error'))
       );
     }

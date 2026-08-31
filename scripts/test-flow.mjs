@@ -92,7 +92,12 @@ before(async () => {
   // A server left behind by an earlier run would answer every request.
   await freePort(PORT);
   rmSync(DB, { force: true });
-  execSync(`printf 'TURSO_DATABASE_URL=file:${DB}\\nSESSION_SECRET=test\\n' > .env.local`, { shell: '/bin/bash' });
+  // Name the admin accounts explicitly. The admin tests used to rely on "the
+  // first account in a fresh database is the admin", which stopped being true
+  // the moment an earlier test registered somebody — so those tests quietly
+  // skipped their own assertions instead of failing. Anything admin-only is
+  // now checked against a real admin, or not claimed at all.
+  execSync(`printf 'TURSO_DATABASE_URL=file:${DB}\\nSESSION_SECRET=test\\nADMIN_EMAIL=admin-one@s.edu,banadmin@s.edu,banadmin2@s.edu\\n' > .env.local`, { shell: '/bin/bash' });
   execSync('npm run db:init', { stdio: 'ignore' });
   // Detached, so the whole process group can be torn down below. `next dev`
   // spawns helper processes of its own; killing only the wrapper leaves one
@@ -326,7 +331,7 @@ test('an admin can remove any book, including one from a finished trade', async 
   // trades, so the database still refused to delete a book a completed one
   // pointed at — and it touched the hub tables without making sure they were
   // there, which broke it even for a book nobody had ever traded.
-  const admin = await register('AdminOne', 'admin-one@s.edu');   // account #1 in a fresh db is the admin
+  const admin = await register('AdminOne', 'admin-one@s.edu');   // named in ADMIN_EMAIL above
   const a = await register('AdmA', 'adma@s.edu');
   const b = await register('AdmB', 'admb@s.edu');
   const plain = await addBook(a, 'NeverTraded', 100);
@@ -339,7 +344,7 @@ test('an admin can remove any book, including one from a finished trade', async 
 
   const admins = { cookie: admin };
   const dash = await api('/api/admin', admins);
-  if (dash.status !== 200) return; // ADMIN_EMAIL is set in this environment; nothing to assert
+  assert.equal(dash.status, 200, 'the admin dashboard must open, or this test proves nothing');
 
   assert.equal((await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'delete_book', book_id: plain } })).status, 200);
   const traded = (await api('/api/admin', admins)).json.books.find(x => x.title === 'AdmTradedB');
@@ -356,7 +361,7 @@ test('an admin can remove any book, including one from a finished trade', async 
 });
 
 test('a ban signs the student out and shuts the door behind them', async () => {
-  const admin = await register('BanAdmin', 'banadmin@s.edu');   // account #1 is the admin
+  const admin = await register('BanAdmin', 'banadmin@s.edu');   // named in ADMIN_EMAIL above
   const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.8.${++ipCounter}`, body: { name: 'ToBan', email: 'toban@s.edu', password: 'secret6', accept_terms: true } });
   const cookie = reg.cookie;
   const id = reg.json.user.id;
@@ -366,7 +371,7 @@ test('a ban signs the student out and shuts the door behind them', async () => {
   assert.equal((await api('/api/books', { cookie })).status, 200);
 
   const banned = await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'ban_user', user_id: id } });
-  if (banned.status !== 200) return; // ADMIN_EMAIL points elsewhere in this environment
+  assert.equal(banned.status, 200, 'the ban must actually be applied, or this test proves nothing');
 
   // The session cookie is signed, not stored, so it is still cryptographically
   // valid — the account behind it is what has changed.
@@ -384,4 +389,45 @@ test('a ban signs the student out and shuts the door behind them', async () => {
   // Lifting the ban puts everything back.
   await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'unban_user', user_id: id } });
   assert.equal((await api('/api/auth/login', { method: 'POST', body: { email: 'toban@s.edu', password: 'secret6' } })).status, 200);
+});
+
+test('a banned student cannot go on trading', async () => {
+  const admin = await register('BanAdmin2', 'banadmin2@s.edu');
+  const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: 'Trader', email: 'bantrader@s.edu', password: 'secret6', accept_terms: true } });
+  const cookie = reg.cookie;
+  const id = reg.json.user.id;
+  const other = await register('Partner', 'banpartner@s.edu');
+
+  // A trade agreed while the account is in good standing, then the ban lands
+  // part-way through — the point at which books are about to change hands.
+  const mine = await addBook(cookie, 'Theirs', 100);
+  const theirs = await addBook(other, 'Ours', 100);
+  const spare = await addBook(cookie, 'Untouched', 100);   // free, so nothing else can explain a refusal
+  const trade = (await api('/api/trades', { method: 'POST', cookie, body: { offered_book_id: mine, wanted_book_id: theirs } })).json.trade.id;
+  assert.equal((await api(`/api/trades/${trade}`, { method: 'PATCH', cookie: other, body: { status: 'accepted' } })).status, 200);
+
+  const banned = await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'ban_user', user_id: id } });
+  assert.equal(banned.status, 200, 'the ban must actually be applied, or this test proves nothing');
+
+  // Accepting, cancelling and confirming all live on one endpoint, and a ban
+  // has to reach every one of them: confirming is what moves a book from one
+  // student to another.
+  for (const body of [{ confirm: 'happened' }, { status: 'cancelled' }]) {
+    assert.equal((await api(`/api/trades/${trade}`, { method: 'PATCH', cookie, body })).status, 403,
+      `a banned student must not be able to send ${JSON.stringify(body)}`);
+  }
+  // Nor quietly rewrite or delete the listings behind a trade.
+  assert.equal((await api(`/api/books/${mine}`, { method: 'PATCH', cookie, body: { title: 'renamed' } })).status, 403);
+  assert.equal((await api(`/api/books/${mine}`, { method: 'DELETE', cookie })).status, 403);
+
+  // Their books leave circulation, and a stale page cannot offer for one.
+  const browse = (await api('/api/books', { cookie: other })).json.books ?? [];
+  assert.equal(browse.filter(b => Number(b.owner_id) === id).length, 0, 'a banned student\'s books must not be browsable');
+  const theirSpare = await addBook(other, 'Spare', 100);
+  const late = await api('/api/trades', { method: 'POST', cookie: other, body: { offered_book_id: theirSpare, wanted_book_id: spare } });
+  assert.equal(late.json.error, 'owner_unavailable', 'a free book of a banned student must still be off limits');
+
+  // The other student is not trapped: they can still call the meet-up off and
+  // get their own book back.
+  assert.equal((await api(`/api/trades/${trade}`, { method: 'PATCH', cookie: other, body: { confirm: 'not' } })).status, 200);
 });

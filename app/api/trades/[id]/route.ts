@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { announceTrade, priceDiffOk } from '@/lib/hub';
+import { announceTrade, isBanned, priceDiffOk } from '@/lib/hub';
 import { notify, notifyBoth } from '@/lib/notify';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // A suspended student stops trading here too. Making an offer was already
+  // refused, but this is where a trade is agreed and where books actually
+  // change hands — so without this a banned account could still accept an
+  // offer and complete the swap, which is most of what trading is.
+  if (await isBanned(user.id)) return NextResponse.json({ error: 'banned' }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json();
