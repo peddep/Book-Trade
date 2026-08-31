@@ -52,9 +52,9 @@ export async function GET(req: NextRequest) {
         -- The length is enough for the page to build a URL the browser can keep.
         length(rb.cover_url) AS offered_cover_len,
         length(wb.cover_url) AS wanted_cover_len,
-        ru.name as requester_name, ru.avatar_color as requester_avatar, ru.availability as requester_availability, ru.contact as requester_contact,
+        ru.name as requester_name, ru.avatar_color as requester_avatar, ru.contact as requester_contact,
         ru.grade as requester_grade, ru.class_no as requester_class,
-        ou.name as owner_name, ou.avatar_color as owner_avatar, ou.availability as owner_availability, ou.contact as owner_contact,
+        ou.name as owner_name, ou.avatar_color as owner_avatar, ou.contact as owner_contact,
         ou.grade as owner_grade, ou.class_no as owner_class
       FROM trades t
       JOIN books rb ON t.offered_book_id = rb.id

@@ -9,32 +9,6 @@ import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { coverFor } from '@/lib/cover';
 
-const DAY_KEYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
-const SLOT_KEYS: Record<string, string> = { p4: 'reg.slotP4', p5: 'reg.slotP5', after: 'reg.slotAfter' };
-const SLOT_ORDER = ['p4', 'p5', 'after'];
-// Clock time each slot starts at (school schedule).
-const SLOT_TIME: Record<string, [number, number]> = { p4: [11, 40], p5: [12, 30], after: [15, 30] };
-
-// The soonest upcoming date+time both users share, based on their weekly grids.
-function nextMeeting(shared: string[]): { date: Date; slot: string } | null {
-  const now = new Date();
-  let best: { date: Date; slot: string } | null = null;
-  for (const key of shared) {
-    const [slot, dayStr] = key.split('-');
-    const targetDow = Number(dayStr) + 1; // grid day 0 = Monday; JS Sunday = 0
-    const [hh, mm] = SLOT_TIME[slot] ?? [12, 0];
-    for (let add = 0; add <= 7; add++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() + add);
-      d.setHours(hh, mm, 0, 0);
-      if (d.getDay() === targetDow && d.getTime() > now.getTime()) {
-        if (!best || d < best.date) best = { date: d, slot };
-        break;
-      }
-    }
-  }
-  return best;
-}
 
 interface Trade {
   id: number;
@@ -45,13 +19,11 @@ interface Trade {
   owner_confirm?: string | null;
   requester_name: string;
   requester_avatar: string;
-  requester_availability?: string | null;
   requester_contact?: string | null;
   requester_grade?: string | null;
   requester_class?: string | null;
   owner_name: string;
   owner_avatar: string;
-  owner_availability?: string | null;
   owner_contact?: string | null;
   owner_grade?: string | null;
   owner_class?: string | null;
@@ -85,37 +57,8 @@ function MiniCover({ url, color, title }: { url?: string | null; color: string; 
   );
 }
 
-function parseAvail(raw?: string | null): string[] {
-  if (!raw) return [];
-  try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; }
-}
-
-// Every slot in the grid, used when someone says they are free any time.
-const ALL_SLOTS = SLOT_ORDER.flatMap(s => [0, 1, 2, 3, 4].map(d => `${s}-${d}`));
-
-// Shared slot keys, sorted by slot then day for stable display. Someone marked
-// flexible matches whatever the other person picked, so a pair whose grids
-// genuinely never line up — different years eat lunch at different times — is
-// not told there is no time when one of them is happy to fit in.
-function overlap(a?: string | null, b?: string | null): string[] {
-  const listA = parseAvail(a);
-  const listB = parseAvail(b);
-  const anyA = listA.includes('any');
-  const anyB = listB.includes('any');
-  const realA = anyA ? ALL_SLOTS : listA;
-  const realB = anyB ? ALL_SLOTS : listB;
-  // Both flexible: nothing to narrow it down, so offer the whole grid.
-  const setB = new Set(realB);
-  return realA
-    .filter(k => k !== 'any' && setB.has(k))
-    .sort((x, y) => {
-      const [sx, dx] = x.split('-'); const [sy, dy] = y.split('-');
-      return SLOT_ORDER.indexOf(sx) - SLOT_ORDER.indexOf(sy) || Number(dx) - Number(dy);
-    });
-}
-
 export default function IrlTradePage() {
-  const { t, bookTitle, lang } = useI18n();
+  const { t, bookTitle } = useI18n();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -197,11 +140,6 @@ export default function IrlTradePage() {
     { key: 'history', label: 'irl.tabHistory', icon: '📜', n: history?.length ?? 0 },
   ] as const;
 
-  function slotLabel(key: string) {
-    const [slot, day] = key.split('-');
-    return `${t(DAY_KEYS[Number(day)])} · ${t(SLOT_KEYS[slot])}`;
-  }
-
   return (
     <>
       <main className="max-w-3xl mx-auto px-4 py-8">
@@ -248,8 +186,6 @@ export default function IrlTradePage() {
               const myConfirm = isRequester ? trade.requester_confirm : trade.owner_confirm;
               const otherConfirm = isRequester ? trade.owner_confirm : trade.requester_confirm;
               const otherContact = isRequester ? trade.owner_contact : trade.requester_contact;
-              const shared = overlap(trade.requester_availability, trade.owner_availability);
-              const meeting = nextMeeting(shared);
               // Same room every day: working out a free period is beside the
               // point, so say so instead of making them read a timetable.
               const sameClass = Boolean(
@@ -257,9 +193,6 @@ export default function IrlTradePage() {
                 trade.requester_grade === trade.owner_grade &&
                 trade.requester_class === trade.owner_class,
               );
-              const meetingText = meeting
-                ? `${meeting.date.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { weekday: 'long', day: 'numeric', month: 'short' })} · ${meeting.date.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })} (${t(SLOT_KEYS[meeting.slot])})`
-                : null;
 
               return (
                 <div key={trade.id} className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
@@ -301,40 +234,18 @@ export default function IrlTradePage() {
                   {/* Stage-specific body */}
                   {tab === 'upcoming' && (
                     <div className="p-3 rounded-xl" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
-                      {/* Decided meeting date & time (from both users' registered availability) */}
-                      {sameClass ? (
+                      {sameClass && (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: '#dcfce7', border: '1px solid #86efac' }}>
                           <p className="text-xs font-bold" style={{ color: '#15803d' }}>
                             🎒 {t('irl.sameClass', { room: `${t('grade.prefix')}${trade.owner_grade}/${trade.owner_class}` })}
                           </p>
                           <p className="text-xs mt-1" style={{ color: '#166534' }}>{t('irl.sameClassHint')}</p>
                         </div>
-                      ) : meetingText ? (
-                        <div className="mb-3 p-3 rounded-xl" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
-                          <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>📅 {t('irl.meetOn')}</p>
-                          <p className="text-base font-bold text-white leading-tight mt-0.5">{meetingText}</p>
-                        </div>
-                      ) : (
-                        <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
-                          <p className="text-xs font-semibold" style={{ color: '#b45309' }}>{t('irl.noOverlap')}</p>
-                          <p className="text-xs mt-1" style={{ color: '#b45309' }}>
-                            {otherContact ? t('irl.reachOut', { contact: otherContact }) : t('irl.reachProfile', { name: otherName })}
-                          </p>
-                        </div>
                       )}
-                      <p className="text-sm font-semibold text-[#2e1065] mb-2">{t('irl.meetAt')}</p>
-                      {shared.length > 1 && (
-                        <>
-                          <p className="text-xs font-semibold text-[#6b7280] mb-1">{t('irl.otherTimes')}</p>
-                          <div className="flex flex-wrap gap-1.5 mb-3">
-                            {shared.map(k => (
-                              <span key={k} className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#ede9fe', color: '#7c3aed' }}>
-                                {slotLabel(k)}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
+                      <p className="text-sm font-semibold text-[#2e1065] mb-1">{t('irl.meetAt')}</p>
+                      <p className="text-xs text-[#6b7280] mb-3">
+                        {otherContact ? t('irl.reachOut', { contact: otherContact }) : t('irl.reachProfile', { name: otherName })}
+                      </p>
                       <p className="text-xs font-semibold text-[#6b7280] mb-1">{t('irl.bring')}</p>
                       <div className="flex items-center gap-2">
                         <MiniCover url={give.url} color={give.color} title={bookTitle(give.title, give.title_en)} />
@@ -346,9 +257,6 @@ export default function IrlTradePage() {
 
                   {tab === 'confirm' && (
                     <div>
-                      {meetingText && (
-                        <p className="text-xs font-semibold mb-2" style={{ color: '#7c3aed' }}>📅 {meetingText}</p>
-                      )}
                       <p className="text-sm font-semibold text-[#2e1065] mb-1">{t('irl.didItHappen')}</p>
                       <p className="text-xs text-[#9ca3af] mb-3">{t('irl.bothConfirm')}</p>
                       {myConfirm ? (
