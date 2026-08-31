@@ -34,8 +34,14 @@ export async function GET(req: NextRequest) {
   const result = await db.execute({
     sql: `
       SELECT t.*,
-        rb.title as offered_title, rb.title_en as offered_title_en, rb.author as offered_author, rb.condition as offered_condition, rb.cover_color as offered_color, rb.cover_url as offered_cover_url,
-        wb.title as wanted_title, wb.title_en as wanted_title_en, wb.author as wanted_author, wb.condition as wanted_condition, wb.cover_color as wanted_color, wb.cover_url as wanted_cover_url,
+        rb.title as offered_title, rb.title_en as offered_title_en, rb.author as offered_author, rb.condition as offered_condition, rb.cover_color as offered_color,
+        wb.title as wanted_title, wb.title_en as wanted_title_en, wb.author as wanted_author, wb.condition as wanted_condition, wb.cover_color as wanted_color,
+        -- Covers are data URLs on the book row, and a trade names two books, so
+        -- sending them inline put two whole photographs into every trade: thirty
+        -- trades came to 2.5MB of JSON, fetched again every time the page opened.
+        -- The length is enough for the page to build a URL the browser can keep.
+        length(rb.cover_url) AS offered_cover_len,
+        length(wb.cover_url) AS wanted_cover_len,
         ru.name as requester_name, ru.avatar_color as requester_avatar, ru.availability as requester_availability, ru.contact as requester_contact,
         ru.grade as requester_grade, ru.class_no as requester_class,
         ou.name as owner_name, ou.avatar_color as owner_avatar, ou.availability as owner_availability, ou.contact as owner_contact,

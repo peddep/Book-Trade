@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
+import { coverFor } from '@/lib/cover';
 
 // Small book-shaped cover for the traded books.
 function MiniCover({ url, color, title }: { url?: string | null; color: string; title: string }) {
@@ -31,13 +32,15 @@ interface Trade {
   offered_title: string;
   offered_author: string;
   offered_color: string;
-  offered_cover_url?: string | null;
+  offered_book_id: number;
+  offered_cover_len?: number | null;
   offered_title_en?: string | null;
   offered_condition: string;
   wanted_title: string;
   wanted_author: string;
   wanted_color: string;
-  wanted_cover_url?: string | null;
+  wanted_book_id: number;
+  wanted_cover_len?: number | null;
   wanted_title_en?: string | null;
   wanted_condition: string;
   requester_name: string;
@@ -213,7 +216,7 @@ export default function TradesPage() {
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#ffffff' }}>
                       <p className="text-xs text-[#6b7280] mb-1">{isIncoming ? t('trades.userOffers', { name: trade.requester_name }) : t('trades.youOffer')}</p>
                       <div className="flex items-center gap-2">
-                        <MiniCover url={trade.offered_cover_url} color={trade.offered_color} title={bookTitle(trade.offered_title, trade.offered_title_en)} />
+                        <MiniCover url={coverFor(trade.offered_book_id, trade.offered_cover_len)} color={trade.offered_color} title={bookTitle(trade.offered_title, trade.offered_title_en)} />
                         <div>
                           <p className="text-sm font-semibold text-[#2e1065] leading-tight">{bookTitle(trade.offered_title, trade.offered_title_en)}</p>
                           <p className="text-xs text-[#6b7280]">{trade.offered_author}</p>
@@ -226,7 +229,7 @@ export default function TradesPage() {
                     <div className="flex-1 p-3 rounded-xl" style={{ background: '#ffffff' }}>
                       <p className="text-xs text-[#6b7280] mb-1">{isIncoming ? t('trades.wantsYour') : t('trades.usersBook', { name: trade.owner_name })}</p>
                       <div className="flex items-center gap-2">
-                        <MiniCover url={trade.wanted_cover_url} color={trade.wanted_color} title={bookTitle(trade.wanted_title, trade.wanted_title_en)} />
+                        <MiniCover url={coverFor(trade.wanted_book_id, trade.wanted_cover_len)} color={trade.wanted_color} title={bookTitle(trade.wanted_title, trade.wanted_title_en)} />
                         <div>
                           <p className="text-sm font-semibold text-[#2e1065] leading-tight">{bookTitle(trade.wanted_title, trade.wanted_title_en)}</p>
                           <p className="text-xs text-[#6b7280]">{trade.wanted_author}</p>

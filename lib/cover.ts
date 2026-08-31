@@ -21,3 +21,11 @@ export function coverSrc(book: HasCover): string | null {
   if (book.cover_len) return `/api/books/${book.id}/cover?v=${book.cover_len}`;
   return null;
 }
+
+// The same thing for a row that names a book rather than being one — a trade
+// carries the two books' ids and cover lengths, not book objects.
+export function coverFor(bookId?: number | null, len?: number | null, inline?: string | null): string | null {
+  if (inline) return inline;
+  if (bookId && len) return `/api/books/${bookId}/cover?v=${len}`;
+  return null;
+}

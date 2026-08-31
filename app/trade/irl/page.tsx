@@ -7,6 +7,7 @@ import { useSession } from '@/lib/session';
 import IrlGuide from '@/components/IrlGuide';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
+import { coverFor } from '@/lib/cover';
 
 const DAY_KEYS = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri'];
 const SLOT_KEYS: Record<string, string> = { p4: 'reg.slotP4', p5: 'reg.slotP5', after: 'reg.slotAfter' };
@@ -57,11 +58,13 @@ interface Trade {
   offered_title: string;
   offered_title_en?: string | null;
   offered_color: string;
-  offered_cover_url?: string | null;
+  offered_book_id: number;
+  offered_cover_len?: number | null;
   wanted_title: string;
   wanted_title_en?: string | null;
   wanted_color: string;
-  wanted_cover_url?: string | null;
+  wanted_book_id: number;
+  wanted_cover_len?: number | null;
 }
 
 interface User { id: number; }
@@ -194,11 +197,11 @@ export default function IrlTradePage() {
               const isRequester = trade.requester_id === user.id;
               // From the current user's perspective: they give their side's book, get the other.
               const give = isRequester
-                ? { title: trade.offered_title, title_en: trade.offered_title_en, color: trade.offered_color, url: trade.offered_cover_url }
-                : { title: trade.wanted_title, title_en: trade.wanted_title_en, color: trade.wanted_color, url: trade.wanted_cover_url };
+                ? { title: trade.offered_title, title_en: trade.offered_title_en, color: trade.offered_color, url: coverFor(trade.offered_book_id, trade.offered_cover_len) }
+                : { title: trade.wanted_title, title_en: trade.wanted_title_en, color: trade.wanted_color, url: coverFor(trade.wanted_book_id, trade.wanted_cover_len) };
               const get = isRequester
-                ? { title: trade.wanted_title, title_en: trade.wanted_title_en, color: trade.wanted_color, url: trade.wanted_cover_url }
-                : { title: trade.offered_title, title_en: trade.offered_title_en, color: trade.offered_color, url: trade.offered_cover_url };
+                ? { title: trade.wanted_title, title_en: trade.wanted_title_en, color: trade.wanted_color, url: coverFor(trade.wanted_book_id, trade.wanted_cover_len) }
+                : { title: trade.offered_title, title_en: trade.offered_title_en, color: trade.offered_color, url: coverFor(trade.offered_book_id, trade.offered_cover_len) };
               const otherName = isRequester ? trade.owner_name : trade.requester_name;
               const otherAvatar = isRequester ? trade.owner_avatar : trade.requester_avatar;
               const otherId = isRequester ? trade.owner_id : trade.requester_id;
