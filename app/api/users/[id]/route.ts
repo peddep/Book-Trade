@@ -20,10 +20,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const user = u.rows[0];
   if (!user) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
+  // Everything except the cover itself. Covers are data URLs on the row, so
+  // "SELECT b.*" put every picture into the reply — opening a classmate who
+  // lists forty books came to 1.7MB, downloaded again every time anybody looked
+  // at them. The length is enough for the page to build a URL per cover and let
+  // the browser keep it.
   const books = await db.execute({
-    sql: `SELECT b.*, u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade
+    sql: `SELECT b.id, b.owner_id, b.title, b.title_en, b.price, b.volume, b.publisher,
+            b.author, b.subject, b.grade_level, b.condition, b.description,
+            b.cover_color, b.available, b.created_at, b.isbn, b.cover_source,
+            length(b.cover_url) AS cover_len,
+            u.name as owner_name, u.avatar_color as owner_avatar_color, u.grade as owner_grade
           FROM books b JOIN users u ON b.owner_id = u.id
-          WHERE b.owner_id = ? AND b.available = 1 ORDER BY b.created_at DESC`,
+          WHERE b.owner_id = ? AND b.available = 1 AND b.deleted_at IS NULL
+          ORDER BY b.created_at DESC`,
     args: [id],
   });
 
