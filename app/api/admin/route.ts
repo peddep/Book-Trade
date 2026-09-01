@@ -4,7 +4,6 @@ import bcrypt from 'bcryptjs';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { ensureHubTables, removeBook } from '@/lib/hub';
-import { meetingFor } from '@/lib/meeting';
 
 export const runtime = 'nodejs';
 
@@ -115,15 +114,10 @@ export async function GET(req: NextRequest) {
                 ORDER BY (f.status = 'open') DESC, f.id DESC LIMIT 200`).catch(() => ({ rows: [] })),
   ]);
 
-  // Soonest first: this is a list of what is about to happen, so the meet-up
-  // in the next free period matters more than the one agreed most recently.
-  // Pairs whose timetables never line up have no date and go last.
-  const meetupRows = meetups.rows
-    .map((r: any) => {
-      const m = meetingFor(r.requester_availability as string | null, r.owner_availability as string | null);
-      return { ...r, meet_at: m ? m.date.toISOString() : null, meet_slot: m?.slot ?? null };
-    })
-    .sort((a, b) => (a.meet_at ?? '\uffff').localeCompare(b.meet_at ?? '\uffff'));
+  // The day and period are worked out in the browser, from the two grids sent
+  // with each row — a period is a time on the school's clock, and this server
+  // runs in UTC, so deciding it here told the teacher a time seven hours from
+  // the one the two students were looking at.
 
   return NextResponse.json({
     stats: {
@@ -133,14 +127,14 @@ export async function GET(req: NextRequest) {
       completed: (await db.execute("SELECT COUNT(*) AS n FROM trades WHERE status = 'completed'")).rows[0].n,
       messages: (await db.execute('SELECT COUNT(*) AS n FROM messages')).rows[0].n,
       openReports: (await db.execute("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'")).rows[0].n,
-      meetups: meetupRows.length,
+      meetups: meetups.rows.length,
       openFeedback: (await db.execute("SELECT COUNT(*) AS n FROM feedback WHERE status = 'open'").catch(() => ({ rows: [{ n: 0 }] }))).rows[0].n,
       catalog: (await db.execute('SELECT COUNT(*) AS n FROM catalog_books').catch(() => ({ rows: [{ n: 0 }] }))).rows[0].n,
     },
     users: users.rows,
     books: books.rows,
     trades: trades.rows,
-    meetups: meetupRows,
+    meetups: meetups.rows,
     wonderbox: wonderbox.rows,
     messages: messages.rows,
     reports: reports.rows,

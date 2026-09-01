@@ -8,7 +8,7 @@ import IrlGuide from '@/components/IrlGuide';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { coverFor } from '@/lib/cover';
-import { meetingFor, SLOT_KEYS } from '@/lib/meeting';
+import { meetingFor, meetingDateText, SLOT_KEYS } from '@/lib/meeting';
 
 
 interface Trade {

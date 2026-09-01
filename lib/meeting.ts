@@ -59,6 +59,20 @@ export function nextMeeting(shared: string[]): { date: Date; slot: string } | nu
 
 // The two students' grids straight to a meeting, which is what both callers
 // actually want.
+//
+// Work this out in the browser, never on the server. A period is a time on the
+// school's clock, but `nextMeeting` builds it with the local clock of whatever
+// machine runs it — so a server in UTC turned "period 5, 12:30" into an instant
+// that a phone in Bangkok then displayed as 19:30. The two students and the
+// teacher looking at the same meet-up must be told the same time.
 export function meetingFor(availA?: string | null, availB?: string | null) {
   return nextMeeting(overlap(availA, availB));
+}
+
+// One wording for a meeting, so the student's card and the admin's list cannot
+// drift apart in how they say it.
+export function meetingDateText(date: Date, lang: string, weekday: 'long' | 'short' = 'long'): string {
+  const locale = lang === 'th' ? 'th-TH' : 'en-US';
+  return `${date.toLocaleDateString(locale, { weekday, day: 'numeric', month: 'short' })}`
+    + ` · ${date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`;
 }

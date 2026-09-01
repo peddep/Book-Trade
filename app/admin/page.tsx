@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Loading from '@/components/Loading';
 import AdminHarvestCard from '@/components/AdminHarvestCard';
 import { useI18n } from '@/lib/i18n';
-import { SLOT_KEYS } from '@/lib/meeting';
+import { SLOT_KEYS, meetingFor, meetingDateText } from '@/lib/meeting';
 import { fileToCoverDataUrl } from '@/lib/image';
 
 type Row = Record<string, unknown>;
@@ -192,25 +192,32 @@ export default function AdminPage() {
   };
   const room = (r: Row, side: 'requester' | 'owner') =>
     r[`${side}_grade`] ? `${t('grade.prefix')}${r[`${side}_grade`]}/${r[`${side}_class`] ?? '?'}` : '—';
-  const meetupRows: Row[] = (data.meetups ?? []).map(r => {
-    const at = r.meet_at ? new Date(String(r.meet_at)) : null;
-    const waiting = [
-      r.requester_confirm ? null : String(r.requester_name),
-      r.owner_confirm ? null : String(r.owner_name),
-    ].filter(Boolean);
-    return {
-      id: r.id,
-      when: at
-        ? `${at.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short' })} · ${at.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })}${r.meet_slot ? ` (${t(SLOT_KEYS[String(r.meet_slot)])})` : ''}`
-        : t('adm.noSharedTime'),
-      students: `${who(r, 'requester')} ⇄ ${who(r, 'owner')}`,
-      class: `${room(r, 'requester')} ⇄ ${room(r, 'owner')}`,
-      contact: [r.requester_contact, r.owner_contact].filter(Boolean).join(' · ') || '—',
-      books: `${r.offered_title} ⇄ ${r.wanted_title}`,
-      'waiting for': waiting.length === 0 ? t('adm.bothConfirmed') : waiting.join(', '),
-      agreed: r.updated_at ?? r.created_at,
-    };
-  });
+  const meetupRows: Row[] = (data.meetups ?? [])
+    // Worked out here, in the same browser and the same timezone as the two
+    // students' own page, with the same code — the teacher must not be given a
+    // different time from the pair standing in the library.
+    .map(r => ({ row: r, meeting: meetingFor(r.requester_availability as string | null, r.owner_availability as string | null) }))
+    // Soonest first: this is a list of what is about to happen. Pairs whose
+    // timetables never line up have no date and go last.
+    .sort((a, b) => (a.meeting?.date.getTime() ?? Infinity) - (b.meeting?.date.getTime() ?? Infinity))
+    .map(({ row: r, meeting }) => {
+      const waiting = [
+        r.requester_confirm ? null : String(r.requester_name),
+        r.owner_confirm ? null : String(r.owner_name),
+      ].filter(Boolean);
+      return {
+        id: r.id,
+        when: meeting
+          ? `${meetingDateText(meeting.date, lang, 'short')} (${t(SLOT_KEYS[meeting.slot])})`
+          : t('adm.noSharedTime'),
+        students: `${who(r, 'requester')} ⇄ ${who(r, 'owner')}`,
+        class: `${room(r, 'requester')} ⇄ ${room(r, 'owner')}`,
+        contact: [r.requester_contact, r.owner_contact].filter(Boolean).join(' · ') || '—',
+        books: `${r.offered_title} ⇄ ${r.wanted_title}`,
+        'waiting for': waiting.length === 0 ? t('adm.bothConfirmed') : waiting.join(', '),
+        agreed: r.updated_at ?? r.created_at,
+      };
+    });
 
   const rows = tab === 'meetups' ? meetupRows : (data[tab] ?? []);
   // The cover-curation view shows a narrower, more useful set of columns:
