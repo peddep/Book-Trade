@@ -486,3 +486,23 @@ test('editing a profile cannot empty what signing up insisted on', async () => {
   assert.equal(after.json.user.contact, '@moved', 'a partial update must not wipe the rest');
   assert.deepEqual(after.json.user.availability, ['after-4']);
 });
+
+test('saving a profile twice in a row works', async () => {
+  // The reply to a save is what the page keeps as its copy of the student, so
+  // if it leaves out the contact or the timetable they look empty on screen and
+  // the next save is refused for fields nobody touched.
+  const cookie = await register('Twice', `twice${Math.random()}@s.edu`);
+  const first = await api('/api/auth/me', { method: 'PATCH', cookie,
+    body: { name: 'Twice', grade: '5', class_no: '3', contact: '@twice', availability: ['p4-0'] } });
+  assert.equal(first.status, 200);
+  assert.equal(first.json.user.contact, '@twice', 'the reply must carry the contact back');
+  assert.deepEqual(first.json.user.availability, ['p4-0'], 'and the timetable');
+
+  // Exactly what the dialog sends the second time, from the values it was given.
+  const second = await api('/api/auth/me', { method: 'PATCH', cookie: first.cookie ?? cookie,
+    body: {
+      name: 'Twice', grade: first.json.user.grade, class_no: first.json.user.class_no,
+      contact: first.json.user.contact, availability: first.json.user.availability,
+    } });
+  assert.equal(second.status, 200, 'a second save must not be refused');
+});

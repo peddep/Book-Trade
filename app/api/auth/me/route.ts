@@ -121,8 +121,24 @@ export async function PATCH(req: NextRequest) {
     await db.execute({ sql: 'UPDATE users SET password_hash = ? WHERE id = ?', args: [hash, user.id] });
   }
 
-  // Re-issue the cookie so the session reflects the new profile.
-  const res = NextResponse.json({ user: { ...nextUser, is_admin: isAdmin(nextUser) } });
+  // Answer with the whole profile, not just the parts the cookie carries. The
+  // page replaces its copy of the student with this one, so leaving the contact
+  // and the timetable out of it quietly emptied them on screen — and now that
+  // neither may be blank, the next save would be refused for fields the student
+  // never touched.
+  const saved = await db.execute({ sql: 'SELECT contact, availability FROM users WHERE id = ?', args: [user.id] });
+  const savedRow = saved.rows[0] as any;
+  const fullUser = {
+    ...nextUser,
+    contact: savedRow?.contact ?? null,
+    availability: (() => {
+      try { const a = JSON.parse(savedRow?.availability ?? '[]'); return Array.isArray(a) ? a : []; } catch { return []; }
+    })(),
+  };
+
+  // Re-issue the cookie so the session reflects the new profile. The cookie
+  // itself stays slim — only the reply carries the rest.
+  const res = NextResponse.json({ user: { ...fullUser, is_admin: isAdmin(nextUser) } });
   res.cookies.set('session', signSession(nextUser), {
     httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', secure: process.env.NODE_ENV === 'production',
   });

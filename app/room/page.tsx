@@ -18,6 +18,7 @@ interface User {
   grade: string | null;
   class_no?: string | null;
   avatar_color: string;
+  contact?: string | null;
   availability?: string[];
   is_admin?: boolean;
 }
@@ -29,7 +30,7 @@ export default function RoomPage() {
   const [booksListed, setBooksListed] = useState(0);
   const [pendingOffers, setPendingOffers] = useState(0);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: '', grade: '', class_no: '', avatar_color: '#6366f1', new_password: '' });
+  const [form, setForm] = useState({ name: '', grade: '', class_no: '', contact: '', avatar_color: '#6366f1', new_password: '' });
   const [availability, setAvailability] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -40,7 +41,7 @@ export default function RoomPage() {
 
   function openEdit() {
     if (!user) return;
-    setForm({ name: user.name, grade: user.grade ?? '', class_no: user.class_no ?? '', avatar_color: user.avatar_color, new_password: '' });
+    setForm({ name: user.name, grade: user.grade ?? '', class_no: user.class_no ?? '', contact: user.contact ?? '', avatar_color: user.avatar_color, new_password: '' });
     setAvailability(Array.isArray(user.availability) ? user.availability : []);
     setFormError('');
     setEditing(true);
@@ -48,7 +49,7 @@ export default function RoomPage() {
 
   async function saveProfile() {
     if (!form.name.trim()) { setFormError(t('profile2.nameRequired')); return; }
-    if (!form.grade || !form.class_no) { setFormError(t('reg.missingFields')); return; }
+    if (!form.grade || !form.class_no || !form.contact.trim()) { setFormError(t('reg.missingFields')); return; }
     if (availability.length === 0) { setFormError(t('reg.availabilityRequired')); return; }
     if (form.new_password && form.new_password.length < 6) { setFormError(t('reg.passwordHint')); return; }
     setSaving(true);
@@ -301,6 +302,11 @@ export default function RoomPage() {
                   </select>
                 </div>
               </div>
+
+              <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.contact')}</label>
+              <input value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))}
+                maxLength={100} placeholder={t('reg.contactHint')}
+                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }} />
 
               <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('profile2.newPassword')}</label>
               <input type="password" value={form.new_password} minLength={6} autoComplete="new-password"
