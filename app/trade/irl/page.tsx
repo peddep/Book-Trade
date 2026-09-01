@@ -198,7 +198,7 @@ export default function IrlTradePage() {
                 trade.requester_class === trade.owner_class,
               );
               const meetingText = meeting
-                ? `${meeting.date.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { weekday: 'long', day: 'numeric', month: 'short' })} · ${meeting.date.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })} (${t(SLOT_KEYS[meeting.slot])})`
+                ? `${meetingDateText(meeting.date, lang)} (${t(SLOT_KEYS[meeting.slot])})`
                 : null;
 
               return (
@@ -253,6 +253,10 @@ export default function IrlTradePage() {
                         <div className="mb-3 p-3 rounded-xl" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
                           <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>📅 {t('irl.meetOn')}</p>
                           <p className="text-base font-bold text-white leading-tight mt-0.5">{meetingText}</p>
+                          {/* The period times are the ordinary ones; on a day the
+                              school shortens periods they move, and only the two
+                              students know that. */}
+                          <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{t('irl.normalSchedule')}</p>
                         </div>
                       ) : (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
@@ -275,7 +279,10 @@ export default function IrlTradePage() {
                   {tab === 'confirm' && (
                     <div>
                       {meetingText && (
-                        <p className="text-xs font-semibold mb-2" style={{ color: '#7c3aed' }}>📅 {meetingText}</p>
+                        <p className="text-xs font-semibold mb-0.5" style={{ color: '#7c3aed' }}>📅 {meetingText}</p>
+                      )}
+                      {meetingText && (
+                        <p className="text-[11px] text-[#9ca3af] mb-2">{t('irl.normalSchedule')}</p>
                       )}
                       <p className="text-sm font-semibold text-[#2e1065] mb-1">{t('irl.didItHappen')}</p>
                       <p className="text-xs text-[#9ca3af] mb-3">{t('irl.bothConfirm')}</p>

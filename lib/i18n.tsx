@@ -148,6 +148,7 @@ const STRINGS: Dict = {
   'irl.tabHistory': { th: 'ประวัติ', en: 'History' },
   'irl.meetAt': { th: '📍 เจอกันที่ห้องสมุดโรงเรียน', en: '📍 Meet at the school library' },
   'irl.when': { th: 'เวลาที่ว่างตรงกัน', en: 'Times you both are free' },
+  'irl.normalSchedule': { th: 'เวลานี้คิดจากคาบปกติ ไม่ร่นคาบ', en: 'This time assumes the normal timetable — periods not shortened' },
   'irl.meetOn': { th: 'นัดเจอกันวันที่', en: 'Meet on' },
   'irl.noOverlap': { th: 'ไม่มีเวลาตรงกัน — นัดหมายกันเอง', en: 'No shared time — arrange one together' },
   'irl.reachOut': { th: 'ทักไปนัดเวลาได้ที่ {contact}', en: 'Message {contact} to arrange a time.' },

@@ -343,6 +343,12 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* The times in the "when" column are the ordinary period times; the
+            same note appears on the students' own cards. */}
+        {tab === 'meetups' && meetupRows.length > 0 && (
+          <p className="text-xs text-[#6b7280] mb-2">🕐 {t('irl.normalSchedule')}</p>
+        )}
+
         {/* Data table */}
         <div className="rounded-2xl overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
           <table className="w-full text-left text-xs">

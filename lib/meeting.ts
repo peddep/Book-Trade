@@ -5,8 +5,11 @@
 // need this answer, and they must not disagree about it: a teacher looking at
 // the library rota should see the day and period the two students were shown.
 
-// Clock time each slot starts at (school schedule).
-const SLOT_TIME: Record<string, [number, number]> = { p4: [11, 40], p5: [12, 30], after: [15, 30] };
+// When each slot starts, on the ordinary timetable — the one where periods run
+// their full length. On a day the school shortens them these times move, which
+// is why the pages that show a meeting say which timetable they assume rather
+// than presenting the time as certain.
+const SLOT_TIME: Record<string, [number, number]> = { p4: [12, 0], p5: [12, 55], after: [16, 10] };
 export const SLOT_ORDER = ['p4', 'p5', 'after'];
 export const SLOT_KEYS: Record<string, string> = { p4: 'reg.slotP4', p5: 'reg.slotP5', after: 'reg.slotAfter' };
 
@@ -62,7 +65,7 @@ export function nextMeeting(shared: string[]): { date: Date; slot: string } | nu
 //
 // Work this out in the browser, never on the server. A period is a time on the
 // school's clock, but `nextMeeting` builds it with the local clock of whatever
-// machine runs it — so a server in UTC turned "period 5, 12:30" into an instant
+// machine runs it — so a server in UTC turned "period 5, 12:55" into an instant
 // that a phone in Bangkok then displayed as 19:30. The two students and the
 // teacher looking at the same meet-up must be told the same time.
 export function meetingFor(availA?: string | null, availB?: string | null) {
