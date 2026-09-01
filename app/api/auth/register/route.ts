@@ -41,6 +41,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'terms_required' }, { status: 400 });
   }
 
+  // Same reasoning for the rest of the form. Every one of these is something
+  // another student needs to arrange a swap: which room to find them in, how to
+  // message them, and when they are free — a listing from somebody nobody can
+  // reach or meet wastes the time of whoever offers for it.
+  const filledIn = (v: unknown) => typeof v === 'string' ? v.trim() !== '' : v != null && v !== '';
+  if (!filledIn(real_name) || !filledIn(grade) || !filledIn(class_no) || !filledIn(contact)
+      || !Array.isArray(availability) || availability.length === 0) {
+    return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
+  }
+
   // When ALLOWED_EMAIL_DOMAIN is set (e.g. student.nssc.ac.th), only school
   // emails may register.
   const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;

@@ -33,8 +33,14 @@ async function api(path, { method = 'GET', cookie, body, ip } = {}) {
 // Each signup gets a distinct IP so the per-IP registration limit (a real,
 // tested guard) doesn't trip during the suite.
 let ipCounter = 0;
+// Every box on the signup form is required, so a test account fills them all
+// in — the same as a student would.
+const SIGNUP = {
+  password: 'secret6', accept_terms: true, real_name: 'Test Student',
+  grade: '5', class_no: '3', contact: '@tester', availability: ['p4-0', 'p5-2'],
+};
 async function register(name, email) {
-  const r = await api('/api/auth/register', { method: 'POST', body: { name, email, password: 'secret6', accept_terms: true }, ip: `10.0.0.${++ipCounter}` });
+  const r = await api('/api/auth/register', { method: 'POST', body: { ...SIGNUP, name, email }, ip: `10.0.0.${++ipCounter}` });
   return r.cookie;
 }
 async function addBook(cookie, title, price) {
@@ -292,20 +298,20 @@ test('a book in an agreed meet-up cannot be removed from under the other student
 
 test('an email or a username can only be used once', async () => {
   const email = 'unique@s.edu';
-  const first = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: 'Uniq', email, password: 'secret6', accept_terms: true } });
+  const first = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { ...SIGNUP, name: 'Uniq', email } });
   assert.equal(first.status, 200);
 
   // The same address in different capitals, or with stray spaces, is the same
   // address — it used to make a second account.
   for (const variant of [email, email.toUpperCase(), `  ${email}  `]) {
-    const r = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: 'Someone' + Math.random(), email: variant, password: 'secret6', accept_terms: true } });
+    const r = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { ...SIGNUP, name: 'Someone' + Math.random(), email: variant } });
     assert.equal(r.status, 409, `expected ${variant} to be refused`);
     assert.equal(r.json.error, 'email_taken');
   }
 
   // And one student per username, whatever the capitals.
   for (const variant of ['Uniq', 'UNIQ', 'uniq']) {
-    const r = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: variant, email: `x${Math.random()}@s.edu`, password: 'secret6', accept_terms: true } });
+    const r = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { ...SIGNUP, name: variant, email: `x${Math.random()}@s.edu` } });
     assert.equal(r.status, 409, `expected the name ${variant} to be refused`);
     assert.equal(r.json.error, 'name_taken');
   }
@@ -362,7 +368,7 @@ test('an admin can remove any book, including one from a finished trade', async 
 
 test('a ban signs the student out and shuts the door behind them', async () => {
   const admin = await register('BanAdmin', 'banadmin@s.edu');   // named in ADMIN_EMAIL above
-  const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.8.${++ipCounter}`, body: { name: 'ToBan', email: 'toban@s.edu', password: 'secret6', accept_terms: true } });
+  const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.8.${++ipCounter}`, body: { ...SIGNUP, name: 'ToBan', email: 'toban@s.edu' } });
   const cookie = reg.cookie;
   const id = reg.json.user.id;
 
@@ -393,7 +399,7 @@ test('a ban signs the student out and shuts the door behind them', async () => {
 
 test('a banned student cannot go on trading', async () => {
   const admin = await register('BanAdmin2', 'banadmin2@s.edu');
-  const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { name: 'Trader', email: 'bantrader@s.edu', password: 'secret6', accept_terms: true } });
+  const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.9.${++ipCounter}`, body: { ...SIGNUP, name: 'Trader', email: 'bantrader@s.edu' } });
   const cookie = reg.cookie;
   const id = reg.json.user.id;
   const other = await register('Partner', 'banpartner@s.edu');
@@ -430,4 +436,24 @@ test('a banned student cannot go on trading', async () => {
   // The other student is not trapped: they can still call the meet-up off and
   // get their own book back.
   assert.equal((await api(`/api/trades/${trade}`, { method: 'PATCH', cookie: other, body: { confirm: 'not' } })).status, 200);
+});
+
+test('signing up requires every box, not only the ones the form marks', async () => {
+  const base = { ...SIGNUP, name: 'Partial', email: `partial${Math.random()}@s.edu` };
+  for (const missing of ['real_name', 'grade', 'class_no', 'contact', 'availability']) {
+    const body = { ...base, name: `Partial${Math.random()}`, email: `p${Math.random()}@s.edu` };
+    delete body[missing];
+    const r = await api('/api/auth/register', { method: 'POST', ip: `10.0.7.${++ipCounter}`, body });
+    assert.equal(r.status, 400, `an account with no ${missing} must be refused`);
+    assert.equal(r.json.error, 'missing_fields');
+  }
+  // An empty timetable is the same as none: nobody could arrange a meet-up.
+  const empty = await api('/api/auth/register', { method: 'POST', ip: `10.0.7.${++ipCounter}`,
+    body: { ...base, name: `Empty${Math.random()}`, email: `e${Math.random()}@s.edu`, availability: [] } });
+  assert.equal(empty.json.error, 'missing_fields');
+
+  // Filled in properly, it still works.
+  const ok = await api('/api/auth/register', { method: 'POST', ip: `10.0.7.${++ipCounter}`,
+    body: { ...base, name: `Full${Math.random()}`, email: `f${Math.random()}@s.edu` } });
+  assert.equal(ok.status, 200);
 });

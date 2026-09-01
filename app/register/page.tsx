@@ -67,6 +67,10 @@ export default function RegisterPage() {
       setError(t('reg.passwordMismatch'));
       return;
     }
+    if (availability.length === 0) {
+      setError(t('reg.availabilityRequired'));
+      return;
+    }
     if (!acceptTerms) {
       setError(t('reg.termsRequired'));
       return;
@@ -92,6 +96,7 @@ export default function RegisterPage() {
       }
       setError(
         data.error === 'terms_required' ? t('reg.termsRequired')
+        : data.error === 'missing_fields' ? t('reg.missingFields')
         : data.error === 'email_taken' ? t('reg.emailTaken')
         : data.error === 'name_taken' ? t('reg.nameTaken')
         : data.error === 'email_domain' ? t('reg.emailDomain', { domain: data.domain })
@@ -184,10 +189,11 @@ export default function RegisterPage() {
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.gradeOptional')}</label>
+                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.grade')}</label>
                 <select
                   value={grade}
                   onChange={e => setGrade(e.target.value)}
+                  required
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: grade ? '#2e1065' : '#9ca3af', outline: 'none' }}
                 >
@@ -196,10 +202,11 @@ export default function RegisterPage() {
                 </select>
               </div>
               <div className="flex-1">
-                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.classOptional')}</label>
+                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.class')}</label>
                 <select
                   value={classNo}
                   onChange={e => setClassNo(e.target.value)}
+                  required
                   className="w-full p-2.5 rounded-xl text-sm"
                   style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: classNo ? '#2e1065' : '#9ca3af', outline: 'none' }}
                 >
@@ -209,11 +216,12 @@ export default function RegisterPage() {
               </div>
             </div>
             <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.contactOptional')}</label>
+              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.contact')}</label>
               <input
                 type="text"
                 value={contact}
                 onChange={e => setContact(e.target.value)}
+                required
                 maxLength={100}
                 className="w-full p-2.5 rounded-xl text-sm"
                 style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
