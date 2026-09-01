@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns, ensureUserColumns } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { isBanned } from '@/lib/hub';
 
 // Public profile of a user + their available books (requires being logged in).
@@ -16,9 +16,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   await ensureBookColumns();
   await ensureUserColumns();
 
-  const u = await db.execute({ sql: 'SELECT id, name, grade, class_no, contact, avatar_color FROM users WHERE id = ?', args: [id] });
+  const u = await db.execute({ sql: 'SELECT id, name, grade, class_no, contact, avatar_color, banned FROM users WHERE id = ?', args: [id] });
   const user = u.rows[0];
   if (!user) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+
+  // A suspended student is out of circulation: their books are already hidden
+  // from browsing and offers for them are refused, but their profile could
+  // still be opened by anyone with the link — and it lists those same books
+  // with a button to offer for them. The admin still needs to see it.
+  if (Number(user.banned) === 1 && !isAdmin(me)) {
+    return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  }
+  delete (user as Record<string, unknown>).banned;
 
   // Everything except the cover itself. Covers are data URLs on the row, so
   // "SELECT b.*" put every picture into the reply — opening a classmate who

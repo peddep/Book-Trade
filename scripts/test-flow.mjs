@@ -103,7 +103,7 @@ before(async () => {
   // the moment an earlier test registered somebody — so those tests quietly
   // skipped their own assertions instead of failing. Anything admin-only is
   // now checked against a real admin, or not claimed at all.
-  execSync(`printf 'TURSO_DATABASE_URL=file:${DB}\\nSESSION_SECRET=test\\nADMIN_EMAIL=admin-one@s.edu,banadmin@s.edu,banadmin2@s.edu\\n' > .env.local`, { shell: '/bin/bash' });
+  execSync(`printf 'TURSO_DATABASE_URL=file:${DB}\\nSESSION_SECRET=test\\nADMIN_EMAIL=admin-one@s.edu,banadmin@s.edu,banadmin2@s.edu,banadmin3@s.edu\\n' > .env.local`, { shell: '/bin/bash' });
   execSync('npm run db:init', { stdio: 'ignore' });
   // Detached, so the whole process group can be torn down below. `next dev`
   // spawns helper processes of its own; killing only the wrapper leaves one
@@ -505,4 +505,39 @@ test('saving a profile twice in a row works', async () => {
       contact: first.json.user.contact, availability: first.json.user.availability,
     } });
   assert.equal(second.status, 200, 'a second save must not be refused');
+});
+
+test('a suspended student\'s profile cannot be opened by anyone but the admin', async () => {
+  const admin = await register('BanAdmin3', 'banadmin3@s.edu');
+  const reg = await api('/api/auth/register', { method: 'POST', ip: `10.0.6.${++ipCounter}`,
+    body: { ...SIGNUP, name: 'Hidden', email: 'hidden@s.edu' } });
+  const id = reg.json.user.id;
+  const nosy = await register('Nosy', 'nosy@s.edu');
+  await addBook(reg.cookie, 'HiddenBook', 100);
+
+  // Visible while the account is in good standing.
+  const before = await api(`/api/users/${id}`, { cookie: nosy });
+  assert.equal(before.status, 200);
+  assert.equal(before.json.books.length, 1);
+  assert.equal(before.json.user.banned, undefined, 'the profile must not report whether somebody is suspended');
+
+  const banned = await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'ban_user', user_id: id } });
+  assert.equal(banned.status, 200, 'the ban must actually be applied, or this test proves nothing');
+
+  const after = await api(`/api/users/${id}`, { cookie: nosy });
+  assert.equal(after.status, 404, 'a suspended profile must not open for a classmate');
+  assert.equal(after.json.books, undefined, 'and it must not carry their books');
+
+  // The admin still needs to look at it.
+  const asAdmin = await api(`/api/users/${id}`, { cookie: admin });
+  assert.equal(asAdmin.status, 200);
+  assert.equal(asAdmin.json.books.length, 1);
+
+  // Their books also leave the front page, which anyone can see without an account.
+  const showcase = await api('/api/showcase');
+  assert.equal((showcase.json.books ?? []).some(b => b.title === 'HiddenBook'), false);
+
+  // Lifting the suspension puts the profile back.
+  await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'unban_user', user_id: id } });
+  assert.equal((await api(`/api/users/${id}`, { cookie: nosy })).status, 200);
 });

@@ -19,10 +19,10 @@ export async function GET() {
   try {
     await ensureBookColumns();
     const res = await getDb().execute({
-      sql: `SELECT title, title_en, cover_url, cover_color, price
-            FROM books
-            WHERE available = 1
-            ORDER BY (cover_url IS NULL), id DESC
+      sql: `SELECT b.title, b.title_en, b.cover_url, b.cover_color, b.price
+            FROM books b JOIN users u ON b.owner_id = u.id
+            WHERE b.available = 1 AND COALESCE(u.banned, 0) = 0
+            ORDER BY (b.cover_url IS NULL), b.id DESC
             LIMIT ?`,
       args: [LIMIT],
     });
