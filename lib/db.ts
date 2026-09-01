@@ -65,6 +65,12 @@ export async function ensureBookColumns() {
   const added = await addMissingColumns('books', [
     'cover_url TEXT', 'title_en TEXT', 'price REAL', 'volume TEXT', 'publisher TEXT',
     'isbn TEXT', 'cover_source TEXT',
+    // A small copy of the cover, made the first time one is asked for and kept
+    // so it is made once. Every place the app shows a cover shows it small —
+    // a shelf tile, a card, the picture beside an offer — so sending the
+    // full-size photograph to draw a 120px tile was most of what a page
+    // weighed. Cleared whenever the cover itself changes.
+    'thumb_url TEXT',
     // Set when a book is removed but a finished trade still refers to it, so
     // the other student's history keeps its two books.
     'deleted_at TEXT',

@@ -94,7 +94,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // uploads is an arbitrary file from their gallery and stays on their listing
     // only (see cover_source in lib/db.ts).
     const source = cover ? (isAdmin(user) ? 'admin' : 'upload') : null;
-    await db.execute({ sql: 'UPDATE books SET cover_url = ?, cover_source = ? WHERE id = ?', args: [cover, source, id] });
+    // The small copy is made from the cover, so a new cover means the old one
+    // is wrong: drop it and let the next request make a new one.
+    await db.execute({ sql: 'UPDATE books SET cover_url = ?, cover_source = ?, thumb_url = NULL WHERE id = ?', args: [cover, source, id] });
 
     // Reuse only applies to future lookups, so an admin fixing one copy would
     // leave the classmates already listing that same book without a cover. Fill
@@ -102,7 +104,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // nobody's own picture is ever replaced.
     if (cover && isAdmin(user)) {
       const r = await db.execute({
-        sql: `UPDATE books SET cover_url = ?, cover_source = 'admin'
+        sql: `UPDATE books SET cover_url = ?, cover_source = 'admin', thumb_url = NULL
               WHERE lower(title) = lower(?) AND id != ? AND (cover_url IS NULL OR cover_url = '')`,
         args: [cover, String(book.title), id],
       });

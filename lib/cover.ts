@@ -14,18 +14,24 @@ export interface HasCover {
   cover_len?: number | null;
 }
 
-export function coverSrc(book: HasCover): string | null {
+// Covers are shown small everywhere in the app — a shelf tile, a card, the
+// picture beside an offer — so the small copy is what pages ask for. Pass
+// 'full' only where the photograph itself is the point.
+type Size = 'thumb' | 'full';
+const suffix = (size: Size) => (size === 'thumb' ? '&s=thumb' : '');
+
+export function coverSrc(book: HasCover, size: Size = 'thumb'): string | null {
   if (book.cover_url) return book.cover_url;
   // The length doubles as a version: change the picture and it changes too, so
   // a cached cover is replaced rather than kept.
-  if (book.cover_len) return `/api/books/${book.id}/cover?v=${book.cover_len}`;
+  if (book.cover_len) return `/api/books/${book.id}/cover?v=${book.cover_len}${suffix(size)}`;
   return null;
 }
 
 // The same thing for a row that names a book rather than being one — a trade
 // carries the two books' ids and cover lengths, not book objects.
-export function coverFor(bookId?: number | null, len?: number | null, inline?: string | null): string | null {
+export function coverFor(bookId?: number | null, len?: number | null, inline?: string | null, size: Size = 'thumb'): string | null {
   if (inline) return inline;
-  if (bookId && len) return `/api/books/${bookId}/cover?v=${len}`;
+  if (bookId && len) return `/api/books/${bookId}/cover?v=${len}${suffix(size)}`;
   return null;
 }

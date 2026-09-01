@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
     // Base64 inflates by about 4/3, plus the data: prefix.
     const MAX_LEN = Math.round((4_000 * 4) / 3) + 64;
     const r = await getDb().execute({
-      sql: `UPDATE books SET cover_url = NULL, cover_source = NULL
+      sql: `UPDATE books SET cover_url = NULL, cover_source = NULL, thumb_url = NULL
             WHERE cover_source = 'api' AND cover_url IS NOT NULL AND length(cover_url) < ?`,
       args: [MAX_LEN],
     });
