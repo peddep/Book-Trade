@@ -48,6 +48,8 @@ export default function RoomPage() {
 
   async function saveProfile() {
     if (!form.name.trim()) { setFormError(t('profile2.nameRequired')); return; }
+    if (!form.grade || !form.class_no) { setFormError(t('reg.missingFields')); return; }
+    if (availability.length === 0) { setFormError(t('reg.availabilityRequired')); return; }
     if (form.new_password && form.new_password.length < 6) { setFormError(t('reg.passwordHint')); return; }
     setSaving(true);
     const res = await fetch('/api/auth/me', {
@@ -64,7 +66,10 @@ export default function RoomPage() {
       setEditing(false);
     } else {
       const d = await res.json().catch(() => ({}));
-      setFormError(d.error === 'name_taken' ? t('profile2.nameTaken') : t('profile2.nameRequired'));
+      setFormError(
+        d.error === 'name_taken' ? t('profile2.nameTaken')
+        : d.error === 'missing_fields' ? t('reg.missingFields')
+        : t('profile2.nameRequired'));
     }
     setSaving(false);
   }
@@ -280,7 +285,7 @@ export default function RoomPage() {
 
               <div className="flex gap-2 mb-3">
                 <div className="flex-1">
-                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('profile2.gradeOptional')}</label>
+                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.grade')}</label>
                   <select value={form.grade} onChange={e => setForm(f => ({ ...f, grade: e.target.value }))}
                     className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
                     <option value="">{t('reg.selectGrade')}</option>
@@ -288,7 +293,7 @@ export default function RoomPage() {
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.classOptional')}</label>
+                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.class')}</label>
                   <select value={form.class_no} onChange={e => setForm(f => ({ ...f, class_no: e.target.value }))}
                     className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
                     <option value="">{t('reg.selectClass')}</option>

@@ -49,14 +49,30 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const name = typeof body.name === 'string' ? body.name.trim() : '';
-  const grade = typeof body.grade === 'string' ? body.grade.trim() : '';
   const avatarColor = typeof body.avatar_color === 'string' ? body.avatar_color.trim() : '';
-  // class_no: use the provided value when present, otherwise keep the current one.
+  // grade and class_no: use the provided value when present, otherwise keep the
+  // current one. Grade used to default to empty when it was not sent, and was
+  // then written as NULL — so any update that did not mention it, a rename for
+  // instance, quietly cleared the student's year.
+  const grade = 'grade' in body
+    ? (typeof body.grade === 'string' ? body.grade.trim() : '')
+    : (user.grade ?? '');
   const classNo = 'class_no' in body
     ? (body.class_no ? String(body.class_no).trim() : null)
     : (user.class_no ?? null);
 
   if (!name) return NextResponse.json({ error: 'name_required' }, { status: 400 });
+
+  // Signing up asks for a year, a room, a contact and a timetable, so editing
+  // a profile must not be a way around that. Only what is actually sent is
+  // checked — this endpoint takes partial updates — but nothing it does send
+  // may be emptied.
+  const emptied = (key: string, v: unknown) =>
+    key in body && (Array.isArray(v) ? v.length === 0 : !(typeof v === 'string' ? v.trim() : v));
+  if (emptied('grade', grade) || emptied('class_no', classNo) || emptied('contact', body.contact)
+      || emptied('availability', body.availability)) {
+    return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
+  }
 
   // A student may rename themselves, but not into somebody else's name.
   await ensureUniqueAccounts();

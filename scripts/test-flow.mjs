@@ -457,3 +457,32 @@ test('signing up requires every box, not only the ones the form marks', async ()
     body: { ...base, name: `Full${Math.random()}`, email: `f${Math.random()}@s.edu` } });
   assert.equal(ok.status, 200);
 });
+
+test('editing a profile cannot empty what signing up insisted on', async () => {
+  const cookie = await register('Editor', `editor${Math.random()}@s.edu`);
+  const patch = body => api('/api/auth/me', { method: 'PATCH', cookie, body });
+
+  for (const [field, empty] of [['grade', ''], ['class_no', ''], ['contact', ''], ['availability', []]]) {
+    const r = await patch({ name: 'Editor', [field]: empty });
+    assert.equal(r.json?.error, 'missing_fields', `clearing ${field} must be refused`);
+  }
+
+  // Real edits still go through, and a partial update leaves the rest alone.
+  const ok = await patch({ name: 'Editor', grade: '4', class_no: '7', contact: '@moved', availability: ['after-4'] });
+  assert.equal(ok.status, 200);
+  const me = await api('/api/auth/me', { cookie: ok.cookie ?? cookie });
+  assert.equal(me.json.user.grade, '4');
+  assert.equal(me.json.user.class_no, '7');
+  assert.equal(me.json.user.contact, '@moved');
+  assert.deepEqual(me.json.user.availability, ['after-4']);
+
+  // Changing only the name does not require sending everything again.
+  const rename = await api('/api/auth/me', { method: 'PATCH', cookie: ok.cookie ?? cookie, body: { name: 'Editor2' } });
+  assert.equal(rename.status, 200);
+  const after = await api('/api/auth/me', { cookie: rename.cookie ?? cookie });
+  assert.equal(after.json.user.name, 'Editor2');
+  assert.equal(after.json.user.grade, '4', 'a partial update must not wipe the year');
+  assert.equal(after.json.user.class_no, '7', 'a partial update must not wipe the room');
+  assert.equal(after.json.user.contact, '@moved', 'a partial update must not wipe the rest');
+  assert.deepEqual(after.json.user.availability, ['after-4']);
+});
