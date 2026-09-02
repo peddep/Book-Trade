@@ -8,6 +8,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, execSync } from 'node:child_process';
 import { rmSync, readFileSync, readdirSync, readlinkSync } from 'node:fs';
+import { createClient } from '@libsql/client';
 
 const PORT = 3199;
 const BASE = `http://localhost:${PORT}`;
@@ -540,4 +541,54 @@ test('a suspended student\'s profile cannot be opened by anyone but the admin', 
   // Lifting the suspension puts the profile back.
   await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'unban_user', user_id: id } });
   assert.equal((await api(`/api/users/${id}`, { cookie: nosy })).status, 200);
+});
+
+test('agreeing to a trade cannot be done twice, or to a book already taken', async () => {
+  const owner = await register('RaceO', `raceo${Math.random()}@s.edu`);
+  const a = await register('RaceA', `racea${Math.random()}@s.edu`);
+  const b = await register('RaceB', `raceb${Math.random()}@s.edu`);
+  const prize = await addBook(owner, 'Prize', 100);
+  const oa = await addBook(a, 'OfferA', 100);
+  const ob = await addBook(b, 'OfferB', 100);
+  const ta = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: oa, wanted_book_id: prize } })).json.trade.id;
+  const tb = (await api('/api/trades', { method: 'POST', cookie: b, body: { offered_book_id: ob, wanted_book_id: prize } })).json.trade.id;
+
+  // Both students' offers, accepted at the same moment.
+  const [ra, rb] = await Promise.all([
+    api(`/api/trades/${ta}`, { method: 'PATCH', cookie: owner, body: { status: 'accepted' } }),
+    api(`/api/trades/${tb}`, { method: 'PATCH', cookie: owner, body: { status: 'accepted' } }),
+  ]);
+  const wins = [ra, rb].filter(r => r.status === 200).length;
+  assert.equal(wins, 1, 'one book cannot be promised to two people');
+
+  const list = (await api('/api/trades', { cookie: owner })).json.trades;
+  const accepted = list.filter(t => (t.id === ta || t.id === tb) && t.status === 'accepted');
+  assert.equal(accepted.length, 1);
+
+  // The same offer twice over is refused the second time.
+  const again = await api(`/api/trades/${accepted[0].id}`, { method: 'PATCH', cookie: owner, body: { status: 'accepted' } });
+  assert.equal(again.status, 409);
+  assert.equal(again.json.error, 'stale_trade');
+});
+
+test('the guard the accept relies on actually reports when it changed nothing', async () => {
+  // Accepting is safe because the database is asked to move a trade only from
+  // the status it was read at, and to take a book only while it is still free —
+  // and because an update that matches nothing says so. If that ever stopped
+  // being true, the guards would read like a fix while doing nothing, and only
+  // a race on the real server would show it. So it is checked here.
+  const db = createClient({ url: `file:${DB}` });
+  const trade = (await db.execute("SELECT id FROM trades WHERE status = 'cancelled' LIMIT 1")).rows[0];
+  await db.execute({ sql: "UPDATE trades SET status = 'pending' WHERE id = ?", args: [trade.id] });
+  const first = await db.execute({ sql: "UPDATE trades SET status = 'accepted' WHERE id = ? AND status = 'pending'", args: [trade.id] });
+  const second = await db.execute({ sql: "UPDATE trades SET status = 'accepted' WHERE id = ? AND status = 'pending'", args: [trade.id] });
+  assert.equal(Number(first.rowsAffected), 1);
+  assert.equal(Number(second.rowsAffected), 0, 'a trade must only be movable once from the status it was read at');
+
+  const book = (await db.execute('SELECT id FROM books LIMIT 1')).rows[0];
+  await db.execute({ sql: 'UPDATE books SET available = 1 WHERE id = ?', args: [book.id] });
+  const take = await db.execute({ sql: 'UPDATE books SET available = 0 WHERE id = ? AND available = 1', args: [book.id] });
+  const takeAgain = await db.execute({ sql: 'UPDATE books SET available = 0 WHERE id = ? AND available = 1', args: [book.id] });
+  assert.equal(Number(take.rowsAffected), 1);
+  assert.equal(Number(takeAgain.rowsAffected), 0, 'a book must only be reservable once');
 });

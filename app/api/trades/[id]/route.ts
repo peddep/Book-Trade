@@ -66,8 +66,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'books_changed' }, { status: 409 });
       }
 
-      // Both confirmed → the trade is complete; announce it in the community chat.
-      await db.execute({ sql: "UPDATE trades SET status = 'completed', updated_at = datetime('now') WHERE id = ?", args: [id] });
+      // Both confirmed → the trade is complete; announce it in the community
+      // chat. Only from 'accepted', and only once: both students tapping at the
+      // same moment each see two confirmations, and without this they would
+      // both run the swap and the trade would be announced twice.
+      const finished = await db.execute({
+        sql: "UPDATE trades SET status = 'completed', updated_at = datetime('now') WHERE id = ? AND status = 'accepted'",
+        args: [id],
+      });
+      if (Number(finished.rowsAffected) !== 1) return NextResponse.json({ ok: true });
       // The physical books changed hands, so swap owners in the app too and
       // put both books back on the market on their new owners' shelves.
       await db.execute({
@@ -139,7 +146,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const wasAccepted = String(trade.status) === 'accepted';
 
-  await db.execute({ sql: "UPDATE trades SET status = ?, updated_at = datetime('now') WHERE id = ?", args: [status, id] });
+  // Move the trade only if it is still where it was a moment ago. The check
+  // above reads the status and this writes it, and nothing holds the row in
+  // between: two people pressing at the same instant — an owner accepting while
+  // the requester withdraws — both read 'pending' and both wrote. Asking the
+  // database to make the change only from the status we saw settles it for us,
+  // and whoever loses is told the trade has moved on.
+  const moved = await db.execute({
+    sql: "UPDATE trades SET status = ?, updated_at = datetime('now') WHERE id = ? AND status = ?",
+    args: [status, id, String(trade.status)],
+  });
+  if (Number(moved.rowsAffected) !== 1) {
+    const now = await db.execute({ sql: 'SELECT status FROM trades WHERE id = ?', args: [id] });
+    return NextResponse.json({ error: 'stale_trade', status: now.rows[0]?.status ?? null }, { status: 409 });
+  }
 
   // Backing out of an agreed trade has to release the books it was holding,
   // or both sit reserved forever with no trade left to complete them.
@@ -150,9 +170,44 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     });
   }
 
+  // Agreeing to a trade takes both books off the market, and that is the step
+  // two trades for the same book race over: each is a different row, so each
+  // passes its own status check above, and the reservation below is where they
+  // meet. Taking a book is asking the database to move it from free to spoken
+  // for — only one of them can be the one that moved it. Whoever loses gives
+  // back whatever they took and is told the books changed underneath them,
+  // rather than a book being promised to two people.
+  if (status === 'accepted') {
+    const take = async (bookId: number, expectedOwner: number) => Number((await db.execute({
+      sql: 'UPDATE books SET available = 0 WHERE id = ? AND owner_id = ? AND available = 1 AND deleted_at IS NULL',
+      args: [bookId, expectedOwner],
+    })).rowsAffected) === 1;
+
+    const offeredId = Number(trade.offered_book_id);
+    const wantedId = Number(trade.wanted_book_id);
+    const gotOffered = await take(offeredId, Number(trade.requester_id));
+    const gotWanted = gotOffered && await take(wantedId, Number(trade.owner_id));
+
+    if (!gotOffered || !gotWanted) {
+      if (gotOffered) {
+        await db.execute({ sql: 'UPDATE books SET available = 1 WHERE id = ?', args: [offeredId] });
+      }
+      await db.execute({ sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?", args: [id] });
+      return NextResponse.json({ error: 'books_changed' }, { status: 409 });
+    }
+
+    // Both are held now, so the other offers for either book cannot be taken up.
+    await db.execute({
+      sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id != ? AND status = 'pending' AND (offered_book_id = ? OR wanted_book_id = ? OR offered_book_id = ? OR wanted_book_id = ?)",
+      args: [id, offeredId, offeredId, wantedId, wantedId],
+    });
+  }
+
   // Tell whichever side did not press the button. Accept and reject are the
   // owner's doing, so the requester hears about them; a cancel is the
-  // requester's, so the owner does.
+  // requester's, so the owner does. Only once the trade has actually moved —
+  // telling somebody their offer was accepted and then calling it off because
+  // the book had gone would be worse than not telling them yet.
   {
     const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
     const names = await db.execute({
@@ -166,17 +221,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       actor: row?.actor ? String(row.actor) : null,
       subject: row?.subject ? String(row.subject) : null,
       link: status === 'accepted' ? '/trade/irl' : '/trades',
-    });
-  }
-
-  if (status === 'accepted') {
-    await db.execute({
-      sql: 'UPDATE books SET available = 0 WHERE id = ? OR id = ?',
-      args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
-    });
-    await db.execute({
-      sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id != ? AND status = 'pending' AND (offered_book_id = ? OR wanted_book_id = ? OR offered_book_id = ? OR wanted_book_id = ?)",
-      args: [id, Number(trade.offered_book_id), Number(trade.offered_book_id), Number(trade.wanted_book_id), Number(trade.wanted_book_id)],
     });
   }
 
