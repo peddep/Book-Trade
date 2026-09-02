@@ -18,6 +18,7 @@ interface Trade {
   status: string;
   requester_confirm?: string | null;
   owner_confirm?: string | null;
+  meet_after?: string | null;
   requester_name: string;
   requester_avatar: string;
   requester_availability?: string | null;
@@ -101,6 +102,30 @@ export default function IrlTradePage() {
   useEffect(() => {
     if (tab === 'history' && history === null) fetchHistory();
   }, [tab, history, fetchHistory]);
+
+  // "I cannot be there" — take the period being shown off the table and let the
+  // next one they both have free stand instead, and tell the other student,
+  // who would otherwise be waiting in the library.
+  async function skipMeeting(trade: Trade, when: Date) {
+    // window.confirm, not this page's own confirm() for a meet-up, which the
+    // name would otherwise reach first.
+    if (!window.confirm(t('irl.skipConfirm'))) return;
+    const before = trades;
+    const iso = when.toISOString();
+    setTrades(prev => prev.map(tr => (tr.id === trade.id ? { ...tr, meet_after: iso } : tr)));
+    try {
+      const res = await fetch(`/api/trades/${trade.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skip_meeting: iso }),
+      });
+      if (!res.ok) { setTrades(before); alert(t('trades.actionFailed')); return; }
+      fetchTrades();
+    } catch {
+      setTrades(before);
+      alert(t('trades.actionFailed'));
+    }
+  }
 
   async function confirm(id: number, value: 'happened' | 'not') {
     // Say so at once. Reporting the swap is something the student has just
@@ -189,7 +214,7 @@ export default function IrlTradePage() {
               const myConfirm = isRequester ? trade.requester_confirm : trade.owner_confirm;
               const otherConfirm = isRequester ? trade.owner_confirm : trade.requester_confirm;
               const otherContact = isRequester ? trade.owner_contact : trade.requester_contact;
-              const meeting = meetingFor(trade.requester_availability, trade.owner_availability);
+              const meeting = meetingFor(trade.requester_availability, trade.owner_availability, trade.meet_after);
               // Same room every day: working out a free period is beside the
               // point, so say so instead of making them read a timetable.
               const sameClass = Boolean(
@@ -257,6 +282,11 @@ export default function IrlTradePage() {
                               school shortens periods they move, and only the two
                               students know that. */}
                           <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{t('irl.normalSchedule')}</p>
+                          <button onClick={() => skipMeeting(trade, meeting!.date)}
+                            className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
+                            style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>
+                            {t('irl.cantMakeIt')}
+                          </button>
                         </div>
                       ) : (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>

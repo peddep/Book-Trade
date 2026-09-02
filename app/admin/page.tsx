@@ -207,7 +207,7 @@ export default function AdminPage() {
       return {
         row: r,
         sameClass,
-        meeting: sameClass ? null : meetingFor(r.requester_availability as string | null, r.owner_availability as string | null),
+        meeting: sameClass ? null : meetingFor(r.requester_availability as string | null, r.owner_availability as string | null, r.meet_after as string | null),
       };
     })
     // Soonest first: this is a list of what is about to happen. Pairs whose

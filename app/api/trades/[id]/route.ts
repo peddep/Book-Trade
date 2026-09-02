@@ -25,6 +25,38 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const isOwner = Number(trade.owner_id) === user.id;
   if (!isRequester && !isOwner) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+  // ── "I cannot make that period" → move to their next shared one ──
+  //
+  // The period itself is worked out in the browser, from the two timetables, so
+  // the browser is what says which one is being cried off: it sends the moment
+  // it is showing. Storing the moment rather than a count of skips means it
+  // stops applying by itself once that period is past.
+  if (typeof body.skip_meeting === 'string') {
+    await ensureTradeColumns();
+    if (trade.status !== 'accepted') {
+      return NextResponse.json({ error: 'Trade is not in progress' }, { status: 400 });
+    }
+    const when = new Date(body.skip_meeting);
+    const soon = Date.now() + 21 * 24 * 60 * 60 * 1000;   // a fortnight of slack
+    if (isNaN(when.getTime()) || when.getTime() < Date.now() - 60_000 || when.getTime() > soon) {
+      return NextResponse.json({ error: 'bad_time' }, { status: 400 });
+    }
+    // Both of them may cry off in turn, each pushing it further, so never move
+    // the meeting earlier than where it already stands.
+    const current = trade.meet_after ? new Date(String(trade.meet_after)).getTime() : 0;
+    if (when.getTime() > current) {
+      await db.execute({
+        sql: "UPDATE trades SET meet_after = ?, updated_at = datetime('now') WHERE id = ?",
+        args: [when.toISOString(), id],
+      });
+    }
+
+    // The other student is expecting to stand in the library at that period.
+    const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
+    await notify(other, 'trade_postponed', { actor: user.name, link: '/trade/irl' });
+    return NextResponse.json({ ok: true, meet_after: when.toISOString() });
+  }
+
   // ── IRL meet-up confirmation: each side reports happened / not ──
   if (body.confirm === 'happened' || body.confirm === 'not') {
     await ensureTradeColumns();

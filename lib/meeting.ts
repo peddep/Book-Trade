@@ -39,9 +39,11 @@ export function overlap(a?: string | null, b?: string | null): string[] {
     });
 }
 
-// The soonest upcoming date+time both users share, based on their weekly grids.
-export function nextMeeting(shared: string[]): { date: Date; slot: string } | null {
-  const now = new Date();
+// The soonest date+time both users share, based on their weekly grids. `from`
+// is where to start looking: now, or just after a period one of them said they
+// could not make.
+export function nextMeeting(shared: string[], from: Date = new Date()): { date: Date; slot: string } | null {
+  const now = from;
   let best: { date: Date; slot: string } | null = null;
   for (const key of shared) {
     const [slot, dayStr] = key.split('-');
@@ -68,8 +70,12 @@ export function nextMeeting(shared: string[]): { date: Date; slot: string } | nu
 // machine runs it — so a server in UTC turned "period 5, 12:55" into an instant
 // that a phone in Bangkok then displayed as 19:30. The two students and the
 // teacher looking at the same meet-up must be told the same time.
-export function meetingFor(availA?: string | null, availB?: string | null) {
-  return nextMeeting(overlap(availA, availB));
+export function meetingFor(availA?: string | null, availB?: string | null, meetAfter?: string | null) {
+  // A period one of them has already cried off is no longer on offer — but only
+  // while it is still in the future; a skip from last week means nothing now.
+  const after = meetAfter ? new Date(meetAfter) : null;
+  const from = after && after.getTime() > Date.now() ? after : new Date();
+  return nextMeeting(overlap(availA, availB), from);
 }
 
 // One wording for a meeting, so the student's card and the admin's list cannot

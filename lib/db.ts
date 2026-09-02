@@ -136,7 +136,13 @@ let tradeColumnsEnsured = false;
 export async function ensureTradeColumns() {
   if (tradeColumnsEnsured) return;
   await ensureCoreTables();
-  await addMissingColumns('trades', ['requester_confirm TEXT', 'owner_confirm TEXT']);
+  await addMissingColumns('trades', [
+    'requester_confirm TEXT', 'owner_confirm TEXT',
+    // When one of them cannot make the period the app worked out, the meet-up
+    // moves to their next shared one. Kept as the moment being skipped rather
+    // than a count of skips, so it stops mattering once that moment is past.
+    'meet_after TEXT',
+  ]);
   tradeColumnsEnsured = true;
 }
 

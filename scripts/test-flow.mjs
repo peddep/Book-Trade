@@ -610,3 +610,42 @@ test('every status a trade can end in has a label of its own', async () => {
     assert.ok(i18n.includes(`'${key}':`), `no wording for ${key}`);
   }
 });
+
+test('a student who cannot make the meet-up can move it on, and the other is told', async () => {
+  const a = await register('SkipA', `skipa${Math.random()}@s.edu`);
+  const b = await register('SkipB', `skipb${Math.random()}@s.edu`);
+  const ba = await addBook(a, 'SkipBookA', 100);
+  const bb = await addBook(b, 'SkipBookB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+
+  const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+  const moved = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: soon } });
+  assert.equal(moved.status, 200);
+
+  // Both sides read the same "not before" mark, which is what each browser
+  // works the next period out from.
+  for (const cookie of [a, b]) {
+    const row = (await api('/api/trades', { cookie })).json.trades.find(x => x.id === t);
+    assert.equal(new Date(row.meet_after).toISOString(), soon, 'both students must work from the same mark');
+  }
+
+  // The other student hears about it; the one who moved it does not need to.
+  const theirs = (await api('/api/notifications', { cookie: b })).json.notifications ?? [];
+  assert.ok(theirs.some(n => n.kind === 'trade_postponed'), 'the other student must be told');
+  assert.equal(theirs.find(n => n.kind === 'trade_postponed').actor, 'SkipA');
+
+  // It only ever moves forwards, whoever presses it.
+  const earlier = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { skip_meeting: earlier } });
+  const after = (await api('/api/trades', { cookie: a })).json.trades.find(x => x.id === t);
+  assert.equal(new Date(after.meet_after).toISOString(), soon, 'a later mark must not be pulled back earlier');
+
+  // Nonsense is refused, and so is anybody who is not in the trade.
+  const c = await register('SkipC', `skipc${Math.random()}@s.edu`);
+  assert.equal((await api(`/api/trades/${t}`, { method: 'PATCH', cookie: c, body: { skip_meeting: soon } })).status, 403);
+  for (const bad of ['whenever', new Date(Date.now() - 9 * 86400000).toISOString(), new Date(Date.now() + 200 * 86400000).toISOString()]) {
+    const r = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: bad } });
+    assert.equal(r.json.error, 'bad_time', `"${bad}" should not be accepted as a time`);
+  }
+});

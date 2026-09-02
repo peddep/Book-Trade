@@ -8,6 +8,7 @@ export type NotifyKind =
   | 'trade_rejected'   // your offer was turned down
   | 'trade_cancelled'  // the other side pulled out
   | 'trade_completed'  // both sides confirmed the swap happened
+  | 'trade_postponed'  // the other student cannot make the period you were given
   | 'wonderbox_match'; // the Wonder Box paired your book with someone
 
 interface Options {
