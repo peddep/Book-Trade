@@ -196,20 +196,35 @@ export default function AdminPage() {
     // Worked out here, in the same browser and the same timezone as the two
     // students' own page, with the same code — the teacher must not be given a
     // different time from the pair standing in the library.
-    .map(r => ({ row: r, meeting: meetingFor(r.requester_availability as string | null, r.owner_availability as string | null) }))
+    .map(r => {
+      // Two students in the same room are told to swap in class rather than
+      // given a period, so there is no time to show the teacher either — the
+      // list should say what the pair themselves were told.
+      const sameClass = Boolean(
+        r.requester_grade && r.requester_class &&
+        r.requester_grade === r.owner_grade && r.requester_class === r.owner_class,
+      );
+      return {
+        row: r,
+        sameClass,
+        meeting: sameClass ? null : meetingFor(r.requester_availability as string | null, r.owner_availability as string | null),
+      };
+    })
     // Soonest first: this is a list of what is about to happen. Pairs whose
     // timetables never line up have no date and go last.
     .sort((a, b) => (a.meeting?.date.getTime() ?? Infinity) - (b.meeting?.date.getTime() ?? Infinity))
-    .map(({ row: r, meeting }) => {
+    .map(({ row: r, meeting, sameClass }) => {
       const waiting = [
         r.requester_confirm ? null : String(r.requester_name),
         r.owner_confirm ? null : String(r.owner_name),
       ].filter(Boolean);
       return {
         id: r.id,
-        when: meeting
-          ? `${meetingDateText(meeting.date, lang, 'short')} (${t(SLOT_KEYS[meeting.slot])})`
-          : t('adm.noSharedTime'),
+        when: sameClass
+          ? t('adm.sameClass', { room: `${t('grade.prefix')}${r.owner_grade}/${r.owner_class}` })
+          : meeting
+            ? `${meetingDateText(meeting.date, lang, 'short')} (${t(SLOT_KEYS[meeting.slot])})`
+            : t('adm.noSharedTime'),
         students: `${who(r, 'requester')} ⇄ ${who(r, 'owner')}`,
         class: `${room(r, 'requester')} ⇄ ${room(r, 'owner')}`,
         contact: [r.requester_contact, r.owner_contact].filter(Boolean).join(' · ') || '—',

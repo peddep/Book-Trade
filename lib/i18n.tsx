@@ -407,6 +407,7 @@ const STRINGS: Dict = {
   'scan.notFound': { th: 'ไม่พบหนังสือจากบาร์โค้ดนี้ กรุณากรอกชื่อเอง', en: 'No book found for this barcode — please type the title.' },
   'adm.reports': { th: 'รายงาน', en: 'Reports' },
   'adm.meetups': { th: 'นัดเจอ', en: 'Meet-ups' },
+  'adm.sameClass': { th: 'ห้องเดียวกัน ({room}) — เจอกันในห้องได้เลย', en: 'Same class ({room}) — they meet in class' },
   'adm.noSharedTime': { th: 'ไม่มีเวลาตรงกัน — นัดกันเอง', en: 'No shared time — arranged privately' },
   'adm.bothConfirmed': { th: 'ยืนยันครบแล้ว', en: 'Both confirmed' },
   'adm.openReports': { th: 'รายงานใหม่', en: 'Open reports' },
