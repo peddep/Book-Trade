@@ -267,13 +267,19 @@ export default function RoomPage() {
         {editing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46, 16, 101, 0.4)' }}
             onClick={() => setEditing(false)}>
-            <div className="w-full max-w-sm p-6 rounded-2xl shadow-2xl bt-pop-in" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+            {/* Taller than a phone screen, so the middle scrolls and the title
+                and the buttons stay put. It used to be one tall box: on a small
+                phone the heading sat above the top of the screen and Save below
+                the bottom, with no way to reach either. */}
+            <div className="w-full max-w-sm rounded-2xl shadow-2xl bt-pop-in flex flex-col overflow-hidden"
+              style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: 'calc(100dvh - 2rem)' }}
               onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between px-6 pt-6 pb-3 flex-shrink-0">
                 <p className="text-lg font-bold text-[#2e1065]">{t('profile2.title')}</p>
                 <button onClick={() => setEditing(false)} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
               </div>
 
+              <div className="px-6 overflow-y-auto">
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{ background: form.avatar_color }}>
                   {(form.name.trim()[0] || '?').toUpperCase()}
@@ -319,7 +325,9 @@ export default function RoomPage() {
               </div>
 
               <label className="block text-xs font-semibold text-[#6b7280] mb-2">{t('profile2.avatarColor')}</label>
-              <div className="flex flex-wrap gap-2 mb-4">
+              {/* Eight of them: a row of four twice on a phone, rather than
+                  seven and a stray one wrapped underneath. */}
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 justify-items-center mb-4">
                 {AVATAR_COLORS.map(c => (
                   <button key={c} onClick={() => setForm(f => ({ ...f, avatar_color: c }))}
                     className="w-8 h-8 rounded-full transition-transform"
@@ -327,16 +335,19 @@ export default function RoomPage() {
                 ))}
               </div>
 
-              {formError && <p className="text-sm text-red-500 mb-3">{formError}</p>}
+              </div>
 
-              <div className="flex gap-2">
-                <button onClick={() => setEditing(false)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>
-                  {t('profile2.cancel')}
-                </button>
-                <button onClick={saveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
-                  {t('profile2.save')}
-                </button>
+              <div className="px-6 pt-3 pb-6 flex-shrink-0" style={{ borderTop: '1px solid #f3e8ff' }}>
+                {formError && <p className="text-sm text-red-500 mb-3">{formError}</p>}
+                <div className="flex gap-2">
+                  <button onClick={() => setEditing(false)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                    {t('profile2.cancel')}
+                  </button>
+                  <button onClick={saveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                    {t('profile2.save')}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
