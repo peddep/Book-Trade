@@ -80,6 +80,9 @@ export default function IrlTradePage() {
     setLoading(false);
   }, []);
 
+  // The meet-up that has just been moved on, so only that card animates.
+  const [movedId, setMovedId] = useState<number | null>(null);
+
   const [history, setHistory] = useState<Trade[] | null>(null);
   const fetchHistory = useCallback(async () => {
     const res = await fetch('/api/trades?status=completed,cancelled');
@@ -113,16 +116,19 @@ export default function IrlTradePage() {
     const before = trades;
     const iso = when.toISOString();
     setTrades(prev => prev.map(tr => (tr.id === trade.id ? { ...tr, meet_after: iso } : tr)));
+    setMovedId(trade.id);
+    setTimeout(() => setMovedId(id => (id === trade.id ? null : id)), 900);
     try {
       const res = await fetch(`/api/trades/${trade.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skip_meeting: iso }),
       });
-      if (!res.ok) { setTrades(before); alert(t('trades.actionFailed')); return; }
+      if (!res.ok) { setTrades(before); setMovedId(null); alert(t('trades.actionFailed')); return; }
       fetchTrades();
     } catch {
       setTrades(before);
+      setMovedId(null);
       alert(t('trades.actionFailed'));
     }
   }
@@ -275,9 +281,10 @@ export default function IrlTradePage() {
                           <p className="text-xs mt-1" style={{ color: '#166534' }}>{t('irl.sameClassHint')}</p>
                         </div>
                       ) : meetingText ? (
-                        <div className="mb-3 p-3 rounded-xl" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                        <div className={`mb-3 p-3 rounded-xl${movedId === trade.id ? ' bt-time-flash' : ''}`}
+                          style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
                           <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>📅 {t('irl.meetOn')}</p>
-                          <p className="text-base font-bold text-white leading-tight mt-0.5">{meetingText}</p>
+                          <p key={meetingText} className={`text-base font-bold text-white leading-tight mt-0.5${movedId === trade.id ? ' bt-time-moved' : ''}`}>{meetingText}</p>
                           {/* The period times are the ordinary ones; on a day the
                               school shortens periods they move, and only the two
                               students know that. */}

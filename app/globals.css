@@ -31,6 +31,17 @@ body {
   from { transform: scaleY(0); }
   to   { transform: scaleY(1); }
 }
+/* A meet-up that has just been moved on: the new period arrives from the right,
+   so it reads as the next one rather than as the same one edited. */
+@keyframes bt-time-moved {
+  0%   { opacity: 0; transform: translateX(16px); }
+  55%  { opacity: 1; transform: translateX(-3px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes bt-time-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  45%      { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); }
+}
 @keyframes bt-slide-in {
   from { opacity: 0; transform: translateY(6px) scale(0.98); }
   to   { opacity: 1; transform: none; }
@@ -40,6 +51,8 @@ body {
 .bt-pop-in   { animation: bt-pop-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 .bt-grow-up  { animation: bt-grow-up 520ms cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: bottom; }
 .bt-slide-in { animation: bt-slide-in 260ms ease-out both; }
+.bt-time-moved   { animation: bt-time-moved 460ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.bt-time-flash   { animation: bt-time-flash 620ms ease-out both; }
 
 /* Stagger helper: set --i on the item and the delay follows its position. */
 .bt-stagger { animation-delay: calc(var(--i, 0) * 60ms); }
@@ -51,7 +64,7 @@ body {
 /* Respect the system setting. Someone who has asked for less motion gets the
    finished state immediately rather than a faster version of the same thing. */
 @media (prefers-reduced-motion: reduce) {
-  .bt-fade-up, .bt-pop-in, .bt-grow-up, .bt-slide-in {
+  .bt-fade-up, .bt-pop-in, .bt-grow-up, .bt-slide-in, .bt-time-moved, .bt-time-flash {
     animation: none !important;
   }
   .bt-press { transition: none; }
