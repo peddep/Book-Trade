@@ -62,7 +62,16 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: strin
   accepted:  { bg: '#dcfce7', color: '#10b981', labelKey: 'trades.accepted' },
   rejected:  { bg: '#fee2e2', color: '#ef4444', labelKey: 'trades.rejected' },
   cancelled: { bg: '#f3f4f6', color: '#9ca3af', labelKey: 'trades.cancelled' },
+  // A finished swap had no entry here, and the fallback below called everything
+  // it did not recognise "cancelled" — so every trade a student actually
+  // completed told them it had been called off.
+  completed: { bg: '#ede9fe', color: '#7c3aed', labelKey: 'trades.completed' },
 };
+
+// Anything not listed above is shown plainly rather than dressed up as one of
+// these: a status this page has not been taught yet should look unfamiliar,
+// not wrong.
+const UNKNOWN_STATUS = { bg: '#f3f4f6', color: '#6b7280', labelKey: '' };
 
 export default function TradesPage() {
   const { t, bookTitle } = useI18n();
@@ -171,7 +180,7 @@ export default function TradesPage() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
             {filtered.map(trade => {
               const isIncoming = trade.owner_id === user.id;
-              const style = STATUS_STYLES[trade.status] ?? STATUS_STYLES.cancelled;
+              const style = STATUS_STYLES[trade.status] ?? UNKNOWN_STATUS;
               return (
                 <div
                   key={trade.id}
@@ -187,7 +196,7 @@ export default function TradesPage() {
                         {isIncoming ? t('trades.incomingTag') : t('trades.outgoingTag')}
                       </span>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: style.bg, color: style.color }}>
-                        {t(style.labelKey)}
+                        {style.labelKey ? t(style.labelKey) : trade.status}
                       </span>
                     </div>
                     <span className="text-xs text-[#9ca3af] flex-shrink-0">

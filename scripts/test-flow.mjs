@@ -592,3 +592,21 @@ test('the guard the accept relies on actually reports when it changed nothing', 
   assert.equal(Number(take.rowsAffected), 1);
   assert.equal(Number(takeAgain.rowsAffected), 0, 'a book must only be reservable once');
 });
+
+test('every status a trade can end in has a label of its own', async () => {
+  // A finished trade had no entry in the badge table on My Trades, and the
+  // fallback dressed anything unknown as "cancelled" — so a student who had
+  // just swapped a book was told the trade was called off.
+  const page = readFileSync('app/trades/page.tsx', 'utf8');
+  const labelled = [...page.matchAll(/^\s{2}(\w+):\s*\{ bg:/gm)].map(m => m[1]);
+  for (const status of ['pending', 'accepted', 'rejected', 'cancelled', 'completed']) {
+    assert.ok(labelled.includes(status), `My Trades has no badge for a "${status}" trade`);
+  }
+  // And an unrecognised one must not borrow another status's words.
+  assert.match(page, /STATUS_STYLES\[trade\.status\] \?\? UNKNOWN_STATUS/);
+
+  const i18n = readFileSync('lib/i18n.tsx', 'utf8');
+  for (const key of ['trades.pending', 'trades.accepted', 'trades.rejected', 'trades.cancelled', 'trades.completed']) {
+    assert.ok(i18n.includes(`'${key}':`), `no wording for ${key}`);
+  }
+});

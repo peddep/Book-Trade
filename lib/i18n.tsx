@@ -651,6 +651,7 @@ const STRINGS: Dict = {
   'trades.accepted': { th: 'ตกลงแล้ว ✓', en: 'Accepted ✓' },
   'trades.rejected': { th: 'ปฏิเสธ', en: 'Rejected' },
   'trades.cancelled': { th: 'ยกเลิกแล้ว', en: 'Cancelled' },
+  'trades.completed': { th: 'แลกสำเร็จแล้ว ✓', en: 'Completed ✓' },
   'trades.userOffers': { th: '{name} เสนอ', en: '{name} offers' },
   'trades.youOffer': { th: 'คุณเสนอ', en: 'You offer' },
   'trades.wantsYour': { th: 'ต้องการหนังสือของคุณ', en: 'Wants your' },
