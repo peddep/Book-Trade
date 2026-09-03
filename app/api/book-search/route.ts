@@ -59,7 +59,7 @@ async function searchOpenLibrary(q: string, thai: boolean): Promise<Suggestion[]
   const query = thai ? `${q} language:tha` : q;
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,author_name,publisher`;
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' },
+    headers: { 'User-Agent': 'LemLaekLem/1.0 (student book trading app)' },
     signal: AbortSignal.timeout(6000),
     next: { revalidate: 86400 },
   });

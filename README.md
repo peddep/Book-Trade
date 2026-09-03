@@ -1,4 +1,4 @@
-# BookTrade
+# เล่มแลกเล่ม (LemLaekLem)
 
 A book-swapping site for one school. Students list books they have finished,
 offer swaps to each other, and meet at the school library to hand them over.
@@ -21,7 +21,7 @@ production, because it looks safe.
 So give Preview its own database. **All of this can be done from a phone** —
 no terminal, no clone, nothing to install.
 
-1. **Create a second Turso database**, e.g. `booktrade-preview`, and copy its
+1. **Create a second Turso database**, e.g. `lemlaeklem-preview`, and copy its
    URL and a token.
 
 2. **In Vercel → Settings → Environment Variables**, check the scope of each:
@@ -52,7 +52,7 @@ no terminal, no clone, nothing to install.
 5. **Check you are on the right site.** A preview shows an orange strip across
    the top:
 
-   > 🧪 เว็บทดสอบ — ไม่ใช่เว็บจริง · TEST SITE — not the real BookTrade
+   > 🧪 เว็บทดสอบ — ไม่ใช่เว็บจริง · TEST SITE — not the real เล่มแลกเล่ม
 
    The live site never shows it. If you do not see it, you are on production.
 

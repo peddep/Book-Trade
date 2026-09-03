@@ -15,8 +15,8 @@ const serif = Noto_Serif_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "BookTrade — Student Book Trading",
-  description: "Trade books with other students at your school",
+  title: "เล่มแลกเล่ม (LemLaekLem) — แลกหนังสือกับเพื่อนในโรงเรียน",
+  description: "แลกเปลี่ยนหนังสือกับเพื่อน ๆ ในโรงเรียน · Trade books with other students at your school",
 };
 
 export const viewport = {
@@ -36,7 +36,7 @@ function PreviewBanner() {
       background: '#b45309', color: '#ffffff', textAlign: 'center',
       padding: '4px 12px', fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
     }}>
-      🧪 เว็บทดสอบ — ไม่ใช่เว็บจริง · TEST SITE — not the real BookTrade
+      🧪 เว็บทดสอบ — ไม่ใช่เว็บจริง · TEST SITE — not the real เล่มแลกเล่ม
     </div>
   );
 }

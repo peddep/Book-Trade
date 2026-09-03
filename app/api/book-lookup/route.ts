@@ -277,7 +277,7 @@ async function lookupOpenLibraryIsbn(isbn: string): Promise<Lookup | null> {
     // references, so it could never produce an author name at all.
     const res = await fetch(
       `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`,
-      { headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' }, signal: AbortSignal.timeout(6000) },
+      { headers: { 'User-Agent': 'LemLaekLem/1.0 (student book trading app)' }, signal: AbortSignal.timeout(6000) },
     );
     if (!res.ok) return null;
     const d = (await res.json())?.[`ISBN:${isbn}`];

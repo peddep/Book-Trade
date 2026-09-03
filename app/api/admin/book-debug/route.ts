@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(
       `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`,
-      { headers: { 'User-Agent': 'BookTrade/1.0 (student book trading app)' }, signal: AbortSignal.timeout(8000) },
+      { headers: { 'User-Agent': 'LemLaekLem/1.0 (student book trading app)' }, signal: AbortSignal.timeout(8000) },
     );
     const d = res.ok ? (await res.json())?.[`ISBN:${isbn}`] : null;
     out.openLibrary = {

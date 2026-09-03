@@ -65,8 +65,8 @@ export default function Navbar() {
       <div className="w-full px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between">
         <div className="flex items-center gap-8 min-w-0">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-2xl">📚</span>
-            <span className="font-bold text-xl" style={{ color: '#7c3aed' }}>BookTrade</span>
+            <span className="text-2xl hidden sm:inline">📚</span>
+            <span className="font-bold text-lg sm:text-xl whitespace-nowrap" style={{ color: '#7c3aed' }}>{t('brand.name')}</span>
           </Link>
 
           {/* Desktop navigation. On a phone these three live in the tab strip on
@@ -99,15 +99,15 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <button
             onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
-            className="text-sm font-semibold px-3 py-1.5 rounded-lg"
+            className="text-sm font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap"
             style={{ background: '#e9d5ff', color: '#2e1065' }}
             title="Change language"
             aria-label="Change language"
           >
-            {lang === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
+            {lang === 'th' ? '🇹🇭' : '🇬🇧'}<span className="hidden sm:inline"> {lang === 'th' ? 'ไทย' : 'EN'}</span>
           </button>
           {user && <NotificationBell />}
           {user ? (
@@ -166,16 +166,17 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="text-sm text-[#4b5563] hover:text-[#2e1065] px-3 py-1.5"
+                className="hidden min-[360px]:inline text-sm text-[#4b5563] hover:text-[#2e1065] px-2 sm:px-3 py-1.5 whitespace-nowrap"
               >
                 {t('nav.signIn')}
               </Link>
               <Link
                 href="/register"
-                className="text-sm font-semibold px-4 py-1.5 rounded-lg text-white"
+                className="text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-lg text-white whitespace-nowrap"
                 style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               >
-                {t('nav.join')}
+                <span className="sm:hidden">{t('nav.joinShort')}</span>
+                <span className="hidden sm:inline">{t('nav.join')}</span>
               </Link>
             </>
           )}

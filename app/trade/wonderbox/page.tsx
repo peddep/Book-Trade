@@ -45,7 +45,7 @@ export default function WonderBoxPage() {
   }, []);
 
   // Signed out, this page rendered an empty box that could not be used. Send
-  // them to the front page — which explains what BookTrade is and offers a way
+  // them to the front page — which explains what the site is and offers a way
   // in — rather than leaving them there or dropping them on a login form.
   useEffect(() => {
     if (sessionLoading) return;

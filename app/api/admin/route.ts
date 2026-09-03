@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(body, {
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="booktrade-backup-${new Date().toISOString().slice(0, 10)}.json"`,
+        'Content-Disposition': `attachment; filename="lemlaeklem-backup-${new Date().toISOString().slice(0, 10)}.json"`,
       },
     });
   }
