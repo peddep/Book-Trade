@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 
-// Instagram of the site — shown in the over-฿100 note. Update when the real
-// account is created.
-const IG_HANDLE = '@booktrade.ig';
+// Instagram of the site — shown in the over-฿100 note.
+const IG_HANDLE = '@lemlaeklem';
 
 interface TopDonator { user_id: number; name: string; avatar_color: string; total: number; }
 
