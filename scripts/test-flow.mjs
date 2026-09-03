@@ -649,3 +649,28 @@ test('a student who cannot make the meet-up can move it on, and the other is tol
     assert.equal(r.json.error, 'bad_time', `"${bad}" should not be accepted as a time`);
   }
 });
+
+test('times the database wrote are read back as the moment they happened', async () => {
+  // datetime('now') writes UTC with nothing in the string to say so, and a
+  // browser handed it reads it as local time — which is how a notification
+  // made at 07:51 in Bangkok was shown as 00:51, and a trade agreed after 7pm
+  // UTC was dated the day before.
+  const db = createClient({ url: `file:${DB}` });
+  const stamp = String((await db.execute("SELECT datetime('now') AS t")).rows[0].t);
+  assert.match(stamp, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/, 'the shape parseDbTime is written for');
+
+  // Read as UTC, it is the moment it was written.
+  const asUtc = new Date(stamp.replace(' ', 'T') + 'Z');
+  const outBy = Math.abs(Date.now() - asUtc.getTime()) / 60000;
+  assert.ok(outBy < 5, `reading the stamp as UTC must land on now, was ${outBy.toFixed(1)} minutes out`);
+
+  // Nothing shows a student one of these strings as it stands, nor reads one
+  // with a bare new Date(), which is what put the times out.
+  const bell = readFileSync('components/NotificationBell.tsx', 'utf8');
+  assert.match(bell, /timeAgo\(n\.created_at/, 'the notification list must put its stamps through timeAgo');
+  assert.doesNotMatch(bell, /\{n\.created_at\}/, 'a raw database stamp must not be printed');
+
+  const trades = readFileSync('app/trades/page.tsx', 'utf8');
+  assert.match(trades, /parseDbTime\(trade\.created_at\)/, 'My Trades must read its dates as UTC');
+  assert.doesNotMatch(trades, /new Date\(trade\.created_at\)/, 'a bare new Date() reads the stamp as local time');
+});

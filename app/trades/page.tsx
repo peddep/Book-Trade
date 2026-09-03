@@ -7,6 +7,7 @@ import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { coverFor } from '@/lib/cover';
+import { parseDbTime } from '@/lib/time';
 
 // Small book-shaped cover for the traded books.
 function MiniCover({ url, color, title }: { url?: string | null; color: string; title: string }) {
@@ -200,7 +201,7 @@ export default function TradesPage() {
                       </span>
                     </div>
                     <span className="text-xs text-[#9ca3af] flex-shrink-0">
-                      {new Date(trade.created_at).toLocaleDateString()}
+                      {parseDbTime(trade.created_at)?.toLocaleDateString() ?? ''}
                     </span>
                   </div>
 

@@ -8,6 +8,7 @@ import AdminHarvestCard from '@/components/AdminHarvestCard';
 import { useI18n } from '@/lib/i18n';
 import { SLOT_KEYS, meetingFor, meetingDateText } from '@/lib/meeting';
 import { fileToCoverDataUrl } from '@/lib/image';
+import { parseDbTime } from '@/lib/time';
 
 type Row = Record<string, unknown>;
 
@@ -230,7 +231,9 @@ export default function AdminPage() {
         contact: [r.requester_contact, r.owner_contact].filter(Boolean).join(' · ') || '—',
         books: `${r.offered_title} ⇄ ${r.wanted_title}`,
         'waiting for': waiting.length === 0 ? t('adm.bothConfirmed') : waiting.join(', '),
-        agreed: r.updated_at ?? r.created_at,
+        // Stored in UTC; a teacher reading the rota wants the school's clock.
+        agreed: parseDbTime(String(r.updated_at ?? r.created_at))?.toLocaleString(
+          lang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) ?? '—',
       };
     });
 

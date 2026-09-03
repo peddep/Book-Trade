@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
+import { timeAgo } from '@/lib/time';
 
 interface Notification {
   id: number;
@@ -27,7 +28,7 @@ const ICONS: Record<string, string> = {
 // that someone offered them a trade, so this is the thing that makes an offer
 // visible after they have closed the tab.
 export default function NotificationBell() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [items, setItems] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
@@ -129,7 +130,7 @@ export default function NotificationBell() {
                       <p className="text-xs leading-snug text-[#2e1065]">
                         {t(`notif.${n.kind}`, { actor: n.actor ?? '', subject: n.subject ?? '' })}
                       </p>
-                      <p className="text-[10px] mt-0.5" style={{ color: '#9ca3af' }}>{n.created_at}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: '#9ca3af' }}>{timeAgo(n.created_at, t, lang)}</p>
                     </div>
                     {!n.read && <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ background: '#7c3aed' }} />}
                   </div>
