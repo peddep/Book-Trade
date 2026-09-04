@@ -674,3 +674,36 @@ test('times the database wrote are read back as the moment they happened', async
   assert.match(trades, /parseDbTime\(trade\.created_at\)/, 'My Trades must read its dates as UTC');
   assert.doesNotMatch(trades, /new Date\(trade\.created_at\)/, 'a bare new Date() reads the stamp as local time');
 });
+
+test('the two ways a meet-up can fail are not the same thing', async () => {
+  const a = await register('MissA', `missa${Math.random()}@s.edu`);
+  const b = await register('MissB', `missb${Math.random()}@s.edu`);
+  const setUp = async (n) => {
+    const ba = await addBook(a, `MissBookA${n}`, 100);
+    const bb = await addBook(b, `MissBookB${n}`, 100);
+    const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+    await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+    return { t, ba, bb };
+  };
+
+  // "I could not be there" moves the meet-up on and leaves the trade standing.
+  const mine = await setUp(1);
+  const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+  assert.equal((await api(`/api/trades/${mine.t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: soon } })).status, 200);
+  const stillOn = (await api('/api/trades?status=accepted', { cookie: a })).json.trades.find(x => x.id === mine.t);
+  assert.ok(stillOn, 'being the one who could not come must not end the trade');
+  assert.equal(new Date(stillOn.meet_after).toISOString(), soon);
+
+  // "They did not come" ends it, hands the books back, and says who reported it.
+  const theirs = await setUp(2);
+  assert.equal((await api(`/api/trades/${theirs.t}`, { method: 'PATCH', cookie: a, body: { confirm: 'not', reason: 'no_show' } })).status, 200);
+  const list = (await api('/api/trades', { cookie: a })).json.trades;
+  assert.equal(list.find(x => x.id === theirs.t).status, 'cancelled');
+  const books = (await api('/api/books?mine=1', { cookie: a })).json.books;
+  assert.equal(books.find(x => x.id === theirs.ba).available, 1, 'the books must go back on the shelves');
+
+  const notes = (await api('/api/notifications', { cookie: b })).json.notifications ?? [];
+  assert.equal(notes[0].kind, 'trade_no_show', 'the other student must be told, and told which it was');
+  assert.equal(notes[0].actor, 'MissA');
+  assert.ok(notes.some(n => n.kind === 'trade_postponed'), 'and told separately when a meet-up only moved');
+});

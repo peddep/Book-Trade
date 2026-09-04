@@ -80,6 +80,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         sql: 'UPDATE books SET available = 1 WHERE id = ? OR id = ?',
         args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
       });
+      // The other student had a meet-up in their week and two books held for
+      // it; they were told none of this before, and would have found out by
+      // noticing the trade had quietly gone.
+      const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
+      await notify(other, body.reason === 'no_show' ? 'trade_no_show' : 'trade_cancelled',
+        { actor: user.name, link: '/trades' });
     } else if (rConfirm === 'happened' && oConfirm === 'happened') {
       // Never move a book that has since left the hands it was promised from.
       // Accepting locks both books, so this should be unreachable — but the

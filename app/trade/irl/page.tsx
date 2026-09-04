@@ -133,7 +133,14 @@ export default function IrlTradePage() {
     }
   }
 
-  async function confirm(id: number, value: 'happened' | 'not') {
+  // The other student did not turn up: the trade is called off and both books
+  // go back on the shelves, so this asks before doing it.
+  async function noShow(trade: Trade, otherName: string) {
+    if (!window.confirm(t('irl.noShowConfirm', { name: otherName }))) return;
+    await confirm(trade.id, 'not', 'no_show');
+  }
+
+  async function confirm(id: number, value: 'happened' | 'not', reason?: 'no_show') {
     // Say so at once. Reporting the swap is something the student has just
     // done in person; watching the whole list reload before the card admits it
     // makes the button feel like it did not register.
@@ -144,7 +151,7 @@ export default function IrlTradePage() {
       const res = await fetch(`/api/trades/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirm: value }),
+        body: JSON.stringify({ confirm: value, reason }),
       });
       if (!res.ok) {
         setTrades(before);
@@ -331,17 +338,29 @@ export default function IrlTradePage() {
                           )}
                         </div>
                       ) : (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2">
                           <button onClick={() => confirm(trade.id, 'happened')}
-                            className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
+                            className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
                             style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
                             {t('irl.happened')}
                           </button>
-                          <button onClick={() => confirm(trade.id, 'not')}
-                            className="px-4 py-2.5 rounded-xl text-sm font-bold"
-                            style={{ background: '#fee2e2', color: '#ef4444' }}>
-                            {t('irl.notHappened')}
-                          </button>
+                          <div className="flex gap-2">
+                            {/* Being the one who could not come is not a reason
+                                to end the trade: it moves to the next period
+                                they both have free, as on the other tab. */}
+                            {meeting && (
+                              <button onClick={() => skipMeeting(trade, meeting.date)}
+                                className="flex-1 py-2.5 rounded-xl text-xs font-bold"
+                                style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                                {t('irl.iCouldntCome')}
+                              </button>
+                            )}
+                            <button onClick={() => noShow(trade, otherName)}
+                              className="flex-1 py-2.5 rounded-xl text-xs font-bold"
+                              style={{ background: '#fee2e2', color: '#ef4444' }}>
+                              {t('irl.theyDidntCome')}
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
