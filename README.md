@@ -115,6 +115,17 @@ Copy `.env.example` to `.env.local` and fill it in.
 | `ADMIN_EMAIL` | no | Who sees the admin dashboard. Accepts several addresses separated by commas, e.g. `a@student.nssc.ac.th, b@student.nssc.ac.th`. Defaults to account #1. |
 | `ALLOWED_EMAIL_DOMAIN` | no | Restricts sign-ups, e.g. `student.nssc.ac.th`. |
 | `CRON_SECRET` | no | Vercel Cron sends it as a bearer token to the harvest route. |
+| `GOOGLE_CLIENT_ID` | no | Enables "Sign in with Google". Leave both Google vars unset to hide the button entirely. |
+| `GOOGLE_CLIENT_SECRET` | no | Paired with `GOOGLE_CLIENT_ID`. |
+
+### Setting up "Sign in with Google"
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an **OAuth client ID** of type **Web application**.
+2. Under **Authorized redirect URIs**, add one entry per origin the app is served from — production, and each stable preview URL you use — as `https://<that-origin>/api/auth/google/callback`. Google rejects the callback with `redirect_uri_mismatch` for any origin not listed here.
+3. Copy the generated **Client ID** and **Client secret** into `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+4. If `ALLOWED_EMAIL_DOMAIN` is set, it also applies to Google sign-ins — a Google account outside that domain is turned away with the same message a password sign-up would get.
+
+A student who signs up with Google never sets a password; they can add one later from their profile if they want a second way in.
 
 ---
 

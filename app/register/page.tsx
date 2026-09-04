@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import AvailabilityGrid from '@/components/AvailabilityGrid';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 const DRAFT_KEY = 'register-draft';
 
@@ -28,7 +29,26 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const { user: sessionUser, setUser, refresh } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const firstSave = useRef(true);
+
+  // Coming back from Google with an identity already verified: the email is
+  // fixed (it is what was proven, not what is typed) and there is no password
+  // to set, but everything else — grade, room, contact, timetable — is still
+  // this form's job, the same as anyone else signing up.
+  const [googleMode, setGoogleMode] = useState(false);
+  useEffect(() => {
+    if (searchParams.get('google') !== '1') return;
+    fetch('/api/auth/google/pending').then(async r => {
+      if (!r.ok) return; // the link back from Google expired or was never real
+      const d = await r.json();
+      setGoogleMode(true);
+      setEmail(d.email ?? '');
+      // Only when nothing has been typed yet, so a saved draft (or the
+      // student's own edit) is never overwritten.
+      setRealName(prev => prev || d.name || '');
+    });
+  }, [searchParams]);
 
   // Already signed in: registering again would create a second account and
   // swap the session to it, leaving this student's books on the first one.
@@ -63,7 +83,7 @@ export default function RegisterPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirmPassword) {
+    if (!googleMode && password !== confirmPassword) {
       setError(t('reg.passwordMismatch'));
       return;
     }
@@ -152,41 +172,55 @@ export default function RegisterPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                readOnly={googleMode}
+                // Google already proved this address; changing it here would
+                // do nothing, since the server uses the one Google verified.
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                style={{
+                  background: googleMode ? '#faf5ff' : '#ffffff', border: '1px solid #e9d5ff',
+                  color: googleMode ? '#6b7280' : '#2e1065', outline: 'none',
+                }}
                 placeholder="XXXXX.somchai@student.nssc.ac.th"
               />
             </div>
-            <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.password')}</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
-                placeholder={t('reg.passwordHint')}
-              />
-            </div>
-            <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.confirmPassword')}</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                autoComplete="new-password"
-                className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: `1px solid ${confirmPassword && confirmPassword !== password ? '#ef4444' : '#e9d5ff'}`, color: '#2e1065', outline: 'none' }}
-                placeholder={t('reg.confirmPasswordHint')}
-              />
-              {confirmPassword && confirmPassword !== password && (
-                <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{t('reg.passwordMismatch')}</p>
-              )}
-            </div>
+            {googleMode ? (
+              <p className="text-sm font-semibold p-3 rounded-xl" style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }}>
+                {t('reg.googleLinked')}
+              </p>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.password')}</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="w-full p-2.5 rounded-xl text-sm"
+                    style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                    placeholder={t('reg.passwordHint')}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.confirmPassword')}</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    className="w-full p-2.5 rounded-xl text-sm"
+                    style={{ background: '#ffffff', border: `1px solid ${confirmPassword && confirmPassword !== password ? '#ef4444' : '#e9d5ff'}`, color: '#2e1065', outline: 'none' }}
+                    placeholder={t('reg.confirmPasswordHint')}
+                  />
+                  {confirmPassword && confirmPassword !== password && (
+                    <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{t('reg.passwordMismatch')}</p>
+                  )}
+                </div>
+              </>
+            )}
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.grade')}</label>
@@ -274,6 +308,17 @@ export default function RegisterPage() {
                 {t('login.signIn')}
               </Link>
             </p>
+
+            {!googleMode && (
+              <>
+                <div className="flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px" style={{ background: '#e9d5ff' }} />
+                  <span className="text-xs text-[#9ca3af]">{t('auth.orDivider')}</span>
+                  <div className="flex-1 h-px" style={{ background: '#e9d5ff' }} />
+                </div>
+                <GoogleSignInButton label={t('auth.googleSignUp')} />
+              </>
+            )}
           </form>
         </div>
       </main>

@@ -98,7 +98,15 @@ let userColumnsEnsured = false;
 export async function ensureUserColumns() {
   if (userColumnsEnsured) return;
   await ensureCoreTables();
-  await addMissingColumns('users', ['availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT', 'banned INTEGER DEFAULT 0', 'terms_accepted_at TEXT']);
+  await addMissingColumns('users', [
+    'availability TEXT', 'class_no TEXT', 'contact TEXT', 'real_name TEXT',
+    'banned INTEGER DEFAULT 0', 'terms_accepted_at TEXT',
+    // Google's stable per-account id, set when the account was created or
+    // signed into via "Sign in with Google". Not used to authenticate anything
+    // by itself — it is just a record of the link, kept in case a later
+    // feature needs to tell a Google-linked account from a password one.
+    'google_sub TEXT',
+  ]);
   userColumnsEnsured = true;
 }
 

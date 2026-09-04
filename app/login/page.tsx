@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -14,12 +15,33 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { user: sessionUser, setUser, refresh } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Already signed in: signing in again as someone else would swap the session
   // out from under them with no warning. Send them to the app instead.
   useEffect(() => {
     if (sessionUser) router.replace('/trade');
   }, [router, sessionUser]);
+
+  // The Google flow is a full-page redirect, not a fetch, so a failure has
+  // nowhere to report itself except a query param on the page it sends the
+  // student back to.
+  useEffect(() => {
+    const err = searchParams.get('error');
+    if (!err) return;
+    const msg = err === 'google_not_configured' ? t('login.googleNotConfigured')
+      : err === 'google_unverified' ? t('login.googleUnverified')
+      : err === 'google_domain' ? t('login.googleDomain', { domain: searchParams.get('domain') ?? '' })
+      : err === 'banned' ? t('login.banned')
+      : t('login.googleFailed');
+    setError(msg);
+    // router.replace() leaves the query string in place on a statically
+    // optimized page like this one — there's no server data tied to it for
+    // Next to re-fetch, so it skips updating the address bar. Dropping to
+    // the browser's own history API strips it reliably either way, and nothing
+    // here depends on Next's router noticing the change.
+    window.history.replaceState(null, '', '/login');
+  }, [searchParams, router, t]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,6 +124,13 @@ export default function LoginPage() {
               </Link>
             </p>
             <p className="text-center text-xs text-[#9ca3af]">{t('login.forgot')}</p>
+
+            <div className="flex items-center gap-3 my-1">
+              <div className="flex-1 h-px" style={{ background: '#e9d5ff' }} />
+              <span className="text-xs text-[#9ca3af]">{t('auth.orDivider')}</span>
+              <div className="flex-1 h-px" style={{ background: '#e9d5ff' }} />
+            </div>
+            <GoogleSignInButton label={t('auth.googleSignIn')} />
           </form>
         </div>
       </main>

@@ -10,7 +10,10 @@ export interface SessionUser {
   avatar_color: string;
 }
 
-function getSecret(): string {
+// Exported so other stateless-signed-cookie schemes (the short-lived "you just
+// verified this email with Google" cookie) use the same secret rather than
+// inventing a second one to keep track of.
+export function getSecret(): string {
   return process.env.SESSION_SECRET ?? 'dev-secret-change-me-in-production';
 }
 

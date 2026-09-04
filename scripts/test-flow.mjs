@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { spawn, execSync } from 'node:child_process';
 import { rmSync, readFileSync, readdirSync, readlinkSync } from 'node:fs';
 import { createClient } from '@libsql/client';
+import crypto from 'node:crypto';
 
 const PORT = 3199;
 const BASE = `http://localhost:${PORT}`;
@@ -706,4 +707,97 @@ test('the two ways a meet-up can fail are not the same thing', async () => {
   assert.equal(notes[0].kind, 'trade_no_show', 'the other student must be told, and told which it was');
   assert.equal(notes[0].actor, 'MissA');
   assert.ok(notes.some(n => n.kind === 'trade_postponed'), 'and told separately when a meet-up only moved');
+});
+
+// ── "Sign in with Google" ───────────────────────────────────────────────
+//
+// The harness's env has no GOOGLE_CLIENT_ID, so the parts of the flow that
+// talk to Google (the redirect to its consent screen, the code exchange) are
+// not reachable from here — there is no server to fake being Google without
+// real credentials. That half was checked by hand against Google's real
+// endpoints during development: a fake client id produces a genuine 401 from
+// Google's token endpoint, and the callback route turns that into a clean
+// redirect rather than a crash. What is tested here is the half that can be:
+// the signed "you just verified this email with Google" cookie the callback
+// hands to the registration form, and what /api/auth/register does with one —
+// since that is where an account actually gets made or not.
+
+// Mirrors lib/googleAuth.ts's signPending() exactly (same secret, same
+// namespaced HMAC), so a cookie built here is one the server will accept as
+// genuine — there is no other way to get one without a real Google login.
+function signGooglePending({ email, name = 'Google Student', sub = 'sub-' + Math.random(), exp }) {
+  const body = Buffer.from(JSON.stringify({ email, name, sub, exp })).toString('base64url');
+  const sig = crypto.createHmac('sha256', 'test').update('google_pending:' + body).digest('base64url');
+  return `${body}.${sig}`;
+}
+const freshPending = email => signGooglePending({ email, exp: Date.now() + 15 * 60 * 1000 });
+
+test('Google sign-in is invisible until it is configured', async () => {
+  // No GOOGLE_CLIENT_ID in this environment: both entry points must say so
+  // plainly rather than sending a student into a flow that cannot finish.
+  for (const path of ['/api/auth/google', '/api/auth/google/callback?code=x&state=x']) {
+    const res = await fetch(`${BASE}${path}`, { redirect: 'manual' });
+    assert.ok(res.status === 302 || res.status === 307, `${path} must redirect, got ${res.status}`);
+    assert.match(res.headers.get('location') ?? '', /error=google_not_configured/);
+  }
+});
+
+test('a verified Google identity creates an account with no password', async () => {
+  const email = `googler${Math.random()}@s.edu`;
+  const cookie = `google_pending=${freshPending(email)}`;
+
+  // The register page's own prefill call reads the same identity back.
+  const peek = await fetch(`${BASE}/api/auth/google/pending`, { headers: { Cookie: cookie } });
+  assert.equal(peek.status, 200);
+  const peekBody = await peek.json();
+  assert.equal(peekBody.email, email);
+
+  const res = await fetch(`${BASE}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `10.0.5.${++ipCounter}`, Cookie: cookie },
+    // No password at all — the thing this whole feature is for.
+    body: JSON.stringify({ ...SIGNUP, password: undefined, name: `googler${Math.random()}`, email: 'ignored@should-not-be-used.edu' }),
+  });
+  const body = await res.json();
+  assert.equal(res.status, 200, JSON.stringify(body));
+  // The pending cookie's email wins, never whatever the request body claimed —
+  // a client cannot be trusted to say which address it owns, only Google
+  // having answered can.
+  assert.equal(body.user.email, email);
+
+  const db = createClient({ url: `file:${DB}` });
+  const row = (await db.execute({ sql: 'SELECT google_sub, password_hash FROM users WHERE lower(email) = ?', args: [email] })).rows[0];
+  assert.ok(row.google_sub, 'the account must record which Google identity created it');
+  assert.ok(row.password_hash, 'the NOT NULL column must still hold something');
+
+  // The cookie itself is a stateless proof of "this email was verified", good
+  // until it expires — it is not a one-time-use token. Replaying it cannot
+  // make a second account or take over the first: the email is already taken.
+  const replay = await fetch(`${BASE}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `10.0.5.${++ipCounter}`, Cookie: cookie },
+    body: JSON.stringify({ ...SIGNUP, password: undefined, name: `googler2${Math.random()}` }),
+  });
+  assert.equal(replay.status, 409);
+  assert.equal((await replay.json()).error, 'email_taken');
+});
+
+test('a Google identity that has expired or been tampered with is not trusted', async () => {
+  const email = `expired${Math.random()}@s.edu`;
+  const expired = `google_pending=${signGooglePending({ email, exp: Date.now() - 1000 })}`;
+  assert.equal((await fetch(`${BASE}/api/auth/google/pending`, { headers: { Cookie: expired } })).status, 404);
+
+  const fresh = signGooglePending({ email, exp: Date.now() + 15 * 60 * 1000 });
+  const tampered = `google_pending=${fresh.slice(0, -1)}${fresh.slice(-1) === 'a' ? 'b' : 'a'}`;
+  assert.equal((await fetch(`${BASE}/api/auth/google/pending`, { headers: { Cookie: tampered } })).status, 404);
+
+  // Falls all the way back to the ordinary rule: no valid identity, no
+  // password, no account — not a silent bypass.
+  const res = await fetch(`${BASE}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `10.0.5.${++ipCounter}`, Cookie: expired },
+    body: JSON.stringify({ ...SIGNUP, password: undefined, name: `expired${Math.random()}`, email }),
+  });
+  assert.equal(res.status, 400);
+  assert.match((await res.json()).error, /required/i);
 });

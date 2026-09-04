@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getDb, ensureUserColumns, ensureUniqueAccounts } from '@/lib/db';
 import { signSession, getCurrentUser } from '@/lib/auth';
 import { ipRateLimit } from '@/lib/ratelimit';
+import { domainError } from '@/lib/emailDomain';
+import { verifyGooglePending, clearGooglePendingCookie } from '@/lib/googleAuth';
 
 const AVATAR_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
@@ -28,9 +31,18 @@ export async function POST(req: NextRequest) {
   // way so they cannot become two accounts, and so signing in works whichever
   // way it is typed.
   const name = typeof body.name === 'string' ? body.name.trim() : '';
-  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 
-  if (!name || !email || !password) {
+  // A verified "Sign in with Google" identity waiting to be turned into an
+  // account. When present it decides the email — never whatever the client
+  // sent — since the whole point of it is that the client cannot be trusted
+  // to say which address it owns, only Google having answered can.
+  const pending = await verifyGooglePending();
+  const email = pending ? pending.email : (typeof body.email === 'string' ? body.email.trim().toLowerCase() : '');
+
+  // A password is how everyone else gets back in; a Google account signs in
+  // through Google instead, so it does not need one — see below where an
+  // unguessable one is generated to satisfy the column regardless.
+  if (!name || !email || (!pending && !password)) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
@@ -52,10 +64,13 @@ export async function POST(req: NextRequest) {
   }
 
   // When ALLOWED_EMAIL_DOMAIN is set (e.g. student.nssc.ac.th), only school
-  // emails may register.
-  const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;
-  if (allowedDomain && !String(email).toLowerCase().endsWith('@' + allowedDomain.toLowerCase())) {
-    return NextResponse.json({ error: 'email_domain', domain: allowedDomain }, { status: 400 });
+  // emails may register. Google verifying the address already re-checked this
+  // once in the callback that set `pending` — re-checking here as well means
+  // the rule lives in one place instead of being trusted to have been applied
+  // upstream.
+  const domainErr = domainError(email);
+  if (domainErr) {
+    return NextResponse.json({ error: 'email_domain', domain: domainErr.domain }, { status: 400 });
   }
 
   // Availability is a list of "row-col" slot keys (e.g. "noon-0"); store as JSON.
@@ -82,14 +97,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'name_taken' }, { status: 409 });
     }
 
-    const hash = await bcrypt.hash(password, 10);
+    // A Google-created account has no password of its own to check against —
+    // it signs in through Google instead — but the column is NOT NULL, so it
+    // gets a hash of random bytes nobody chose and nobody could reasonably
+    // guess. The student can still give the account a real password later
+    // from their profile, at which point signing in with it starts working.
+    const hash = await bcrypt.hash(pending ? crypto.randomBytes(32).toString('hex') : password, 10);
     const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
     const result = await db.execute({
       // When they agreed is stored alongside the account, so the record of the
       // agreement survives any later change to the wording of the pages.
-      sql: 'INSERT INTO users (name, email, password_hash, grade, class_no, contact, real_name, avatar_color, availability, terms_accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'))',
-      args: [name, email, hash, grade ?? null, classNo, contactStr, realName, color, availabilityJson],
+      sql: 'INSERT INTO users (name, email, password_hash, grade, class_no, contact, real_name, avatar_color, availability, terms_accepted_at, google_sub) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), ?)',
+      args: [name, email, hash, grade ?? null, classNo, contactStr, realName, color, availabilityJson, pending?.sub ?? null],
     });
 
     const user = { id: Number(result.lastInsertRowid), name, email, grade: grade ?? null, class_no: classNo, avatar_color: color };
@@ -97,6 +117,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({ user });
     res.cookies.set('session', token, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+    if (pending) clearGooglePendingCookie(res);
     return res;
   } catch (err) {
     // The unique index caught a signup that raced past the check above.
