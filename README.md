@@ -117,6 +117,10 @@ Copy `.env.example` to `.env.local` and fill it in.
 | `CRON_SECRET` | no | Vercel Cron sends it as a bearer token to the harvest route. |
 | `GOOGLE_CLIENT_ID` | no | Enables "Sign in with Google". Leave both Google vars unset to hide the button entirely. |
 | `GOOGLE_CLIENT_SECRET` | no | Paired with `GOOGLE_CLIENT_ID`. |
+| `VAPID_PUBLIC_KEY` | no | Enables push notifications. Leave the three VAPID vars unset to hide the "turn on notifications" toggle. |
+| `VAPID_PRIVATE_KEY` | no | Paired with `VAPID_PUBLIC_KEY`. Keep this one secret — it lets whoever holds it send a push as this site. |
+| `VAPID_SUBJECT` | no | A `mailto:` address or URL identifying the site owner, required by the push protocol. |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | with the above | The same value as `VAPID_PUBLIC_KEY`, exposed to the browser (the public key is meant to be public — this is what the browser needs to create a subscription). |
 
 ### Setting up "Sign in with Google"
 
@@ -126,6 +130,14 @@ Copy `.env.example` to `.env.local` and fill it in.
 4. If `ALLOWED_EMAIL_DOMAIN` is set, it also applies to Google sign-ins — a Google account outside that domain is turned away with the same message a password sign-up would get.
 
 A student who signs up with Google never sets a password; they can add one later from their profile if they want a second way in.
+
+### Setting up push notifications
+
+1. Generate a VAPID keypair (no account or third-party service needed — it's your own keypair, free): `npx web-push generate-vapid-keys`.
+2. Set `VAPID_PUBLIC_KEY` and `NEXT_PUBLIC_VAPID_PUBLIC_KEY` to the printed public key, `VAPID_PRIVATE_KEY` to the private key, and `VAPID_SUBJECT` to `mailto:` plus an address you control.
+3. That's it — every notification the site already tracks (a trade offer, an accepted swap, a Wonder Box match, ...) now also pushes to any device where a student tapped "turn on notifications" in the bell menu.
+4. iOS Safari requires the site to be added to the home screen first (Share → Add to Home Screen) before it will ask for notification permission — a Safari tab cannot subscribe directly. Android/Chrome and desktop browsers have no such requirement.
+5. Rotating the keys signs every existing device out of push (their old subscription no longer matches) — they simply need to tap "turn on notifications" again.
 
 ---
 

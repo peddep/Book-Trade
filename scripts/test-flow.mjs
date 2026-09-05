@@ -801,3 +801,26 @@ test('a Google identity that has expired or been tampered with is not trusted', 
   assert.equal(res.status, 400);
   assert.match((await res.json()).error, /required/i);
 });
+
+// ── Push notifications ──────────────────────────────────────────────────
+//
+// The harness's env has no VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY (deliberately —
+// same reasoning as Google above), so the endpoint should say so rather than
+// pretend to save a subscription it can never use. Sending a real push and
+// having a dead one cleaned up was checked by hand: a well-formed subscription
+// against a bogus endpoint gets a genuine 410 back from Google's push
+// service, which the app catches and deletes the row for.
+
+test('push subscribing requires a session and a real subscription shape', async () => {
+  const cookie = await register(`pushuser${Math.random()}`, `pushuser${Math.random()}@s.edu`);
+  const validSub = { endpoint: 'https://fcm.googleapis.com/fcm/send/x', keys: { p256dh: 'p', auth: 'a' } };
+
+  const noAuth = await api('/api/push/subscribe', { method: 'POST', body: validSub });
+  assert.equal(noAuth.status, 401);
+
+  // Not configured in this harness, so even a signed-in, well-formed request
+  // is turned away rather than silently accepted and never delivered.
+  const notConfigured = await api('/api/push/subscribe', { method: 'POST', cookie, body: validSub });
+  assert.equal(notConfigured.status, 400);
+  assert.equal(notConfigured.json.error, 'not_configured');
+});

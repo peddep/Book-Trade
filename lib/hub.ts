@@ -104,6 +104,19 @@ export async function ensureHubTables() {
         status TEXT NOT NULL DEFAULT 'open',
         created_at TEXT DEFAULT (datetime('now'))
       )`,
+      // One row per device that has granted push permission. `endpoint` is the
+      // push service's own URL for that device and is unique to it, which is
+      // what lets the same student get a notification on every phone or
+      // browser they signed in on, and what lets a device that uninstalled or
+      // revoked permission be dropped without touching the others.
+      `CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        endpoint TEXT UNIQUE NOT NULL,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
     ],
     'write'
   );

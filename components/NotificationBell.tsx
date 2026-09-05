@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { timeAgo } from '@/lib/time';
+import PushToggle from '@/components/PushToggle';
 
 interface Notification {
   id: number;
@@ -137,6 +138,9 @@ export default function NotificationBell() {
                 </button>
               ))
             )}
+          </div>
+          <div className="px-3 py-2" style={{ borderTop: '1px solid #e9d5ff' }}>
+            <PushToggle />
           </div>
         </div>
       )}

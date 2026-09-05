@@ -1,4 +1,5 @@
 import { getDb } from './db';
+import { sendPush } from './push';
 
 // The events a student is told about. Each maps to a `notif.<kind>` string in
 // the i18n table, rendered with {actor} and {subject}.
@@ -30,6 +31,11 @@ export async function notify(userId: number, kind: NotifyKind, opts: Options = {
   } catch {
     // table not created yet on a very old database, or a transient write error
   }
+  // Awaited, not fire-and-forget: on Vercel, work left running after the
+  // response is sent is not guaranteed to finish. sendPush() never throws, so
+  // this cannot fail the action that caused it — it only adds the time of one
+  // push network call.
+  await sendPush(userId, kind, opts);
 }
 
 // Same, for both sides of a trade at once.

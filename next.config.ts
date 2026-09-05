@@ -21,6 +21,8 @@ const securityHeaders = [
       // Book covers can come from wherever a student's ISBN lookup found one.
       "img-src 'self' data: https:",
       "connect-src 'self'",
+      // The push-notification service worker (public/sw.js).
+      "worker-src 'self'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
