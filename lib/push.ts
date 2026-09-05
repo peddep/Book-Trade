@@ -11,6 +11,16 @@ export function pushConfigured(): boolean {
 let vapidSet = false;
 function ensureVapid() {
   if (vapidSet || !pushConfigured()) return;
+  // The browser encrypts every subscription against NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  // (baked into the client bundle at build time); the server signs and
+  // decrypts against VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY. If the two public
+  // values ever drift apart — a copy-paste slip, one updated without the
+  // other — every send fails with an auth error that looks identical to "no
+  // subscriptions," so it's worth calling out once at startup rather than
+  // leaving it to be rediscovered from a support message.
+  if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY !== process.env.VAPID_PUBLIC_KEY) {
+    console.error('VAPID_PUBLIC_KEY and NEXT_PUBLIC_VAPID_PUBLIC_KEY do not match — every push send will fail.');
+  }
   webPush.setVapidDetails(
     process.env.VAPID_SUBJECT || 'mailto:admin@example.com',
     process.env.VAPID_PUBLIC_KEY!,
@@ -76,6 +86,12 @@ export async function sendPush(userId: number, kind: NotifyKind, opts: { actor?:
         const status = (err as { statusCode?: number }).statusCode;
         if (status === 404 || status === 410) {
           await getDb().execute({ sql: 'DELETE FROM push_subscriptions WHERE id = ?', args: [row.id] }).catch(() => {});
+        } else {
+          // Anything else (a bad VAPID key pair, a malformed subject, a
+          // network error) previously failed completely silently — visible
+          // nowhere, not even Vercel's function logs. That made a real
+          // misconfiguration indistinguishable from "nothing to report."
+          console.error('Push send failed for subscription', row.id, ':', err);
         }
       }
     }));
