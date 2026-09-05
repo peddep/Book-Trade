@@ -114,6 +114,7 @@ Copy `.env.example` to `.env.local` and fill it in.
 | `GOOGLE_BOOKS_API_KEY` | strongly recommended | Without it, barcode scans and title lookups return nothing — Google gives anonymous callers a daily quota of zero. Enable the **Books API** on the project, not just a key. |
 | `ADMIN_EMAIL` | no | Who sees the admin dashboard. Accepts several addresses separated by commas, e.g. `a@student.nssc.ac.th, b@student.nssc.ac.th`. Defaults to account #1. |
 | `ALLOWED_EMAIL_DOMAIN` | no | Restricts sign-ups, e.g. `student.nssc.ac.th`. |
+| `ALLOWED_EMAIL_EXTRA` | no | Exact addresses allowed to sign up despite `ALLOWED_EMAIL_DOMAIN` — for testing with a personal account without opening sign-ups to everyone. Several addresses separated by commas, e.g. `me@gmail.com, tester@gmail.com`. |
 | `CRON_SECRET` | no | Vercel Cron sends it as a bearer token to the harvest route. |
 | `GOOGLE_CLIENT_ID` | no | Enables "Sign in with Google". Leave both Google vars unset to hide the button entirely. |
 | `GOOGLE_CLIENT_SECRET` | no | Paired with `GOOGLE_CLIENT_ID`. |

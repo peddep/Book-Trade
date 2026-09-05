@@ -10,6 +10,7 @@ import { spawn, execSync } from 'node:child_process';
 import { rmSync, readFileSync, readdirSync, readlinkSync } from 'node:fs';
 import { createClient } from '@libsql/client';
 import crypto from 'node:crypto';
+import { domainError } from '../lib/emailDomain.ts';
 
 const PORT = 3199;
 const BASE = `http://localhost:${PORT}`;
@@ -861,4 +862,29 @@ test('an admin can delete a student account, but not while a trade is agreed and
   const row = bTrades.find(x => x.id === t);
   assert.ok(row, 'the finished trade must still appear in the other student\'s history');
   assert.match(String(row.owner_name ?? row.requester_name), /ผู้ใช้ที่ลบบัญชี/);
+});
+
+// ── ALLOWED_EMAIL_EXTRA ──────────────────────────────────────────────────
+//
+// A pure-function unit test rather than a server round trip: this harness
+// deliberately runs with no ALLOWED_EMAIL_DOMAIN set (so @s.edu test accounts
+// can register freely), so exercising the restriction itself means setting
+// the env vars around the call rather than spinning up a second server.
+
+test('ALLOWED_EMAIL_EXTRA lets a specific address through despite the domain restriction', () => {
+  const restore = { domain: process.env.ALLOWED_EMAIL_DOMAIN, extra: process.env.ALLOWED_EMAIL_EXTRA };
+  try {
+    process.env.ALLOWED_EMAIL_DOMAIN = 'student.nssc.ac.th';
+    process.env.ALLOWED_EMAIL_EXTRA = 'Me@Gmail.com, other@example.com';
+
+    assert.equal(domainError('someone@student.nssc.ac.th'), null, 'the real domain still just works');
+    assert.deepEqual(domainError('someone@gmail.com'), { domain: 'student.nssc.ac.th' }, 'an unlisted outside address is still refused');
+    // Case-insensitive on both sides — how it's typed into Vercel and how the
+    // student typed their own email should not have to match exactly.
+    assert.equal(domainError('me@gmail.com'), null, 'a listed address is let through');
+    assert.equal(domainError('ME@GMAIL.COM'), null);
+  } finally {
+    process.env.ALLOWED_EMAIL_DOMAIN = restore.domain;
+    process.env.ALLOWED_EMAIL_EXTRA = restore.extra;
+  }
 });
