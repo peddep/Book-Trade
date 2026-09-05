@@ -32,7 +32,7 @@ export default function IrlGuide() {
     {
       icon: '📚',
       title: t('guide.meetTitle'),
-      steps: [t('guide.meet1'), t('guide.meet2'), t('guide.meet3')],
+      steps: [t('guide.meet1'), t('guide.meetTime'), t('guide.meet2'), t('guide.meet3')],
     },
     {
       icon: '✅',

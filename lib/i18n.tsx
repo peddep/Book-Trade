@@ -358,6 +358,7 @@ const STRINGS: Dict = {
   'guide.meetTitle': { th: 'ตอนเจอกัน', en: 'When you meet' },
   'guide.meet1': { th: 'เจอกันที่ห้องสมุดคอวนิชตามเวลาที่นัด ไปให้ตรงเวลา เพื่อนมีเวลาว่างแค่คาบเดียว', en: 'Meet at the school library at the agreed time. Be on time — the other person may only have that one free period.' },
   'guide.meetSpotCaption': { th: 'จุดนัดพบ: นั่งรอเพื่อนตรงม้านั่งจุดนี้ในห้องสมุดคอวนิช', en: 'Meeting spot: sit and wait on this bench inside the Kowanit Library.' },
+  'guide.meetTime': { th: 'คุณมีเวลา 10 นาทีที่จุดนัดพบ คุยเรื่องหนังสือกันได้ตามสบายในเวลานี้', en: 'You have the full 10 minutes at the meeting spot — feel free to chat about the books during that time.' },
   'guide.meet2': { th: 'เปิดดูหนังสือของอีกฝ่ายก่อนแลก ทั้งสองคนพอใจแล้วค่อยแลก', en: 'Look at each other\'s book before swapping. Only swap once you are both happy with it.' },
   'guide.meet3': { th: 'ถ้าสภาพไม่ตรงกับที่ตกลงไว้ ไม่ต้องแลกก็ได้ ไม่ใช่เรื่องเสียมารยาท', en: 'If it is not in the condition agreed, you do not have to go through with it. Walking away is not rude.' },
   'guide.afterTitle': { th: 'หลังแลกเสร็จ', en: 'After the swap' },
