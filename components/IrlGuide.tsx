@@ -65,6 +65,17 @@ export default function IrlGuide() {
                     </li>
                   ))}
                 </ol>
+                {/* A photo beats a description here — "the library" still
+                    leaves a first-timer unsure exactly where to stand. */}
+                {g.title === t('guide.meetTitle') && (
+                  <div className="mt-3 rounded-xl overflow-hidden" style={{ border: '1px solid #e9d5ff' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/meet-spot.jpg" alt={t('guide.meetSpotCaption')} className="w-full h-auto block" loading="lazy" />
+                    <p className="text-xs font-semibold text-center py-2 px-3" style={{ background: '#faf5ff', color: '#7c3aed' }}>
+                      📍 {t('guide.meetSpotCaption')}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
