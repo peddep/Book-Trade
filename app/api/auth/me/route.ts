@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getDb, ensureUserColumns, ensureUniqueAccounts } from '@/lib/db';
 import { getCurrentUser, isAdmin, signSession } from '@/lib/auth';
-import { deleteAccount } from '@/lib/hub';
 import type { UserRow } from '@/lib/dbTypes';
 
 export async function GET() {
@@ -144,29 +143,5 @@ export async function PATCH(req: NextRequest) {
   res.cookies.set('session', signSession(nextUser), {
     httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7, sameSite: 'lax', secure: process.env.NODE_ENV === 'production',
   });
-  return res;
-}
-
-// Self-service account deletion. Requires the student to type their own
-// username first — the confirmation lives here, not just in the client, so a
-// stray or scripted request can't delete an account without it.
-export async function DELETE(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const body = await req.json().catch(() => ({}));
-  const confirmName = typeof body.confirm_name === 'string' ? body.confirm_name.trim() : '';
-  if (confirmName.toLowerCase() !== user.name.toLowerCase()) {
-    return NextResponse.json({ error: 'name_mismatch' }, { status: 400 });
-  }
-
-  const outcome = await deleteAccount(user.id);
-  if (outcome === 'in_agreed_trade') {
-    // Somebody is expecting to be handed a book at the library.
-    return NextResponse.json({ error: 'in_agreed_trade' }, { status: 409 });
-  }
-
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set('session', '', { maxAge: 0, path: '/' });
   return res;
 }

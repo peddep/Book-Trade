@@ -38,10 +38,6 @@ export default function RoomPage() {
   const [pendingOffers, setPendingOffers] = useState(0);
   const [editing, setEditing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteInput, setDeleteInput] = useState('');
-  const [deleteError, setDeleteError] = useState('');
-  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', grade: '', class_no: '', contact: '', avatar_color: '#6366f1', new_password: '' });
   const [availability, setAvailability] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -106,29 +102,6 @@ export default function RoomPage() {
     // signed-in site to somebody who has just signed out of it.
     setSessionUser(null);
     router.push('/');
-  }
-
-  async function confirmDelete() {
-    if (!user) return;
-    setDeleting(true);
-    setDeleteError('');
-    const res = await fetch('/api/auth/me', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirm_name: deleteInput }),
-    });
-    if (res.ok) {
-      setSessionUser(null);
-      router.push('/');
-      return;
-    }
-    const d = await res.json().catch(() => ({}));
-    setDeleteError(
-      d.error === 'name_mismatch' ? t('account.deleteMismatch')
-      : d.error === 'in_agreed_trade' ? t('account.deleteBlocked')
-      : t('account.deleteFailed')
-    );
-    setDeleting(false);
   }
 
   if (!user) return (
@@ -309,55 +282,9 @@ export default function RoomPage() {
                     {t('room2.admin')}
                   </Link>
                 )}
-                <button onClick={logout} className="w-full py-2.5 mb-3 rounded-xl font-semibold text-sm" style={{ background: '#fee2e2', color: '#ef4444' }}>
+                <button onClick={logout} className="w-full py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#fee2e2', color: '#ef4444' }}>
                   {t('room2.signOut')}
                 </button>
-                <button
-                  onClick={() => { setShowSettings(false); setDeleteInput(''); setDeleteError(''); setShowDeleteConfirm(true); }}
-                  className="w-full py-2 rounded-xl font-semibold text-xs"
-                  style={{ background: '#ffffff', color: '#ef4444', border: '1px solid #fecaca' }}>
-                  {t('account.delete')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete account confirmation */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46, 16, 101, 0.4)' }}
-            onClick={() => !deleting && setShowDeleteConfirm(false)}>
-            <div className="w-full max-w-sm rounded-2xl shadow-2xl bt-pop-in overflow-hidden"
-              style={{ background: '#ffffff', border: '1px solid #fecaca' }}
-              onClick={e => e.stopPropagation()}>
-              <div className="px-6 pt-6 pb-5">
-                <p className="text-lg font-bold mb-2" style={{ color: '#ef4444' }}>⚠️ {t('account.deleteTitle')}</p>
-                <p className="text-sm text-[#4b5563] leading-relaxed mb-4">{t('account.deleteBody')}</p>
-                <label className="block text-xs font-semibold text-[#6b7280] mb-1.5">
-                  {t('account.deleteConfirmLabel', { name: user.name })}
-                </label>
-                <input
-                  value={deleteInput}
-                  onChange={e => setDeleteInput(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#2e1065]"
-                  style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}
-                  autoCapitalize="off"
-                  autoCorrect="off"
-                />
-                {deleteError && <p className="text-sm mb-3" style={{ color: '#ef4444' }}>{deleteError}</p>}
-                <div className="flex gap-2">
-                  <button onClick={() => setShowDeleteConfirm(false)} disabled={deleting}
-                    className="flex-1 py-2.5 rounded-xl font-semibold text-sm disabled:opacity-50" style={{ background: '#f3f4f6', color: '#6b7280' }}>
-                    {t('account.deleteCancel')}
-                  </button>
-                  <button
-                    onClick={confirmDelete}
-                    disabled={deleting || deleteInput.trim().toLowerCase() !== user.name.toLowerCase()}
-                    className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-                    style={{ background: '#ef4444' }}>
-                    {t('account.deleteConfirmButton')}
-                  </button>
-                </div>
               </div>
             </div>
           </div>
