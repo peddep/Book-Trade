@@ -10,7 +10,23 @@ import { spawn, execSync } from 'node:child_process';
 import { rmSync, readFileSync, readdirSync, readlinkSync } from 'node:fs';
 import { createClient } from '@libsql/client';
 import crypto from 'node:crypto';
-import { domainError } from '../lib/emailDomain.ts';
+// A duplicate of lib/emailDomain.ts's domainError(), not an import of it.
+// This test runner is plain Node against a .mjs file — CI pins an older
+// Node that cannot import a .ts file at all (newer local Node versions
+// silently type-strip it, which is what let this slip through once already).
+// Keep this in sync with lib/emailDomain.ts if that ever changes.
+function domainError(email) {
+  const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;
+  if (!allowedDomain) return null;
+  const lower = email.toLowerCase();
+  if (lower.endsWith('@' + allowedDomain.toLowerCase())) return null;
+  const extra = process.env.ALLOWED_EMAIL_EXTRA;
+  if (extra) {
+    const allowed = extra.split(/[,;\s]+/).map(e => e.trim().toLowerCase()).filter(Boolean);
+    if (allowed.includes(lower)) return null;
+  }
+  return { domain: allowedDomain };
+}
 
 const PORT = 3199;
 const BASE = `http://localhost:${PORT}`;
