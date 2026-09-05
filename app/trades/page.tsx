@@ -53,11 +53,6 @@ interface Trade {
   created_at: string;
 }
 
-interface User {
-  id: number;
-  name: string;
-}
-
 const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: string }> = {
   pending:   { bg: '#fef9c3', color: '#b45309', labelKey: 'trades.pending' },
   accepted:  { bg: '#dcfce7', color: '#10b981', labelKey: 'trades.accepted' },

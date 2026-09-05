@@ -137,7 +137,11 @@ export const clearHarvestRunning = () => writeState('harvest_running', '0');
 export const getHarvestStop = () => readState('harvest_stop');
 export const requestHarvestStop = () => writeState('harvest_stop', String(Date.now()));
 
-async function fetchPage(query: string, startIndex: number): Promise<{ rateLimited: boolean; items: any[] }> {
+interface HarvestItem {
+  volumeInfo?: { title?: string; authors?: string[]; publisher?: string };
+}
+
+async function fetchPage(query: string, startIndex: number): Promise<{ rateLimited: boolean; items: HarvestItem[] }> {
   const params = new URLSearchParams({
     q: query,
     langRestrict: 'th',

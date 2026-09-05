@@ -23,6 +23,12 @@ interface User {
   is_admin?: boolean;
 }
 
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>{children}</div>
+  );
+}
+
 export default function RoomPage() {
   const { t, lang, setLang, gradeLabel } = useI18n();
   const [user, setUser] = useState<User | null>(null);
@@ -115,10 +121,6 @@ export default function RoomPage() {
     { key: 'ch.wonderbox', done: tradesMade >= 1 },
   ];
   const achievements = challenges.filter(c => c.done);
-
-  const Card = ({ children }: { children: React.ReactNode }) => (
-    <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>{children}</div>
-  );
 
   return (
     <>

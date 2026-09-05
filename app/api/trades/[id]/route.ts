@@ -3,6 +3,7 @@ import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { announceTrade, isBanned, priceDiffOk } from '@/lib/hub';
 import { notify, notifyBoth } from '@/lib/notify';
+import type { TradeRow } from '@/lib/dbTypes';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -18,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const db = getDb();
 
   const found = await db.execute({ sql: 'SELECT * FROM trades WHERE id = ?', args: [id] });
-  const trade = found.rows[0] as any;
+  const trade = found.rows[0] as unknown as TradeRow | undefined;
   if (!trade) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const isRequester = Number(trade.requester_id) === user.id;
@@ -95,7 +96,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         sql: 'SELECT id, owner_id FROM books WHERE id IN (?, ?)',
         args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
       });
-      const owners = new Map(still.rows.map((r: any) => [Number(r.id), Number(r.owner_id)]));
+      const owners = new Map(still.rows.map((r) => [Number((r as unknown as { id: number }).id), Number((r as unknown as { owner_id: number }).owner_id)]));
       if (
         owners.get(Number(trade.offered_book_id)) !== Number(trade.requester_id) ||
         owners.get(Number(trade.wanted_book_id)) !== Number(trade.owner_id)
@@ -165,10 +166,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       sql: 'SELECT id, owner_id, available, price FROM books WHERE id IN (?, ?)',
       args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
     });
-    const byId = new Map(state.rows.map((r: any) => [Number(r.id), r]));
-    const offeredNow = byId.get(Number(trade.offered_book_id)) as any;
-    const wantedNow = byId.get(Number(trade.wanted_book_id)) as any;
-    const usable = (b: any, expectedOwner: number) =>
+    type BookState = { id: number; owner_id: number; available: number; price: number | null };
+    const byId = new Map(state.rows.map((r) => {
+      const row = r as unknown as BookState;
+      return [Number(row.id), row] as const;
+    }));
+    const offeredNow = byId.get(Number(trade.offered_book_id));
+    const wantedNow = byId.get(Number(trade.wanted_book_id));
+    const usable = (b: BookState | undefined, expectedOwner: number) =>
       b && Number(b.owner_id) === expectedOwner && Number(b.available) === 1;
     if (!usable(offeredNow, Number(trade.requester_id)) || !usable(wantedNow, Number(trade.owner_id))) {
       await db.execute({ sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?", args: [id] });
@@ -177,7 +182,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // The price rule is checked when the offer is made, so editing a book's
     // price afterwards would otherwise carry a trade past a limit it could
     // never have been created under.
-    if (!priceDiffOk(offeredNow.price, wantedNow.price)) {
+    if (!priceDiffOk(offeredNow?.price, wantedNow?.price)) {
       return NextResponse.json({ error: 'price_gap' }, { status: 400 });
     }
   }
@@ -253,7 +258,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
                    (SELECT title FROM books WHERE id = ?) AS subject`,
       args: [user.id, Number(trade.wanted_book_id)],
     });
-    const row = names.rows[0] as any;
+    const row = names.rows[0] as unknown as { actor: string | null; subject: string | null } | undefined;
     const kind = status === 'accepted' ? 'trade_accepted' : status === 'rejected' ? 'trade_rejected' : 'trade_cancelled';
     await notify(other, kind, {
       actor: row?.actor ? String(row.actor) : null,

@@ -51,7 +51,11 @@ export async function GET(req: NextRequest) {
       signal: AbortSignal.timeout(8000),
     });
     const body = await res.text();
-    let parsed: any = null;
+    let parsed: {
+      totalItems?: number;
+      error?: { message?: string };
+      items?: Array<{ id?: string; volumeInfo?: Record<string, unknown> }>;
+    } | null = null;
     try { parsed = JSON.parse(body); } catch { /* not json */ }
     const item = parsed?.items?.[0];
     const info = item?.volumeInfo;

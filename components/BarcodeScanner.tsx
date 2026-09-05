@@ -3,6 +3,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 
+// Chrome/Android's native barcode reader and the extended, non-standard parts
+// of the camera capabilities API it's paired with here (focus mode, torch) —
+// none of these are in TypeScript's built-in lib.dom types.
+interface BarcodeDetectorResult {
+  rawValue: string;
+}
+interface BarcodeDetectorLike {
+  detect(source: HTMLVideoElement): Promise<BarcodeDetectorResult[]>;
+}
+interface BarcodeDetectorCtor {
+  new (options: { formats: string[] }): BarcodeDetectorLike;
+  getSupportedFormats(): Promise<string[]>;
+}
+interface ExtendedTrackCapabilities extends MediaTrackCapabilities {
+  focusMode?: string[];
+  torch?: boolean;
+}
+
 interface Props {
   onDetected: (isbn: string) => void;
   onClose: () => void;
@@ -71,7 +89,11 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
   const [torchable, setTorchable] = useState(false);
   const trackRef = useRef<MediaStreamTrack | null>(null);
   // The last ISBN we looked up, so a failed lookup can be retried deliberately.
+  // Read during an event handler (retryLast), never during render — the
+  // "retry" button's own visibility is tracked separately in state below,
+  // since a ref change alone wouldn't re-render to show it.
   const lastIsbnRef = useRef<string | null>(null);
+  const [hasLastIsbn, setHasLastIsbn] = useState(false);
   // Gates decoding. Set while a lookup is in flight so the same barcode isn't
   // read over and over, cleared to resume scanning.
   const doneRef = useRef(false);
@@ -187,6 +209,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
       doneRef.current = true;
       triedRef.current.add(isbn);
       lastIsbnRef.current = isbn;
+      setHasLastIsbn(true);
       setWrongCode(false);
       setRetryMsg('');
       // Hold the camera here until the parent's lookup reports back.
@@ -203,9 +226,9 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
       if (!track) return;
       trackRef.current = track;
       try {
-        const caps: any = track.getCapabilities?.() ?? {};
+        const caps = (track.getCapabilities?.() ?? {}) as ExtendedTrackCapabilities;
         if (Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
-          await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] });
+          await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] });
         }
         if ('torch' in caps) setTorchable(true);
       } catch { /* the camera does not take these; carry on without them */ }
@@ -241,8 +264,8 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
       }
 
       // Path 1: native BarcodeDetector (Chrome/Android — fast and reliable).
-      const BD = (window as any).BarcodeDetector;
-      let detector: any = null;
+      const BD = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
+      let detector: BarcodeDetectorLike | null = null;
       if (BD) {
         try {
           const formats: string[] = await BD.getSupportedFormats();
@@ -324,7 +347,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     if (!track) return;
     const next = !torchOn;
     try {
-      await track.applyConstraints({ advanced: [{ torch: next } as any] });
+      await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] });
       setTorchOn(next);
     } catch { setTorchable(false); }
   }
@@ -364,7 +387,6 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-4" style={{ background: 'rgba(17, 6, 41, 0.92)' }}>
       <p className="text-white font-bold mb-3 text-center px-2">{heading}</p>
       <div className="relative w-full max-w-sm rounded-2xl overflow-hidden" style={{ border: '2px solid #8b5cf6' }}>
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video ref={videoRef} playsInline muted className="w-full" style={{ maxHeight: '55vh', objectFit: 'cover' }} />
         {/* Aiming guide: a barcode strip while scanning, a cover-shaped frame after */}
         {coverPhase ? (
@@ -395,7 +417,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
             🔦 {t('scan.torch')}
           </button>
         )}
-        {!coverPhase && !lookingPhase && retryMsg && lastIsbnRef.current && (
+        {!coverPhase && !lookingPhase && retryMsg && hasLastIsbn && (
           <button onClick={retryLast} className="px-4 py-2.5 rounded-xl font-semibold text-sm"
             style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff' }}>
             ↻ {t('scan.retrySame')}

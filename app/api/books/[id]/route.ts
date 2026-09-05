@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { isBanned, removeBook } from '@/lib/hub';
+import type { BookRow } from '@/lib/dbTypes';
+import type { InValue } from '@libsql/client';
 
 const MAX_COVER_LEN = 400_000;
 function sanitizeCover(cover: unknown): string | null {
@@ -20,7 +22,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { id } = await params;
   const db = getDb();
   const found = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [id] });
-  const book = found.rows[0] as any;
+  const book = found.rows[0] as unknown as BookRow | undefined;
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   if (Number(book.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -45,7 +47,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const db = getDb();
   await ensureBookColumns();
   const found = await db.execute({ sql: 'SELECT * FROM books WHERE id = ?', args: [id] });
-  const book = found.rows[0] as any;
+  const book = found.rows[0] as unknown as BookRow | undefined;
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   // The owner can edit their book; the admin may too (e.g. adding a missing cover).
   if (Number(book.owner_id) !== user.id && !isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -54,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // Editable text fields.
   const sets: string[] = [];
-  const args: unknown[] = [];
+  const args: InValue[] = [];
   if (typeof body.title === 'string' && body.title.trim()) { sets.push('title = ?'); args.push(body.title.trim()); }
   if (typeof body.author === 'string' && body.author.trim()) { sets.push('author = ?'); args.push(body.author.trim()); }
   if (typeof body.title_en !== 'undefined') {
@@ -76,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
   if (sets.length) {
     args.push(id);
-    await db.execute({ sql: `UPDATE books SET ${sets.join(', ')} WHERE id = ?`, args: args as any[] });
+    await db.execute({ sql: `UPDATE books SET ${sets.join(', ')} WHERE id = ?`, args });
   }
 
   if (typeof body.available !== 'undefined') {

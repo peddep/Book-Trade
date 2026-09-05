@@ -144,7 +144,7 @@ export async function announceTrade(tradeId: number) {
           WHERE t.id = ?`,
     args: [tradeId],
   });
-  const r = res.rows[0] as any;
+  const r = res.rows[0] as unknown as { requester_name: string; owner_name: string; offered_title: string; wanted_title: string } | undefined;
   if (!r) return;
   const body = `${r.requester_name} ⇄ ${r.owner_name} · ${r.offered_title} ⇄ ${r.wanted_title}`;
   await db.execute({
@@ -188,7 +188,7 @@ export async function removeBook(bookId: number, opts: { force?: boolean } = {})
     sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE status IN ('pending','accepted') AND (offered_book_id = ? OR wanted_book_id = ?)",
     args: [bookId, bookId],
   });
-  for (const row of live.rows as any[]) {
+  for (const row of live.rows as unknown as Array<{ offered_book_id: number; wanted_book_id: number }>) {
     const other = Number(row.offered_book_id) === bookId ? Number(row.wanted_book_id) : Number(row.offered_book_id);
     await db.execute({ sql: 'UPDATE books SET available = 1 WHERE id = ?', args: [other] });
   }
@@ -271,7 +271,7 @@ export async function runWonderBoxMatcher() {
   const waiting = await db.execute(
     "SELECT wb.id, wb.user_id, wb.book_id, b.price FROM wonder_box wb JOIN books b ON wb.book_id = b.id WHERE wb.status = 'waiting' AND b.available = 1 ORDER BY wb.created_at"
   );
-  const pool = [...waiting.rows] as any[];
+  const pool = [...waiting.rows] as unknown as Array<{ id: number; user_id: number; book_id: number; price: number | null }>;
   let guard = 0;
   while (pool.length >= 2 && guard++ < 1000) {
     const a = pool.shift()!;

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables, getFreeOwnedBook, createInstantTrade, makeRoomCode, priceDiffOk, PLAN } from '@/lib/hub';
+import type { RoomRow } from '@/lib/dbTypes';
 
 export const runtime = 'nodejs';
 
 async function roomPayload(code: string, userId: number) {
   const db = getDb();
   const roomRes = await db.execute({ sql: 'SELECT * FROM rooms WHERE code = ?', args: [code.toUpperCase()] });
-  const room = roomRes.rows[0] as any;
+  const room = roomRes.rows[0] as unknown as RoomRow | undefined;
   if (!room) return null;
   const members = await db.execute({
     sql: `SELECT rm.user_id, rm.received_book_id, u.name, u.avatar_color, b.title, b.title_en, b.cover_color, b.cover_url,
@@ -25,7 +26,7 @@ async function roomPayload(code: string, userId: number) {
     status: room.status,
     owner_id: Number(room.owner_id),
     is_owner: Number(room.owner_id) === userId,
-    is_member: members.rows.some((m: any) => Number(m.user_id) === userId),
+    is_member: members.rows.some((m) => Number((m as unknown as { user_id: number }).user_id) === userId),
     max: PLAN.roomMax,
     members: members.rows,
   };
@@ -80,11 +81,11 @@ export async function POST(req: NextRequest) {
   if (action === 'join') {
     const code = String(body.code ?? '').toUpperCase().trim();
     const roomRes = await db.execute({ sql: "SELECT * FROM rooms WHERE code = ? AND status = 'open'", args: [code] });
-    const room = roomRes.rows[0] as any;
+    const room = roomRes.rows[0] as unknown as RoomRow | undefined;
     if (!room) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
     const members = await db.execute({ sql: 'SELECT user_id FROM room_members WHERE room_id = ?', args: [Number(room.id)] });
-    if (members.rows.some((m: any) => Number(m.user_id) === user.id)) {
+    if (members.rows.some((m) => Number((m as unknown as { user_id: number }).user_id) === user.id)) {
       return NextResponse.json({ room: await roomPayload(code, user.id) });
     }
     if (members.rows.length >= PLAN.roomMax) return NextResponse.json({ error: 'room_full' }, { status: 400 });
@@ -102,7 +103,7 @@ export async function POST(req: NextRequest) {
   if (action === 'shuffle') {
     const code = String(body.code ?? '').toUpperCase().trim();
     const roomRes = await db.execute({ sql: "SELECT * FROM rooms WHERE code = ? AND status = 'open'", args: [code] });
-    const room = roomRes.rows[0] as any;
+    const room = roomRes.rows[0] as unknown as RoomRow | undefined;
     if (!room) return NextResponse.json({ error: 'not_found' }, { status: 404 });
     if (Number(room.owner_id) !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
             WHERE rm.room_id = ? AND b.available = 1`,
       args: [Number(room.id)],
     });
-    const members = [...membersRes.rows] as any[];
+    const members = [...membersRes.rows] as unknown as Array<{ id: number; user_id: number; book_id: number; price: number | null }>;
     if (members.length < 2) return NextResponse.json({ error: 'need_two' }, { status: 400 });
 
     // Shuffle, then greedily pair members whose book prices are within range.
@@ -136,7 +137,7 @@ export async function POST(req: NextRequest) {
   if (action === 'leave') {
     const code = String(body.code ?? '').toUpperCase().trim();
     const roomRes = await db.execute({ sql: "SELECT * FROM rooms WHERE code = ? AND status = 'open'", args: [code] });
-    const room = roomRes.rows[0] as any;
+    const room = roomRes.rows[0] as unknown as RoomRow | undefined;
     if (room) {
       await db.execute({ sql: 'DELETE FROM room_members WHERE room_id = ? AND user_id = ?', args: [Number(room.id), user.id] });
       const left = await db.execute({ sql: 'SELECT COUNT(*) AS n FROM room_members WHERE room_id = ?', args: [Number(room.id)] });

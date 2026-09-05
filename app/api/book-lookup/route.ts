@@ -107,7 +107,12 @@ async function fetchFirstCover(urls: (string | null | undefined)[]): Promise<str
 // with no imageLinks does not find a missing picture, it just returns the
 // "Image not available" placeholder. The host is only used to fetch a larger
 // rendering of a cover Google has already said it has.
-function googleCoverCandidates(volumeId: string | null, imageLinks: any): (string | null)[] {
+interface GoogleImageLinks {
+  thumbnail?: string;
+  smallThumbnail?: string;
+}
+
+function googleCoverCandidates(volumeId: string | null, imageLinks: GoogleImageLinks | undefined): (string | null)[] {
   const fromLinks = (imageLinks?.thumbnail ?? imageLinks?.smallThumbnail ?? null) as string | null;
   if (!fromLinks) return [];
   const cleaned = fromLinks.replace('http://', 'https://').replace('&edge=curl', '');
@@ -191,7 +196,16 @@ function googleKeyParam(): string {
 // A search hit carries an abbreviated volumeInfo — for Thai books it very often
 // has the title and nothing else. The single-volume endpoint returns the full
 // record, which frequently does have the author and publisher.
-async function fetchGoogleVolumeInfo(id: string): Promise<any | null> {
+interface GoogleVolumeInfo {
+  title?: string;
+  authors?: string[];
+  publisher?: string;
+  description?: string;
+  categories?: string[];
+  imageLinks?: GoogleImageLinks;
+}
+
+async function fetchGoogleVolumeInfo(id: string): Promise<GoogleVolumeInfo | null> {
   try {
     const res = await fetch(
       `https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}?country=TH${googleKeyParam()}`,

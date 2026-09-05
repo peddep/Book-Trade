@@ -139,7 +139,6 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
       } catch { /* best-effort */ }
     }, 900);
     return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.title, form.cover_url, showForm, editingId]);
 
   // Sorted view of the books for display.

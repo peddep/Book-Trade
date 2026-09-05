@@ -3,6 +3,8 @@ import { getDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables, getFreeOwnedBook, createInstantTrade, priceDiffOk, PLAN } from '@/lib/hub';
 import { titlesMatch } from '@/lib/books-catalog';
+import type { GtsDepositRow } from '@/lib/dbTypes';
+import type { InValue } from '@libsql/client';
 
 export const runtime = 'nodejs';
 
@@ -31,13 +33,13 @@ export async function GET(req: NextRequest) {
     JOIN users u ON g.user_id = u.id
     WHERE g.status = 'open' AND g.user_id != ? AND b.available = 1
   `;
-  const args: unknown[] = [user.id];
+  const args: InValue[] = [user.id];
   if (q) {
     sql += ' AND b.title LIKE ?';
     args.push(`%${q}%`);
   }
   sql += ' ORDER BY g.created_at DESC LIMIT 50';
-  const open = await db.execute({ sql, args: args as any[] });
+  const open = await db.execute({ sql, args });
 
   return NextResponse.json({ mine: mine.rows, open: open.rows, slots: PLAN.gtsSlots });
 }
@@ -79,7 +81,7 @@ export async function PATCH(req: NextRequest) {
     sql: `SELECT g.*, b.available, b.price FROM gts_deposits g JOIN books b ON g.book_id = b.id WHERE g.id = ? AND g.status = 'open'`,
     args: [Number(deposit_id)],
   });
-  const dep = depRes.rows[0] as any;
+  const dep = depRes.rows[0] as unknown as (GtsDepositRow & { available: number; price: number | null }) | undefined;
   if (!dep || Number(dep.available) !== 1) return NextResponse.json({ error: 'deposit_gone' }, { status: 400 });
   if (Number(dep.user_id) === user.id) return NextResponse.json({ error: 'own_deposit' }, { status: 400 });
 

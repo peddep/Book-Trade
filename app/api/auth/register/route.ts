@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       sql: 'SELECT lower(email) = ? AS same_email, lower(name) = lower(?) AS same_name FROM users WHERE lower(email) = ? OR lower(name) = lower(?)',
       args: [email, name, email, name],
     });
-    if (existing.rows.some((r: any) => Number(r.same_email) === 1)) {
+    if (existing.rows.some((r) => Number((r as unknown as { same_email: number }).same_email) === 1)) {
       return NextResponse.json({ error: 'email_taken' }, { status: 409 });
     }
     if (existing.rows.length > 0) {

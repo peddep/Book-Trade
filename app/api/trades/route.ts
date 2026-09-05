@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { priceDiffOk, isBookBusy, ensureHubTables, isBanned } from '@/lib/hub';
 import { tooManyRecent } from '@/lib/ratelimit';
 import { notify } from '@/lib/notify';
+import type { BookRow } from '@/lib/dbTypes';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
             FROM trades WHERE requester_id = ? OR owner_id = ?`,
       args: [user.id, user.id, user.id],
     });
-    const row = c.rows[0] as any;
+    const row = c.rows[0] as unknown as { pending: number | null; accepted: number | null };
     return NextResponse.json({ pending: Number(row.pending ?? 0), accepted: Number(row.accepted ?? 0) });
   }
 
@@ -87,11 +88,11 @@ export async function POST(req: NextRequest) {
   const db = getDb();
   await ensureHubTables();
   const offered = await db.execute({ sql: 'SELECT * FROM books WHERE id = ? AND owner_id = ?', args: [offered_book_id, user.id] });
-  const offeredBook = offered.rows[0] as any;
+  const offeredBook = offered.rows[0] as unknown as BookRow | undefined;
   if (!offeredBook) return NextResponse.json({ error: 'You do not own this book' }, { status: 400 });
 
   const wanted = await db.execute({ sql: 'SELECT * FROM books WHERE id = ? AND available = 1', args: [wanted_book_id] });
-  const wantedBook = wanted.rows[0] as any;
+  const wantedBook = wanted.rows[0] as unknown as BookRow | undefined;
   if (!wantedBook) return NextResponse.json({ error: 'Book not available' }, { status: 400 });
 
   if (Number(wantedBook.owner_id) === user.id) {

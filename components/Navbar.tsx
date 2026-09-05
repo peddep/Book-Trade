@@ -7,15 +7,6 @@ import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import NotificationBell from '@/components/NotificationBell';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  grade: string | null;
-  class_no?: string | null;
-  avatar_color: string;
-}
-
 const NAV = [
   { href: '/trade', key: 'tabs.trade' },
   { href: '/room', key: 'tabs.room' },

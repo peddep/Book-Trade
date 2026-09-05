@@ -70,7 +70,7 @@ export default function TradePage() {
       .catch(() => {});
     // Meet-ups still waiting on this student to say whether the swap happened.
     fetch('/api/trades?status=accepted').then(r => (r.ok ? r.json() : { trades: [] })).catch(() => ({ trades: [] })).then(tr => {
-      setAwaitingConfirm((tr.trades ?? []).filter((x: any) => {
+      setAwaitingConfirm((tr.trades ?? []).filter((x: { status: string; requester_id: number; requester_confirm?: string; owner_confirm?: string }) => {
         if (x.status !== 'accepted') return false;
         const mine = x.requester_id === userId ? x.requester_confirm : x.owner_confirm;
         return mine !== 'happened';
@@ -78,7 +78,7 @@ export default function TradePage() {
     });
     // Gift boxes waiting to be opened in the Wonder Box.
     fetch('/api/wonderbox').then(r => (r.ok ? r.json() : { deposits: [] })).then(d =>
-      setGifts((d.deposits ?? []).filter((x: any) => x.status === 'matched').length)
+      setGifts((d.deposits ?? []).filter((x: { status: string }) => x.status === 'matched').length)
     ).catch(() => {});
   }, [router, user, sessionLoading]);
 

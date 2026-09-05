@@ -3,6 +3,7 @@ import { getDb, ensureUserColumns } from '@/lib/db';
 import { signSession } from '@/lib/auth';
 import { domainError } from '@/lib/emailDomain';
 import { googleConfigured, googleRedirectUri, exchangeGoogleCode, setGooglePendingCookie } from '@/lib/googleAuth';
+import type { UserRow } from '@/lib/dbTypes';
 
 export const runtime = 'nodejs';
 
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
   const db = getDb();
   await ensureUserColumns();
   const existing = await db.execute({ sql: 'SELECT * FROM users WHERE lower(email) = ?', args: [identity.email] });
-  const row = existing.rows[0] as any;
+  const row = existing.rows[0] as unknown as UserRow | undefined;
 
   if (!row) {
     // No account yet: the rest of the signup form still needs a grade, a
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
 
   const sessionUser = {
     id: Number(row.id), name: row.name, email: row.email,
-    grade: row.grade, class_no: row.class_no ?? null, avatar_color: row.avatar_color,
+    grade: row.grade, class_no: row.class_no ?? null, avatar_color: row.avatar_color ?? '#6366f1',
   };
   const res = NextResponse.redirect(new URL('/trade', req.url));
   res.cookies.set('google_oauth_state', '', { httpOnly: true, path: '/', maxAge: 0 });

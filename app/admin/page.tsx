@@ -58,7 +58,7 @@ export default function AdminPage() {
   const [missingCover, setMissingCover] = useState(false);
   const [catalogBusy, setCatalogBusy] = useState(false);
   const [catalogQ, setCatalogQ] = useState('');
-  const [editBook, setEditBook] = useState<Record<string, any> | null>(null);
+  const [editBook, setEditBook] = useState<Record<string, unknown> | null>(null);
   const router = useRouter();
 
   // Reload catalog rows when the search box changes (debounced).
@@ -535,21 +535,21 @@ export default function AdminPage() {
                     <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{f.label}</label>
                     <input
                       type={f.type ?? 'text'}
-                      value={editBook[f.k] ?? ''}
+                      value={String(editBook[f.k] ?? '')}
                       onChange={e => setEditBook(b => b && ({ ...b, [f.k]: e.target.value }))}
                       className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', outline: 'none' }} />
                   </div>
                 ))}
                 <div>
                   <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fCondition')}</label>
-                  <select value={editBook.condition ?? 'Good'} onChange={e => setEditBook(b => b && ({ ...b, condition: e.target.value }))}
+                  <select value={String(editBook.condition ?? 'Good')} onChange={e => setEditBook(b => b && ({ ...b, condition: e.target.value }))}
                     className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
                     {['Like New', 'Good', 'Fair', 'Poor'].map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fDescription')}</label>
-                  <textarea rows={2} value={editBook.description ?? ''} onChange={e => setEditBook(b => b && ({ ...b, description: e.target.value }))}
+                  <textarea rows={2} value={String(editBook.description ?? '')} onChange={e => setEditBook(b => b && ({ ...b, description: e.target.value }))}
                     className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065] resize-none" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', outline: 'none' }} />
                 </div>
                 <label className="flex items-center gap-2 text-sm text-[#2e1065]">

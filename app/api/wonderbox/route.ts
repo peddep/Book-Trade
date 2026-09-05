@@ -85,7 +85,7 @@ export async function PATCH(req: NextRequest) {
   const one = body?.id != null ? Number(body.id) : null;
 
   const before = await myBox(user.id);
-  const received = before.filter((d: any) => d.status === 'matched' && (one == null || Number(d.id) === one));
+  const received = before.filter((d) => d.status === 'matched' && (one == null || Number(d.id) === one));
 
   if (one != null) {
     await db.execute({

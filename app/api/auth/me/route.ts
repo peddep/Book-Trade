@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getDb, ensureUserColumns, ensureUniqueAccounts } from '@/lib/db';
 import { getCurrentUser, isAdmin, signSession } from '@/lib/auth';
+import type { UserRow } from '@/lib/dbTypes';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -17,7 +18,7 @@ export async function GET() {
   try {
     await ensureUserColumns();
     const r = await getDb().execute({ sql: 'SELECT availability, contact, banned FROM users WHERE id = ?', args: [user.id] });
-    const row = r.rows[0] as any;
+    const row = r.rows[0] as unknown as Pick<UserRow, 'availability' | 'contact' | 'banned'> | undefined;
     if (!row) {
       // The account is gone. Whatever the cookie says, there is nobody here.
       const res = NextResponse.json({ user: null });
@@ -127,7 +128,7 @@ export async function PATCH(req: NextRequest) {
   // neither may be blank, the next save would be refused for fields the student
   // never touched.
   const saved = await db.execute({ sql: 'SELECT contact, availability FROM users WHERE id = ?', args: [user.id] });
-  const savedRow = saved.rows[0] as any;
+  const savedRow = saved.rows[0] as unknown as Pick<UserRow, 'contact' | 'availability'> | undefined;
   const fullUser = {
     ...nextUser,
     contact: savedRow?.contact ?? null,

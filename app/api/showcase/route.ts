@@ -26,7 +26,7 @@ export async function GET() {
             LIMIT ?`,
       args: [LIMIT],
     });
-    const books = res.rows.map((r: any, i: number) => ({
+    const books = res.rows.map((r, i: number) => ({
       id: i,
       title: String(r.title ?? ''),
       title_en: r.title_en ?? null,

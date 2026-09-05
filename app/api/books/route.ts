@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { ensureHubTables, isBanned } from '@/lib/hub';
 import { tooManyRecent } from '@/lib/ratelimit';
 import { catalogTitleParts } from '@/lib/books-catalog';
-import type { Client } from '@libsql/client';
+import type { Client, InValue } from '@libsql/client';
 
 // Looks up the author for a title: harvested Thai catalog → books already on
 // the site → the built-in bilingual catalog → a quick Google Books query.
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
     JOIN users u ON b.owner_id = u.id
     WHERE b.deleted_at IS NULL
   `;
-  const args: unknown[] = [];
+  const args: InValue[] = [];
 
   if (myBooks && user) {
     sql += ' AND b.owner_id = ?';
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
   }
 
   sql += ' ORDER BY b.created_at DESC';
-  const result = await db.execute({ sql, args: args as any[] });
+  const result = await db.execute({ sql, args });
   return NextResponse.json({ books: result.rows });
 }
 
