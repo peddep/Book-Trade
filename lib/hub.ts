@@ -1,4 +1,6 @@
-import { getDb, ensureBookColumns, addMissingColumns } from './db';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import { getDb, ensureBookColumns, ensureUserColumns, addMissingColumns } from './db';
 
 // Premium Plan limits (this app runs everyone on the Premium Plan).
 export const PLAN = {
@@ -226,6 +228,76 @@ export async function removeBook(bookId: number, opts: { force?: boolean } = {})
     return 'hidden';
   }
   await db.execute({ sql: 'DELETE FROM books WHERE id = ?', args: [bookId] });
+  return 'deleted';
+}
+
+// Deleting an account, self-service.
+//
+// The users row is never actually removed. Two things point at it that
+// matter to someone other than this student: a finished trade is the other
+// side's own history (`JOIN users` in every trades/admin listing), and a
+// community-chat announcement names them. Hard-deleting the row would silently
+// erase this student from both — the same reason removeBook() marks a book
+// "hidden" instead of dropping it when a trade still refers to it. So this
+// scrubs everything personal (name, email, contact, password, availability)
+// and bans the row shut, rather than deleting it.
+//
+// Refuses while an agreed trade is outstanding — somebody is expecting to be
+// handed a book at the library, and disappearing out from under that would
+// leave them standing there with no explanation. Everything else this
+// student holds (books, pending offers, room seats, wonder box, GTS deposits,
+// push subscriptions, notifications) is torn down the same way removing it
+// individually already would.
+export async function deleteAccount(userId: number): Promise<'deleted' | 'in_agreed_trade'> {
+  const db = getDb();
+  await ensureUserColumns();
+  await ensureHubTables();
+
+  const agreed = await db.execute({
+    sql: "SELECT 1 FROM trades WHERE status = 'accepted' AND (requester_id = ? OR owner_id = ?) LIMIT 1",
+    args: [userId, userId],
+  });
+  if (agreed.rows.length > 0) return 'in_agreed_trade';
+
+  const books = await db.execute({ sql: 'SELECT id FROM books WHERE owner_id = ?', args: [userId] });
+  for (const row of books.rows as unknown as Array<{ id: number }>) {
+    await removeBook(Number(row.id));
+  }
+
+  // Any pending offer this student made on someone else's book, or received
+  // on their own — the loop above already cleared their own books' offers,
+  // this catches offers on books they don't own.
+  const pending = await db.execute({
+    sql: "SELECT id FROM trades WHERE status = 'pending' AND (requester_id = ? OR owner_id = ?)",
+    args: [userId, userId],
+  });
+  for (const row of pending.rows as unknown as Array<{ id: number }>) {
+    await db.execute({ sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?", args: [row.id] });
+  }
+
+  for (const sql of [
+    'DELETE FROM wonder_box WHERE user_id = ?',
+    'DELETE FROM gts_deposits WHERE user_id = ?',
+    'DELETE FROM room_members WHERE user_id = ?',
+    'DELETE FROM push_subscriptions WHERE user_id = ?',
+    'DELETE FROM notifications WHERE user_id = ?',
+  ]) {
+    try { await db.execute({ sql, args: [userId] }); } catch { /* table not there yet */ }
+  }
+
+  // A random, never-typeable password (nobody can sign back in with it) and
+  // an unguessable placeholder email/name — unique, since both columns carry
+  // a unique index, and the name still shows up wherever a past trade of
+  // theirs is listed.
+  const placeholder = `${userId}-${crypto.randomBytes(6).toString('hex')}`;
+  const hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+  await db.execute({
+    sql: `UPDATE users SET
+            name = ?, email = ?, password_hash = ?, real_name = NULL, contact = NULL,
+            availability = NULL, grade = NULL, class_no = NULL, google_sub = NULL, banned = 1
+          WHERE id = ?`,
+    args: [`ผู้ใช้ที่ลบบัญชี-${placeholder}`, `deleted-${placeholder}@deleted.invalid`, hash, userId],
+  });
   return 'deleted';
 }
 

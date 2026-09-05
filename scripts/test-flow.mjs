@@ -824,3 +824,55 @@ test('push subscribing requires a session and a real subscription shape', async 
   assert.equal(notConfigured.status, 400);
   assert.equal(notConfigured.json.error, 'not_configured');
 });
+
+// ── Deleting your own account ───────────────────────────────────────────
+
+test('deleting your account requires typing your own username first', async () => {
+  const cookie = await register('DelUserA', 'delusera@s.edu');
+
+  const wrong = await api('/api/auth/me', { method: 'DELETE', cookie, body: { confirm_name: 'not-my-name' } });
+  assert.equal(wrong.status, 400);
+  assert.equal(wrong.json.error, 'name_mismatch');
+
+  // Case doesn't matter, but the actual name does.
+  const right = await api('/api/auth/me', { method: 'DELETE', cookie, body: { confirm_name: 'delusera' } });
+  assert.equal(right.status, 200);
+
+  // The session this deleted is no longer good for anything.
+  const me = await api('/api/auth/me', { cookie });
+  assert.equal(me.json.user, null);
+});
+
+test('deleting your account removes your books but keeps a finished trade legible to the other side', async () => {
+  const a = await register('DelUserB', 'deluserb@s.edu');
+  const b = await register('DelUserC', 'deluserc@s.edu');
+  const ba = await addBook(a, 'DelBookA', 100);
+  const bb = await addBook(b, 'DelBookB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: b, body: { offered_book_id: bb, wanted_book_id: ba } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { status: 'accepted' } });
+
+  // Handing the book over is still outstanding — deleting now would leave B
+  // waiting at the library for someone who no longer exists.
+  const blocked = await api('/api/auth/me', { method: 'DELETE', cookie: a, body: { confirm_name: 'DelUserB' } });
+  assert.equal(blocked.status, 409);
+  assert.equal(blocked.json.error, 'in_agreed_trade');
+
+  // Finish the trade for real, then deleting is allowed.
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { confirm: 'happened' } });
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { confirm: 'happened' } });
+  const deleted = await api('/api/auth/me', { method: 'DELETE', cookie: a, body: { confirm_name: 'DelUserB' } });
+  assert.equal(deleted.status, 200, JSON.stringify(deleted.json));
+
+  // A's old session still verifies (it's a stateless signed cookie), but the
+  // account behind it is banned shut, same as any other banned account.
+  const aBooks = await api('/api/books?mine=1', { cookie: a });
+  assert.equal(aBooks.status, 403);
+  assert.equal(aBooks.json.error, 'banned');
+
+  // ...but B can still see the finished trade in their own history, with a
+  // real (if placeholder) name rather than a broken row.
+  const bTrades = (await api('/api/trades?status=completed', { cookie: b })).json.trades;
+  const row = bTrades.find(x => x.id === t);
+  assert.ok(row, 'the finished trade must still appear in the other student\'s history');
+  assert.match(String(row.owner_name ?? row.requester_name), /ผู้ใช้ที่ลบบัญชี/);
+});
