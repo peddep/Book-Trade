@@ -133,6 +133,18 @@ export default function AdminPage() {
     if (res.ok) refresh();
   }
 
+  async function deleteAccount(userId: unknown, name: unknown) {
+    if (!confirm(t('adm.deleteAccountConfirm', { name: String(name) }))) return;
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete_account', user_id: userId }),
+    });
+    if (res.ok) { refresh(); return; }
+    const d = await res.json().catch(() => ({}));
+    if (d.error === 'in_agreed_trade') alert(t('adm.deleteAccountBlocked', { name: String(name) }));
+  }
+
   async function uploadCover(bookId: unknown, file: File | undefined) {
     if (!file) return;
     const cover = await fileToCoverDataUrl(file);
@@ -436,6 +448,11 @@ export default function AdminPage() {
                             🚫 {t('adm.ban')}
                           </button>
                         )}
+                        <button onClick={() => deleteAccount(r.id, r.name)}
+                          className="px-2 py-1 rounded-lg font-semibold"
+                          style={{ background: '#fee2e2', color: '#ef4444' }}>
+                          {t('adm.deleteAccount')}
+                        </button>
                       </div>
                     </td>
                   )}

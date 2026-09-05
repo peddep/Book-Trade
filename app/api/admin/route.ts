@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
-import { ensureHubTables, removeBook } from '@/lib/hub';
+import { ensureHubTables, removeBook, deleteAccount } from '@/lib/hub';
 
 export const runtime = 'nodejs';
 
@@ -166,6 +166,19 @@ export async function POST(req: NextRequest) {
     if (id === user.id) return NextResponse.json({ error: 'cannot_ban_self' }, { status: 400 });
     await ensureUserColumns();
     await getDb().execute({ sql: 'UPDATE users SET banned = ? WHERE id = ?', args: [body.action === 'ban_user' ? 1 : 0, id] });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Delete a student's account. Anonymizes rather than removes the row (see
+  // lib/hub.ts's deleteAccount for why) and refuses while an agreed trade of
+  // theirs is still waiting to be handed over — the admin can ask them to
+  // settle it, or cancel the trade first, rather than a book quietly going
+  // missing from under whoever was expecting it.
+  if (body.action === 'delete_account' && body.user_id) {
+    const id = Number(body.user_id);
+    if (id === user.id) return NextResponse.json({ error: 'cannot_delete_self' }, { status: 400 });
+    const outcome = await deleteAccount(id);
+    if (outcome === 'in_agreed_trade') return NextResponse.json({ error: 'in_agreed_trade' }, { status: 409 });
     return NextResponse.json({ ok: true });
   }
 

@@ -105,7 +105,7 @@ before(async () => {
   // the moment an earlier test registered somebody — so those tests quietly
   // skipped their own assertions instead of failing. Anything admin-only is
   // now checked against a real admin, or not claimed at all.
-  execSync(`printf 'TURSO_DATABASE_URL=file:${DB}\\nSESSION_SECRET=test\\nADMIN_EMAIL=admin-one@s.edu,banadmin@s.edu,banadmin2@s.edu,banadmin3@s.edu\\n' > .env.local`, { shell: '/bin/bash' });
+  execSync(`printf 'TURSO_DATABASE_URL=file:${DB}\\nSESSION_SECRET=test\\nADMIN_EMAIL=admin-one@s.edu,banadmin@s.edu,banadmin2@s.edu,banadmin3@s.edu,delaccountadmin@s.edu\\n' > .env.local`, { shell: '/bin/bash' });
   execSync('npm run db:init', { stdio: 'ignore' });
   // Detached, so the whole process group can be torn down below. `next dev`
   // spawns helper processes of its own; killing only the wrapper leaves one
@@ -823,4 +823,42 @@ test('push subscribing requires a session and a real subscription shape', async 
   const notConfigured = await api('/api/push/subscribe', { method: 'POST', cookie, body: validSub });
   assert.equal(notConfigured.status, 400);
   assert.equal(notConfigured.json.error, 'not_configured');
+});
+
+// ── Admin: deleting a student's account ─────────────────────────────────
+
+test('an admin can delete a student account, but not while a trade is agreed and unfinished', async () => {
+  const admin = await register('DelAcctAdmin', 'delaccountadmin@s.edu'); // named in ADMIN_EMAIL above
+  const a = await register('AdmDelA', 'admdela@s.edu');
+  const b = await register('AdmDelB', 'admdelb@s.edu');
+  const ba = await addBook(a, 'AdmDelBookA', 100);
+  const bb = await addBook(b, 'AdmDelBookB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: b, body: { offered_book_id: bb, wanted_book_id: ba } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { status: 'accepted' } });
+
+  const aId = (await api('/api/auth/me', { cookie: a })).json.user.id;
+
+  // A non-admin can't do this at all.
+  const forbidden = await api('/api/admin', { method: 'POST', cookie: a, body: { action: 'delete_account', user_id: aId } });
+  assert.equal(forbidden.status, 403);
+
+  // The book is still expected at the library — refused, not silently ignored.
+  const blocked = await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'delete_account', user_id: aId } });
+  assert.equal(blocked.status, 409);
+  assert.equal(blocked.json.error, 'in_agreed_trade');
+
+  // Finish the trade, then the admin can delete the account.
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { confirm: 'happened' } });
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { confirm: 'happened' } });
+  const deleted = await api('/api/admin', { method: 'POST', cookie: admin, body: { action: 'delete_account', user_id: aId } });
+  assert.equal(deleted.status, 200, JSON.stringify(deleted.json));
+
+  // A's old session is banned shut, same as any other banned account.
+  assert.equal((await api('/api/books?mine=1', { cookie: a })).status, 403);
+
+  // B's own history of the finished trade still resolves to a real name.
+  const bTrades = (await api('/api/trades?status=completed', { cookie: b })).json.trades;
+  const row = bTrades.find(x => x.id === t);
+  assert.ok(row, 'the finished trade must still appear in the other student\'s history');
+  assert.match(String(row.owner_name ?? row.requester_name), /ผู้ใช้ที่ลบบัญชี/);
 });
