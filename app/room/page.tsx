@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Loading from '@/components/Loading';
 import TopTabs from '@/components/TopTabs';
 import DonationCard from '@/components/DonationCard';
 import FeedbackCard from '@/components/FeedbackCard';
 import AvailabilityGrid from '@/components/AvailabilityGrid';
 import PushToggle from '@/components/PushToggle';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 import { useI18n, type Lang } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 
@@ -22,6 +23,7 @@ interface User {
   contact?: string | null;
   availability?: string[];
   is_admin?: boolean;
+  google_linked?: boolean;
 }
 
 function Card({ children }: { children: React.ReactNode }) {
@@ -44,6 +46,23 @@ export default function RoomPage() {
   const [formError, setFormError] = useState('');
   const { user: sessionUser, loading: sessionLoading, setUser: setSessionUser } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [linkMsg, setLinkMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Back from linking a Google account (see components/GoogleSignInButton's
+  // href="/api/auth/google?link=1" below). router.replace() leaves the query
+  // string in place on this statically-rendered page — the same quirk fixed
+  // this way on /login — so the browser's own history API strips it instead.
+  useEffect(() => {
+    const link = searchParams.get('googleLink');
+    if (!link) return;
+    setLinkMsg(
+      link === 'success' ? { ok: true, text: t('account.googleLinkSuccess') }
+      : link === 'mismatch' ? { ok: false, text: t('account.googleLinkMismatch') }
+      : { ok: false, text: t('account.googleLinkFailed') }
+    );
+    window.history.replaceState(null, '', '/room');
+  }, [searchParams, t]);
 
   const AVATAR_COLORS = ['#6366f1', '#7c3aed', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6'];
 
@@ -68,10 +87,14 @@ export default function RoomPage() {
     });
     if (res.ok) {
       const d = await res.json();
-      setUser(d.user);
+      // Merged, not replaced — this response doesn't carry every field (e.g.
+      // google_linked), and a save must not make those quietly disappear
+      // from the page until the next full session refresh.
+      const merged = user ? { ...user, ...d.user } : d.user;
+      setUser(merged);
       // Keep the shared session in step, or the navbar keeps showing the old
       // name and avatar until a full reload.
-      setSessionUser(d.user);
+      setSessionUser(merged);
       setEditing(false);
     } else {
       const d = await res.json().catch(() => ({}));
@@ -128,6 +151,16 @@ export default function RoomPage() {
     <>
       <main className="max-w-4xl xl:max-w-6xl mx-auto px-4 lg:px-8 py-6">
         <TopTabs />
+
+        {linkMsg && (
+          <div className="mb-6 px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between gap-3"
+            style={linkMsg.ok
+              ? { background: '#dcfce7', color: '#10b981', border: '1px solid #bbf7d0' }
+              : { background: '#fee2e2', color: '#ef4444', border: '1px solid #fecaca' }}>
+            <span>{linkMsg.text}</span>
+            <button onClick={() => setLinkMsg(null)} className="opacity-70 hover:opacity-100">✕</button>
+          </div>
+        )}
 
         {/* User card */}
         <div className="flex items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, #ffffff, #ede9fe)', border: '1px solid #e9d5ff' }}>
@@ -252,6 +285,16 @@ export default function RoomPage() {
                 <div className="p-3 rounded-xl mb-4" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
                   <PushToggle />
                 </div>
+
+                {user.google_linked ? (
+                  <p className="text-xs font-semibold text-center py-2 mb-4" style={{ color: '#10b981' }}>
+                    {t('account.googleLinked')}
+                  </p>
+                ) : (
+                  <div className="mb-4">
+                    <GoogleSignInButton label={t('account.linkGoogle')} href="/api/auth/google?link=1" />
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-[#4b5563]">{t('room2.language')}</span>

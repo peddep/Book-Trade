@@ -9,6 +9,11 @@ import AvailabilityGrid from '@/components/AvailabilityGrid';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 const DRAFT_KEY = 'register-draft';
+// A deliberate, reversible toggle rather than removing the password path from
+// the code: set in the deployment's env, not baked in, so it can be flipped
+// back instantly (a Google outage, a misconfigured Workspace) without a
+// redeploy that touches code.
+const GOOGLE_ONLY = process.env.NEXT_PUBLIC_GOOGLE_ONLY_SIGNUP === '1';
 
 const GRADES = ['1', '2', '3', '4', '5', '6'];
 const CLASSES = Array.from({ length: 16 }, (_, i) => String(i + 1));
@@ -128,6 +133,34 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // New accounts go through Google only — but a student already partway
+  // through the flow (googleMode) still needs the rest of this form, since
+  // Google only ever proved an email, not a grade, a room, or a timetable.
+  if (GOOGLE_ONLY && !googleMode) {
+    return (
+      <>
+        <main className="min-h-screen flex items-center justify-center px-4 py-16">
+          <div className="w-full max-w-md">
+            <div className="text-center mb-8">
+              <div className="text-5xl mb-3">📚</div>
+              <h1 className="text-2xl font-bold text-[#2e1065]">{t('reg.googleOnlyTitle')}</h1>
+              <p className="text-[#6b7280] text-sm mt-2 leading-relaxed">{t('reg.googleOnlyBody')}</p>
+            </div>
+            <div className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+              <GoogleSignInButton label={t('auth.googleSignUp')} />
+              <p className="text-center text-sm text-[#6b7280]">
+                {t('reg.haveAccount')}{' '}
+                <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
+                  {t('login.signIn')}
+                </Link>
+              </p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
   }
 
   return (

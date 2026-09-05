@@ -13,12 +13,12 @@ export async function GET() {
   // somebody who is already signed in: the session cookie is signed, not
   // stored, so it stays valid until it expires. This is where the app finds
   // out, and it is asked for on a timer.
-  let extra: { availability: string[]; contact: string | null } = { availability: [], contact: null };
+  let extra: { availability: string[]; contact: string | null; google_linked: boolean } = { availability: [], contact: null, google_linked: false };
   let banned = false;
   try {
     await ensureUserColumns();
-    const r = await getDb().execute({ sql: 'SELECT availability, contact, banned FROM users WHERE id = ?', args: [user.id] });
-    const row = r.rows[0] as unknown as Pick<UserRow, 'availability' | 'contact' | 'banned'> | undefined;
+    const r = await getDb().execute({ sql: 'SELECT availability, contact, banned, google_sub FROM users WHERE id = ?', args: [user.id] });
+    const row = r.rows[0] as unknown as Pick<UserRow, 'availability' | 'contact' | 'banned' | 'google_sub'> | undefined;
     if (!row) {
       // The account is gone. Whatever the cookie says, there is nobody here.
       const res = NextResponse.json({ user: null });
@@ -29,6 +29,10 @@ export async function GET() {
     extra = {
       availability: (() => { try { const a = JSON.parse(row.availability ?? '[]'); return Array.isArray(a) ? a : []; } catch { return []; } })(),
       contact: row.contact ?? null,
+      // Whether an account can sign in through Google, not the identity
+      // itself — nothing about which Google account it is needs to reach
+      // the browser.
+      google_linked: Boolean(row.google_sub),
     };
   } catch { /* older database */ }
 

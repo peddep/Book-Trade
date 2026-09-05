@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureUserColumns } from '@/lib/db';
-import { signSession } from '@/lib/auth';
+import { signSession, getCurrentUser } from '@/lib/auth';
 import { domainError } from '@/lib/emailDomain';
-import { googleConfigured, googleRedirectUri, exchangeGoogleCode, setGooglePendingCookie } from '@/lib/googleAuth';
+import { googleConfigured, googleRedirectUri, exchangeGoogleCode, setGooglePendingCookie, GOOGLE_LINK_COOKIE } from '@/lib/googleAuth';
 import type { UserRow } from '@/lib/dbTypes';
 
 export const runtime = 'nodejs';
@@ -11,12 +11,26 @@ export const runtime = 'nodejs';
 // — there is no page of its own, so every failure has to say why on the page
 // it lands on rather than showing this route's own words.
 export async function GET(req: NextRequest) {
+  const linkUid = req.cookies.get(GOOGLE_LINK_COOKIE)?.value;
+
   const fail = (reason: string, extra?: Record<string, string>) => {
     const url = new URL('/login', req.url);
     url.searchParams.set('error', reason);
     for (const [k, v] of Object.entries(extra ?? {})) url.searchParams.set(k, v);
     const res = NextResponse.redirect(url);
     res.cookies.set('google_oauth_state', '', { httpOnly: true, path: '/', maxAge: 0 });
+    res.cookies.set(GOOGLE_LINK_COOKIE, '', { httpOnly: true, path: '/', maxAge: 0 });
+    return res;
+  };
+
+  // Linking always returns to /room (that is where the button lives, and
+  // where there is a page to show the result on) rather than /login.
+  const toRoom = (googleLink: string) => {
+    const url = new URL('/room', req.url);
+    url.searchParams.set('googleLink', googleLink);
+    const res = NextResponse.redirect(url);
+    res.cookies.set('google_oauth_state', '', { httpOnly: true, path: '/', maxAge: 0 });
+    res.cookies.set(GOOGLE_LINK_COOKIE, '', { httpOnly: true, path: '/', maxAge: 0 });
     return res;
   };
 
@@ -51,6 +65,21 @@ export async function GET(req: NextRequest) {
   await ensureUserColumns();
   const existing = await db.execute({ sql: 'SELECT * FROM users WHERE lower(email) = ?', args: [identity.email] });
   const row = existing.rows[0] as unknown as UserRow | undefined;
+
+  // Attaching Google to the account the student is already signed into
+  // (started from their settings, not the sign-in page) — a different errand
+  // from everything below, which is about signing in or signing up.
+  if (linkUid) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || String(currentUser.id) !== linkUid) return fail('google_link_failed');
+    // The Google account has to be the same address this account already
+    // uses — otherwise "linking" would either silently do nothing useful or,
+    // worse, let someone attach a Google identity that answers for a
+    // different email than the one this account is reachable at.
+    if (!row || Number(row.id) !== currentUser.id) return toRoom('mismatch');
+    await db.execute({ sql: 'UPDATE users SET google_sub = ? WHERE id = ?', args: [identity.sub, currentUser.id] });
+    return toRoom('success');
+  }
 
   if (!row) {
     // No account yet: the rest of the signup form still needs a grade, a

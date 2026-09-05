@@ -118,6 +118,7 @@ Copy `.env.example` to `.env.local` and fill it in.
 | `CRON_SECRET` | no | Vercel Cron sends it as a bearer token to the harvest route. |
 | `GOOGLE_CLIENT_ID` | no | Enables "Sign in with Google". Leave both Google vars unset to hide the button entirely. |
 | `GOOGLE_CLIENT_SECRET` | no | Paired with `GOOGLE_CLIENT_ID`. |
+| `NEXT_PUBLIC_GOOGLE_ONLY_SIGNUP` | no | Set to `1` to make new accounts sign up through Google only — `/register` shows just the Google button, and the API refuses a password-only signup. Existing password accounts are unaffected and can still log in with their password on `/login`; they get a "🔗 Link Google account" button in Settings to switch over. Requires `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` to actually be set, or it hides the only way to sign up. |
 | `VAPID_PUBLIC_KEY` | no | Enables push notifications. Leave the three VAPID vars unset to hide the "turn on notifications" toggle. |
 | `VAPID_PRIVATE_KEY` | no | Paired with `VAPID_PUBLIC_KEY`. Keep this one secret — it lets whoever holds it send a push as this site. |
 | `VAPID_SUBJECT` | no | A `mailto:` address or URL identifying the site owner, required by the push protocol. |

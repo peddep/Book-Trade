@@ -19,6 +19,7 @@ export interface SessionUser {
   contact?: string | null;
   availability?: string[];
   is_admin?: boolean;
+  google_linked?: boolean;
 }
 
 interface SessionValue {

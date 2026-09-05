@@ -3,10 +3,10 @@
 // Continues to /api/auth/google as a full page navigation (never a fetch —
 // Google's consent screen has to be the top-level page, or the browser
 // refuses to load it and a student sees nothing happen).
-export default function GoogleSignInButton({ label }: { label: string }) {
+export default function GoogleSignInButton({ label, href = '/api/auth/google' }: { label: string; href?: string }) {
   return (
     <a
-      href="/api/auth/google"
+      href={href}
       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold"
       style={{ background: '#ffffff', border: '1px solid #e5e7eb', color: '#3c4043' }}
     >

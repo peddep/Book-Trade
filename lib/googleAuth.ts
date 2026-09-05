@@ -111,6 +111,15 @@ export async function exchangeGoogleCode(code: string, redirectUri: string): Pro
 const PENDING_COOKIE = 'google_pending';
 const PENDING_TTL_MS = 15 * 60 * 1000;
 
+// Set alongside google_oauth_state when an already-signed-in student starts
+// the flow to link Google to their existing (password) account, rather than
+// to sign up or sign in. Not signed like the pending-identity cookie below —
+// the callback re-derives the real signed-in user from the session cookie
+// and only proceeds if it matches this value, so a forged value can at worst
+// fail that match, never link to an account the forger isn't already signed
+// into.
+export const GOOGLE_LINK_COOKIE = 'google_link_uid';
+
 interface PendingPayload {
   email: string;
   name: string | null;

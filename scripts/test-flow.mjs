@@ -743,6 +743,28 @@ test('Google sign-in is invisible until it is configured', async () => {
   }
 });
 
+test('linking Google to an existing account requires being signed in, and fails the same clean way when not configured', async () => {
+  // Not signed in at all: nothing to attach Google to.
+  const anon = await fetch(`${BASE}/api/auth/google?link=1`, { redirect: 'manual' });
+  assert.ok(anon.status === 302 || anon.status === 307);
+  assert.match(anon.headers.get('location') ?? '', /\/login$/);
+
+  // Signed in, but Google is not configured in this environment: the
+  // ordinary (non-linking) entry point sends an already-signed-in visitor
+  // straight to /trade, so this checks that ?link=1 is what lets a signed-in
+  // request past that and reach the "not configured" branch at all, landing
+  // back on /room (where the button lives) rather than /login.
+  const cookie = await register(`linkuser${Math.random()}`, `linkuser${Math.random()}@s.edu`);
+  const signedIn = await fetch(`${BASE}/api/auth/google?link=1`, { headers: { cookie }, redirect: 'manual' });
+  assert.ok(signedIn.status === 302 || signedIn.status === 307);
+  assert.match(signedIn.headers.get('location') ?? '', /\/room\?googleLink=not_configured/);
+
+  // The same request without ?link=1 takes the ordinary "already signed in"
+  // path instead, straight to /trade — never anywhere near Google.
+  const ordinary = await fetch(`${BASE}/api/auth/google`, { headers: { cookie }, redirect: 'manual' });
+  assert.match(ordinary.headers.get('location') ?? '', /\/trade$/);
+});
+
 test('a verified Google identity creates an account with no password', async () => {
   const email = `googler${Math.random()}@s.edu`;
   const cookie = `google_pending=${freshPending(email)}`;

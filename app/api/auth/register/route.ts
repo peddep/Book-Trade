@@ -46,6 +46,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  // New accounts go through Google only once this is set — the register
+  // page's own form disappears, but this is the backstop for a request made
+  // directly rather than through it. An existing password account is
+  // unaffected: this only blocks creating a *new* one without a verified
+  // Google identity.
+  if (!pending && process.env.NEXT_PUBLIC_GOOGLE_ONLY_SIGNUP === '1') {
+    return NextResponse.json({ error: 'google_only' }, { status: 400 });
+  }
+
   // The form requires the checkbox, but the form is not what creates the
   // account — an account with no recorded agreement must not exist, so the
   // check belongs here too.
