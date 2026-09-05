@@ -8,6 +8,7 @@ import TopTabs from '@/components/TopTabs';
 import DonationCard from '@/components/DonationCard';
 import FeedbackCard from '@/components/FeedbackCard';
 import AvailabilityGrid from '@/components/AvailabilityGrid';
+import PushToggle from '@/components/PushToggle';
 import { useI18n, type Lang } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 
@@ -36,6 +37,7 @@ export default function RoomPage() {
   const [booksListed, setBooksListed] = useState(0);
   const [pendingOffers, setPendingOffers] = useState(0);
   const [editing, setEditing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [form, setForm] = useState({ name: '', grade: '', class_no: '', contact: '', avatar_color: '#6366f1', new_password: '' });
   const [availability, setAvailability] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -141,6 +143,11 @@ export default function RoomPage() {
             style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
             ✏️ {t('room2.editProfile')}
           </button>
+          <button onClick={() => setShowSettings(true)} aria-label={t('room2.settings')}
+            className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base"
+            style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
+            ⚙️
+          </button>
         </div>
 
         {/* Stats */}
@@ -228,42 +235,60 @@ export default function RoomPage() {
           </div>
         </div>
 
-        {/* Settings */}
-        <h2 className="font-bold text-[#2e1065] mt-6 mb-3">⚙️ {t('room2.settings')}</h2>
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-[#4b5563]">{t('room2.language')}</span>
-            <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#ffffff' }}>
-              {(['th', 'en'] as Lang[]).map(l => (
-                <button
-                  key={l}
-                  onClick={() => setLang(l)}
-                  className="px-3 py-1.5 rounded-lg text-sm font-semibold"
-                  style={lang === l ? { background: '#6366f1', color: 'white' } : { color: '#6b7280' }}
-                >
-                  {l === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
+        {/* Settings modal */}
+        {showSettings && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46, 16, 101, 0.4)' }}
+            onClick={() => setShowSettings(false)}>
+            <div className="w-full max-w-sm rounded-2xl shadow-2xl bt-pop-in flex flex-col overflow-hidden"
+              style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: 'calc(100dvh - 2rem)' }}
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 pt-6 pb-3 flex-shrink-0">
+                <p className="text-lg font-bold text-[#2e1065]">⚙️ {t('room2.settings')}</p>
+                <button onClick={() => setShowSettings(false)} className="text-[#6b7280] hover:text-[#2e1065] text-xl">✕</button>
+              </div>
+
+              <div className="px-6 pb-6 overflow-y-auto">
+                <p className="text-xs font-semibold text-[#6b7280] mb-2">{t('room2.notifications')}</p>
+                <div className="p-3 rounded-xl mb-4" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                  <PushToggle />
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm text-[#4b5563]">{t('room2.language')}</span>
+                  <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#faf5ff' }}>
+                    {(['th', 'en'] as Lang[]).map(l => (
+                      <button
+                        key={l}
+                        onClick={() => setLang(l)}
+                        className="px-3 py-1.5 rounded-lg text-sm font-semibold"
+                        style={lang === l ? { background: '#6366f1', color: 'white' } : { color: '#6b7280' }}
+                      >
+                        {l === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2 mb-3">
+                  <Link href="/rules" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}>
+                    📋 {t('rules.title')}
+                  </Link>
+                  <Link href="/privacy" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}>
+                    🔒 {t('priv.title')}
+                  </Link>
+                </div>
+                {user.is_admin && (
+                  <Link href="/admin" className="block w-full py-2.5 mb-3 rounded-xl font-semibold text-sm text-center"
+                    style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
+                    {t('room2.admin')}
+                  </Link>
+                )}
+                <button onClick={logout} className="w-full py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#fee2e2', color: '#ef4444' }}>
+                  {t('room2.signOut')}
                 </button>
-              ))}
+              </div>
             </div>
           </div>
-          <div className="flex gap-2 mb-3">
-            <Link href="/rules" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}>
-              📋 {t('rules.title')}
-            </Link>
-            <Link href="/privacy" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#faf5ff', color: '#6b7280', border: '1px solid #e9d5ff' }}>
-              🔒 {t('priv.title')}
-            </Link>
-          </div>
-          {user.is_admin && (
-            <Link href="/admin" className="block w-full py-2.5 mb-3 rounded-xl font-semibold text-sm text-center"
-              style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
-              {t('room2.admin')}
-            </Link>
-          )}
-          <button onClick={logout} className="w-full py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#fee2e2', color: '#ef4444' }}>
-            {t('room2.signOut')}
-          </button>
-        </Card>
+        )}
 
         {/* Edit profile modal */}
         {editing && (

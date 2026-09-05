@@ -300,6 +300,7 @@ const STRINGS: Dict = {
   'room2.challenges': { th: 'ภารกิจ', en: 'Challenges' },
   'room2.achievements': { th: 'ความสำเร็จ', en: 'Achievements' },
   'room2.settings': { th: 'ตั้งค่า', en: 'Settings' },
+  'room2.notifications': { th: 'การแจ้งเตือน', en: 'Notifications' },
   'room2.language': { th: 'ภาษา', en: 'Language' },
   'room2.signOut': { th: 'ออกจากระบบ', en: 'Sign Out' },
   'room2.editProfile': { th: 'แก้ไขโปรไฟล์', en: 'Edit Profile' },
