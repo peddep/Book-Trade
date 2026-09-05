@@ -56,7 +56,9 @@ export interface TradeRow {
   message: string | null;
   requester_confirm: string | null;
   owner_confirm: string | null;
-  meet_after: string | null;
+  meeting_date: string | null;
+  meeting_period: string | null;
+  meeting_sub: number | null;
   created_at: string | null;
   updated_at: string | null;
 }

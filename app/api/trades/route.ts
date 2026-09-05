@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { priceDiffOk, isBookBusy, ensureHubTables, isBanned } from '@/lib/hub';
+import { priceDiffOk, isBookBusy, ensureHubTables, isBanned, assignMeetingSlot } from '@/lib/hub';
 import { tooManyRecent } from '@/lib/ratelimit';
 import { notify } from '@/lib/notify';
 import type { BookRow } from '@/lib/dbTypes';
@@ -67,6 +67,31 @@ export async function GET(req: NextRequest) {
     `,
     args: [user.id, user.id, ...wanted],
   });
+
+  // Self-heal trades accepted before meeting slots existed (or before this
+  // pair's class info was recorded): still 'accepted' but never assigned a
+  // slot. Skipped for same-class pairs, who swap in class and were never
+  // meant to hold one.
+  type Row = typeof result.rows[number] & {
+    id: number; status: string; meeting_date: string | null;
+    requester_grade: string | null; requester_class: string | null;
+    owner_grade: string | null; owner_class: string | null;
+    requester_availability: string | null; owner_availability: string | null;
+  };
+  for (const r of result.rows as unknown as Row[]) {
+    if (r.status !== 'accepted' || r.meeting_date) continue;
+    const sameClass = r.requester_grade === r.owner_grade && r.requester_class === r.owner_class;
+    if (sameClass) continue;
+    const assignment = await assignMeetingSlot(r.requester_availability, r.owner_availability, new Date());
+    if (!assignment) continue;
+    await db.execute({
+      sql: 'UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ? WHERE id = ?',
+      args: [assignment.date, assignment.period, assignment.sub, r.id],
+    });
+    (r as unknown as { meeting_date: string | null; meeting_period: string | null; meeting_sub: number | null }).meeting_date = assignment.date;
+    (r as unknown as { meeting_period: string | null }).meeting_period = assignment.period;
+    (r as unknown as { meeting_sub: number | null }).meeting_sub = assignment.sub;
+  }
 
   return NextResponse.json({ trades: result.rows });
 }

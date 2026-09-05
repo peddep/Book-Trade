@@ -16,6 +16,7 @@ const TEMPLATES: Record<NotifyKind, string> = {
   trade_postponed: '{actor} ไปตามเวลาที่นัดไม่ได้ — เลื่อนไปเป็นเวลาถัดไปที่ว่างตรงกัน',
   trade_no_show: '{actor} แจ้งว่าคุณไม่ได้ไปตามนัด — การแลกเปลี่ยนถูกยกเลิกและหนังสือกลับไปอยู่ชั้นของทั้งคู่แล้ว',
   wonderbox_match: '✨ กล่องมหัศจรรย์จับคู่ให้แล้ว — เปิดดูเลย!',
+  trade_meeting_ready: '📍 มีคิวว่างแล้ว — นัดแลกเปลี่ยนของคุณมีเวลานัดแล้ว',
 };
 
 export function pushBody(kind: NotifyKind, params: { actor?: string | null; subject?: string | null }): string {

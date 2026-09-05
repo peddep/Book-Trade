@@ -11,6 +11,7 @@ export type NotifyKind =
   | 'trade_completed'  // both sides confirmed the swap happened
   | 'trade_postponed'  // the other student cannot make the period you were given
   | 'trade_no_show'    // the other student says you did not turn up
+  | 'trade_meeting_ready' // a library slot opened up and your meet-up now has a time
   | 'wonderbox_match'; // the Wonder Box paired your book with someone
 
 interface Options {

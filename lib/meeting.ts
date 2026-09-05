@@ -1,15 +1,10 @@
-// Working out when two students can meet, from the weekly grids they filled in
-// when they signed up.
-//
-// Both the student's meet-up page and the admin's list of upcoming meet-ups
-// need this answer, and they must not disagree about it: a teacher looking at
-// the library rota should see the day and period the two students were shown.
+// Which periods two students share, from the weekly grids they filled in when
+// they signed up. Turning a shared period into an actual appointment — which
+// day, and which of the two ten-minute windows within it — is a capacity
+// decision (the library only fits one pair at a time) made server-side in
+// lib/hub.ts's assignMeetingSlot, and stored on the trade; see
+// lib/meetingSlots.ts for the fixed times and display of that decision.
 
-// When each slot starts, on the ordinary timetable — the one where periods run
-// their full length. On a day the school shortens them these times move, which
-// is why the pages that show a meeting say which timetable they assume rather
-// than presenting the time as certain.
-const SLOT_TIME: Record<string, [number, number]> = { p4: [12, 0], p5: [12, 55], after: [16, 10] };
 export const SLOT_ORDER = ['p4', 'p5', 'after'];
 export const SLOT_KEYS: Record<string, string> = { p4: 'reg.slotP4', p5: 'reg.slotP5', after: 'reg.slotAfter' };
 
@@ -37,51 +32,4 @@ export function overlap(a?: string | null, b?: string | null): string[] {
       const [sx, dx] = x.split('-'); const [sy, dy] = y.split('-');
       return SLOT_ORDER.indexOf(sx) - SLOT_ORDER.indexOf(sy) || Number(dx) - Number(dy);
     });
-}
-
-// The soonest date+time both users share, based on their weekly grids. `from`
-// is where to start looking: now, or just after a period one of them said they
-// could not make.
-export function nextMeeting(shared: string[], from: Date = new Date()): { date: Date; slot: string } | null {
-  const now = from;
-  let best: { date: Date; slot: string } | null = null;
-  for (const key of shared) {
-    const [slot, dayStr] = key.split('-');
-    const targetDow = Number(dayStr) + 1; // grid day 0 = Monday; JS Sunday = 0
-    const [hh, mm] = SLOT_TIME[slot] ?? [12, 0];
-    for (let add = 0; add <= 7; add++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() + add);
-      d.setHours(hh, mm, 0, 0);
-      if (d.getDay() === targetDow && d.getTime() > now.getTime()) {
-        if (!best || d < best.date) best = { date: d, slot };
-        break;
-      }
-    }
-  }
-  return best;
-}
-
-// The two students' grids straight to a meeting, which is what both callers
-// actually want.
-//
-// Work this out in the browser, never on the server. A period is a time on the
-// school's clock, but `nextMeeting` builds it with the local clock of whatever
-// machine runs it — so a server in UTC turned "period 5, 12:55" into an instant
-// that a phone in Bangkok then displayed as 19:30. The two students and the
-// teacher looking at the same meet-up must be told the same time.
-export function meetingFor(availA?: string | null, availB?: string | null, meetAfter?: string | null) {
-  // A period one of them has already cried off is no longer on offer — but only
-  // while it is still in the future; a skip from last week means nothing now.
-  const after = meetAfter ? new Date(meetAfter) : null;
-  const from = after && after.getTime() > Date.now() ? after : new Date();
-  return nextMeeting(overlap(availA, availB), from);
-}
-
-// One wording for a meeting, so the student's card and the admin's list cannot
-// drift apart in how they say it.
-export function meetingDateText(date: Date, lang: string, weekday: 'long' | 'short' = 'long'): string {
-  const locale = lang === 'th' ? 'th-TH' : 'en-US';
-  return `${date.toLocaleDateString(locale, { weekday, day: 'numeric', month: 'short' })}`
-    + ` · ${date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`;
 }

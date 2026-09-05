@@ -8,7 +8,8 @@ import IrlGuide from '@/components/IrlGuide';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { coverFor } from '@/lib/cover';
-import { meetingFor, meetingDateText, SLOT_KEYS } from '@/lib/meeting';
+import { overlap } from '@/lib/meeting';
+import { meetingWindowText, type Period } from '@/lib/meetingSlots';
 
 
 interface Trade {
@@ -18,7 +19,9 @@ interface Trade {
   status: string;
   requester_confirm?: string | null;
   owner_confirm?: string | null;
-  meet_after?: string | null;
+  meeting_date?: string | null;
+  meeting_period?: string | null;
+  meeting_sub?: number | null;
   requester_name: string;
   requester_avatar: string;
   requester_availability?: string | null;
@@ -109,20 +112,18 @@ export default function IrlTradePage() {
   // "I cannot be there" — take the period being shown off the table and let the
   // next one they both have free stand instead, and tell the other student,
   // who would otherwise be waiting in the library.
-  async function skipMeeting(trade: Trade, when: Date) {
+  async function skipMeeting(trade: Trade) {
     // window.confirm, not this page's own confirm() for a meet-up, which the
     // name would otherwise reach first.
     if (!window.confirm(t('irl.skipConfirm'))) return;
     const before = trades;
-    const iso = when.toISOString();
-    setTrades(prev => prev.map(tr => (tr.id === trade.id ? { ...tr, meet_after: iso } : tr)));
     setMovedId(trade.id);
     setTimeout(() => setMovedId(id => (id === trade.id ? null : id)), 900);
     try {
       const res = await fetch(`/api/trades/${trade.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skip_meeting: iso }),
+        body: JSON.stringify({ skip_meeting: true }),
       });
       if (!res.ok) { setTrades(before); setMovedId(null); alert(t('trades.actionFailed')); return; }
       fetchTrades();
@@ -227,7 +228,7 @@ export default function IrlTradePage() {
               const myConfirm = isRequester ? trade.requester_confirm : trade.owner_confirm;
               const otherConfirm = isRequester ? trade.owner_confirm : trade.requester_confirm;
               const otherContact = isRequester ? trade.owner_contact : trade.requester_contact;
-              const meeting = meetingFor(trade.requester_availability, trade.owner_availability, trade.meet_after);
+              const hasMeeting = Boolean(trade.meeting_date && trade.meeting_period);
               // Same room every day: working out a free period is beside the
               // point, so say so instead of making them read a timetable.
               const sameClass = Boolean(
@@ -235,9 +236,15 @@ export default function IrlTradePage() {
                 trade.requester_grade === trade.owner_grade &&
                 trade.requester_class === trade.owner_class,
               );
-              const meetingText = meeting
-                ? `${meetingDateText(meeting.date, lang)} (${t(SLOT_KEYS[meeting.slot])})`
+              const meetingText = hasMeeting
+                ? meetingWindowText(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0, lang)
                 : null;
+              // No slot yet: either they share nothing at all, or they share a
+              // period but both its ten-minute windows are already taken by
+              // other pairs — worth telling apart, since the second one is
+              // temporary.
+              const sharesAnyPeriod = !hasMeeting && !sameClass &&
+                overlap(trade.requester_availability, trade.owner_availability).length > 0;
 
               return (
                 <div key={trade.id} className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
@@ -296,11 +303,15 @@ export default function IrlTradePage() {
                               school shortens periods they move, and only the two
                               students know that. */}
                           <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{t('irl.normalSchedule')}</p>
-                          <button onClick={() => skipMeeting(trade, meeting!.date)}
+                          <button onClick={() => skipMeeting(trade)}
                             className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
                             style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>
                             {t('irl.cantMakeIt')}
                           </button>
+                        </div>
+                      ) : sharesAnyPeriod ? (
+                        <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
+                          <p className="text-xs font-semibold" style={{ color: '#b45309' }}>{t('irl.waitingForSpot')}</p>
                         </div>
                       ) : (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
@@ -348,8 +359,8 @@ export default function IrlTradePage() {
                             {/* Being the one who could not come is not a reason
                                 to end the trade: it moves to the next period
                                 they both have free, as on the other tab. */}
-                            {meeting && (
-                              <button onClick={() => skipMeeting(trade, meeting.date)}
+                            {hasMeeting && (
+                              <button onClick={() => skipMeeting(trade)}
                                 className="flex-1 py-2.5 rounded-xl text-xs font-bold"
                                 style={{ background: '#ede9fe', color: '#7c3aed' }}>
                                 {t('irl.iCouldntCome')}

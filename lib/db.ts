@@ -146,10 +146,16 @@ export async function ensureTradeColumns() {
   await ensureCoreTables();
   await addMissingColumns('trades', [
     'requester_confirm TEXT', 'owner_confirm TEXT',
-    // When one of them cannot make the period the app worked out, the meet-up
-    // moves to their next shared one. Kept as the moment being skipped rather
-    // than a count of skips, so it stops mattering once that moment is past.
+    // Superseded by meeting_date/meeting_period/meeting_sub below — kept so
+    // an existing database doesn't choke reading an old row, but nothing
+    // writes it any more.
     'meet_after TEXT',
+    // The actual assigned appointment: a specific calendar date (the
+    // library only fits one pair at a time, so "period 4" alone isn't
+    // enough — meeting_period + meeting_sub say which of that period's two
+    // ten-minute windows this pair got). NULL on all three means "waiting
+    // for a spot" — every period this pair shares is already double-booked.
+    'meeting_date TEXT', 'meeting_period TEXT', 'meeting_sub INTEGER',
   ]);
   tradeColumnsEnsured = true;
 }

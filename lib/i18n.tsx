@@ -162,6 +162,10 @@ const STRINGS: Dict = {
   'irl.noOverlap': { th: 'ไม่มีเวลาตรงกัน — นัดหมายกันเอง', en: 'No shared time — arrange one together' },
   'irl.reachOut': { th: 'ทักไปนัดเวลาได้ที่ {contact}', en: 'Message {contact} to arrange a time.' },
   'irl.reachProfile': { th: 'ทัก {name} ที่โรงเรียนเพื่อนัดเวลา', en: 'Find {name} at school to arrange a time.' },
+  'irl.waitingForSpot': {
+    th: 'ช่วงเวลาที่ตรงกันเต็มแล้ว (จำกัด 2 คู่ต่อคาบ) — รอคิวว่าง จะแจ้งเตือนทันทีที่มีคิว',
+    en: 'Every shared period is fully booked (2 pairs per period) — you are waiting for a spot and will be told the moment one opens up.',
+  },
   'irl.bring': { th: 'สิ่งที่ต้องนำมา', en: 'What to bring' },
   'irl.give': { th: 'คุณให้', en: 'You give' },
   'irl.get': { th: 'คุณได้รับ', en: 'You get' },
@@ -378,6 +382,7 @@ const STRINGS: Dict = {
   'notif.trade_no_show': { th: '{actor} แจ้งว่าคุณไม่ได้ไปตามนัด — การแลกเปลี่ยนถูกยกเลิกและหนังสือกลับไปอยู่ชั้นของทั้งคู่แล้ว', en: '{actor} reported that you did not turn up — the trade was called off and both books are back on the shelves.' },
   'notif.trade_completed': { th: '🎉 แลกเปลี่ยนสำเร็จแล้ว!', en: '🎉 Your trade is complete!' },
   'notif.wonderbox_match': { th: '✨ กล่องมหัศจรรย์จับคู่ให้แล้ว — เปิดดูเลย!', en: '✨ Your Wonder Box found a match — go and open it!' },
+  'notif.trade_meeting_ready': { th: '📍 มีคิวว่างแล้ว — นัดแลกเปลี่ยนของคุณมีเวลานัดแล้ว', en: '📍 A spot opened up — your meet-up now has a time.' },
   'push.enable': { th: '🔔 เปิดแจ้งเตือนบนอุปกรณ์นี้', en: '🔔 Turn on notifications on this device' },
   'push.enabled': { th: '✓ เปิดแจ้งเตือนบนอุปกรณ์นี้แล้ว', en: '✓ Notifications on for this device' },
   'push.denied': { th: 'เบราว์เซอร์บล็อกการแจ้งเตือนไว้ — เปิดได้ในตั้งค่าเบราว์เซอร์', en: 'Your browser is blocking notifications — enable them in your browser settings.' },

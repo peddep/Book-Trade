@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { announceTrade, isBanned, priceDiffOk } from '@/lib/hub';
+import { announceTrade, isBanned, priceDiffOk, assignMeetingSlot, sweepWaitingMeetings, bangkokInstantOf } from '@/lib/hub';
+import type { Period } from '@/lib/meetingSlots';
 import { notify, notifyBoth } from '@/lib/notify';
 import type { TradeRow } from '@/lib/dbTypes';
+
+// Called whenever a trade that held a library slot stops holding it (it
+// moved on, or the trade itself ended) — someone else may have been waiting
+// on that exact period with nowhere to go until now.
+async function notifyFreedSlot() {
+  const resolved = await sweepWaitingMeetings();
+  await Promise.all(resolved.map(r =>
+    notifyBoth(r.requesterId, r.ownerId, 'trade_meeting_ready', { link: '/trade/irl' })
+  ));
+}
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -28,34 +39,43 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // ── "I cannot make that period" → move to their next shared one ──
   //
-  // The period itself is worked out in the browser, from the two timetables, so
-  // the browser is what says which one is being cried off: it sends the moment
-  // it is showing. Storing the moment rather than a count of skips means it
-  // stops applying by itself once that period is past.
-  if (typeof body.skip_meeting === 'string') {
+  // The server already knows this pair's current appointment (or that they
+  // are waiting for one), so all the client sends is "move me on" — it no
+  // longer has to say from when, which is one less thing that could disagree
+  // with what the server actually has stored.
+  if (body.skip_meeting === true) {
     await ensureTradeColumns();
     if (trade.status !== 'accepted') {
       return NextResponse.json({ error: 'Trade is not in progress' }, { status: 400 });
     }
-    const when = new Date(body.skip_meeting);
-    const soon = Date.now() + 21 * 24 * 60 * 60 * 1000;   // a fortnight of slack
-    if (isNaN(when.getTime()) || when.getTime() < Date.now() - 60_000 || when.getTime() > soon) {
-      return NextResponse.json({ error: 'bad_time' }, { status: 400 });
-    }
-    // Both of them may cry off in turn, each pushing it further, so never move
-    // the meeting earlier than where it already stands.
-    const current = trade.meet_after ? new Date(String(trade.meet_after)).getTime() : 0;
-    if (when.getTime() > current) {
-      await db.execute({
-        sql: "UPDATE trades SET meet_after = ?, updated_at = datetime('now') WHERE id = ?",
-        args: [when.toISOString(), id],
-      });
-    }
+    const hadSlot = Boolean(trade.meeting_date && trade.meeting_period);
+    const from = hadSlot
+      ? bangkokInstantOf(String(trade.meeting_date), trade.meeting_period as Period, Number(trade.meeting_sub ?? 0))
+      : new Date();
+    const users = await db.execute({
+      sql: 'SELECT id, availability FROM users WHERE id IN (?, ?)',
+      args: [Number(trade.requester_id), Number(trade.owner_id)],
+    });
+    const availById = new Map(
+      users.rows.map(r => [Number((r as unknown as { id: number }).id), (r as unknown as { availability: string | null }).availability])
+    );
+    const assignment = await assignMeetingSlot(
+      availById.get(Number(trade.requester_id)),
+      availById.get(Number(trade.owner_id)),
+      from,
+    );
+    await db.execute({
+      sql: 'UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ?, updated_at = datetime(\'now\') WHERE id = ?',
+      args: [assignment?.date ?? null, assignment?.period ?? null, assignment?.sub ?? null, id],
+    });
 
     // The other student is expecting to stand in the library at that period.
     const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
     await notify(other, 'trade_postponed', { actor: user.name, link: '/trade/irl' });
-    return NextResponse.json({ ok: true, meet_after: when.toISOString() });
+    // This pair's old slot (if they had one) just freed up for whoever else
+    // was waiting on that same period.
+    if (hadSlot) await notifyFreedSlot();
+    return NextResponse.json({ ok: true, meeting: assignment });
   }
 
   // ── IRL meet-up confirmation: each side reports happened / not ──
@@ -87,6 +107,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
       await notify(other, body.reason === 'no_show' ? 'trade_no_show' : 'trade_cancelled',
         { actor: user.name, link: '/trades' });
+      // Whatever library slot this pair held (if any) is free again.
+      if (trade.meeting_date) await notifyFreedSlot();
     } else if (rConfirm === 'happened' && oConfirm === 'happened') {
       // Never move a book that has since left the hands it was promised from.
       // Accepting locks both books, so this should be unreachable — but the
@@ -126,6 +148,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       });
       await announceTrade(Number(id));
       await notifyBoth(Number(trade.requester_id), Number(trade.owner_id), 'trade_completed', { link: '/trades' });
+      // The slot this pair used is free for the next appointment now.
+      if (trade.meeting_date) await notifyFreedSlot();
     }
 
     return NextResponse.json({ ok: true });
@@ -211,6 +235,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       sql: 'UPDATE books SET available = 1 WHERE id = ? OR id = ?',
       args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
     });
+    if (trade.meeting_date) await notifyFreedSlot();
   }
 
   // Agreeing to a trade takes both books off the market, and that is the step
@@ -244,6 +269,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id != ? AND status = 'pending' AND (offered_book_id = ? OR wanted_book_id = ? OR offered_book_id = ? OR wanted_book_id = ?)",
       args: [id, offeredId, offeredId, wantedId, wantedId],
     });
+
+    // Same class → they see each other in class anyway, so swap there instead
+    // of spending one of the library's two slots on a pair that never needed
+    // the room. Everyone else gets an actual appointment.
+    const pairInfo = await db.execute({
+      sql: 'SELECT id, grade, class_no, availability FROM users WHERE id IN (?, ?)',
+      args: [Number(trade.requester_id), Number(trade.owner_id)],
+    });
+    type PairRow = { id: number; grade: string | null; class_no: string | null; availability: string | null };
+    const byUserId = new Map(pairInfo.rows.map(r => {
+      const row = r as unknown as PairRow;
+      return [Number(row.id), row] as const;
+    }));
+    const reqInfo = byUserId.get(Number(trade.requester_id));
+    const ownInfo = byUserId.get(Number(trade.owner_id));
+    const sameClass = Boolean(
+      reqInfo && ownInfo && reqInfo.grade === ownInfo.grade && reqInfo.class_no === ownInfo.class_no
+    );
+    if (!sameClass) {
+      const assignment = await assignMeetingSlot(reqInfo?.availability, ownInfo?.availability, new Date());
+      await db.execute({
+        sql: 'UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ? WHERE id = ?',
+        args: [assignment?.date ?? null, assignment?.period ?? null, assignment?.sub ?? null, id],
+      });
+    }
   }
 
   // Tell whichever side did not press the button. Accept and reject are the

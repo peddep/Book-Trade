@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Loading from '@/components/Loading';
 import AdminHarvestCard from '@/components/AdminHarvestCard';
 import { useI18n } from '@/lib/i18n';
-import { SLOT_KEYS, meetingFor, meetingDateText } from '@/lib/meeting';
+import { meetingWindow, meetingWindowText, type Period } from '@/lib/meetingSlots';
 import { fileToCoverDataUrl } from '@/lib/image';
 import { parseDbTime } from '@/lib/time';
 
@@ -217,15 +217,17 @@ export default function AdminPage() {
         r.requester_grade && r.requester_class &&
         r.requester_grade === r.owner_grade && r.requester_class === r.owner_class,
       );
-      return {
-        row: r,
-        sameClass,
-        meeting: sameClass ? null : meetingFor(r.requester_availability as string | null, r.owner_availability as string | null, r.meet_after as string | null),
-      };
+      const meeting = !sameClass && r.meeting_date && r.meeting_period
+        ? { date: String(r.meeting_date), period: r.meeting_period as Period, sub: Number(r.meeting_sub ?? 0) }
+        : null;
+      return { row: r, sameClass, meeting };
     })
     // Soonest first: this is a list of what is about to happen. Pairs whose
-    // timetables never line up have no date and go last.
-    .sort((a, b) => (a.meeting?.date.getTime() ?? Infinity) - (b.meeting?.date.getTime() ?? Infinity))
+    // timetables never line up (or are still waiting for a spot) have no date
+    // and go last.
+    .sort((a, b) =>
+      (a.meeting ? meetingWindow(a.meeting.date, a.meeting.period, a.meeting.sub).start.getTime() : Infinity) -
+      (b.meeting ? meetingWindow(b.meeting.date, b.meeting.period, b.meeting.sub).start.getTime() : Infinity))
     .map(({ row: r, meeting, sameClass }) => {
       const waiting = [
         r.requester_confirm ? null : String(r.requester_name),
@@ -236,7 +238,7 @@ export default function AdminPage() {
         when: sameClass
           ? t('adm.sameClass', { room: `${t('grade.prefix')}${r.owner_grade}/${r.owner_class}` })
           : meeting
-            ? `${meetingDateText(meeting.date, lang, 'short')} (${t(SLOT_KEYS[meeting.slot])})`
+            ? meetingWindowText(meeting.date, meeting.period, meeting.sub, lang, 'short')
             : t('adm.noSharedTime'),
         students: `${who(r, 'requester')} ⇄ ${who(r, 'owner')}`,
         class: `${room(r, 'requester')} ⇄ ${room(r, 'owner')}`,

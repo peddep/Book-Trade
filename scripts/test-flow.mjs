@@ -58,8 +58,17 @@ const SIGNUP = {
   password: 'secret6', accept_terms: true, real_name: 'Test Student',
   grade: '5', class_no: '3', contact: '@tester', availability: ['p4-0', 'p5-2'],
 };
-async function register(name, email) {
-  const r = await api('/api/auth/register', { method: 'POST', body: { ...SIGNUP, name, email }, ip: `10.0.0.${++ipCounter}` });
+async function register(name, email, availability, classNo) {
+  const r = await api('/api/auth/register', {
+    method: 'POST',
+    body: {
+      ...SIGNUP,
+      ...(availability ? { availability } : {}),
+      ...(classNo ? { class_no: classNo } : {}),
+      name, email,
+    },
+    ip: `10.0.0.${++ipCounter}`,
+  });
   return r.cookie;
 }
 async function addBook(cookie, title, price) {
@@ -631,21 +640,24 @@ test('every status a trade can end in has a label of its own', async () => {
 
 test('a student who cannot make the meet-up can move it on, and the other is told', async () => {
   const a = await register('SkipA', `skipa${Math.random()}@s.edu`);
-  const b = await register('SkipB', `skipb${Math.random()}@s.edu`);
+  const b = await register('SkipB', `skipb${Math.random()}@s.edu`, undefined, '4');
   const ba = await addBook(a, 'SkipBookA', 100);
   const bb = await addBook(b, 'SkipBookB', 100);
   const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
   await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
 
-  const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
-  const moved = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: soon } });
+  const before = (await api('/api/trades', { cookie: a })).json.trades.find(x => x.id === t);
+  assert.ok(before.meeting_date, 'an accepted trade must be given a meeting slot');
+  const key = r => `${r.meeting_date}-${r.meeting_period}-${r.meeting_sub}`;
+
+  const moved = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } });
   assert.equal(moved.status, 200);
 
-  // Both sides read the same "not before" mark, which is what each browser
-  // works the next period out from.
+  // Both sides read the same new slot, which is what each browser shows.
   for (const cookie of [a, b]) {
     const row = (await api('/api/trades', { cookie })).json.trades.find(x => x.id === t);
-    assert.equal(new Date(row.meet_after).toISOString(), soon, 'both students must work from the same mark');
+    assert.ok(row.meeting_date, 'moving on must still find a slot, since these two share plenty of periods');
+    assert.notEqual(key(row), key(before), 'a postponed meet-up must move to a different slot');
   }
 
   // The other student hears about it; the one who moved it does not need to.
@@ -653,19 +665,9 @@ test('a student who cannot make the meet-up can move it on, and the other is tol
   assert.ok(theirs.some(n => n.kind === 'trade_postponed'), 'the other student must be told');
   assert.equal(theirs.find(n => n.kind === 'trade_postponed').actor, 'SkipA');
 
-  // It only ever moves forwards, whoever presses it.
-  const earlier = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { skip_meeting: earlier } });
-  const after = (await api('/api/trades', { cookie: a })).json.trades.find(x => x.id === t);
-  assert.equal(new Date(after.meet_after).toISOString(), soon, 'a later mark must not be pulled back earlier');
-
-  // Nonsense is refused, and so is anybody who is not in the trade.
+  // Anybody who is not in the trade is refused.
   const c = await register('SkipC', `skipc${Math.random()}@s.edu`);
-  assert.equal((await api(`/api/trades/${t}`, { method: 'PATCH', cookie: c, body: { skip_meeting: soon } })).status, 403);
-  for (const bad of ['whenever', new Date(Date.now() - 9 * 86400000).toISOString(), new Date(Date.now() + 200 * 86400000).toISOString()]) {
-    const r = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: bad } });
-    assert.equal(r.json.error, 'bad_time', `"${bad}" should not be accepted as a time`);
-  }
+  assert.equal((await api(`/api/trades/${t}`, { method: 'PATCH', cookie: c, body: { skip_meeting: true } })).status, 403);
 });
 
 test('times the database wrote are read back as the moment they happened', async () => {
@@ -695,7 +697,7 @@ test('times the database wrote are read back as the moment they happened', async
 
 test('the two ways a meet-up can fail are not the same thing', async () => {
   const a = await register('MissA', `missa${Math.random()}@s.edu`);
-  const b = await register('MissB', `missb${Math.random()}@s.edu`);
+  const b = await register('MissB', `missb${Math.random()}@s.edu`, undefined, '4');
   const setUp = async (n) => {
     const ba = await addBook(a, `MissBookA${n}`, 100);
     const bb = await addBook(b, `MissBookB${n}`, 100);
@@ -706,11 +708,15 @@ test('the two ways a meet-up can fail are not the same thing', async () => {
 
   // "I could not be there" moves the meet-up on and leaves the trade standing.
   const mine = await setUp(1);
-  const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
-  assert.equal((await api(`/api/trades/${mine.t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: soon } })).status, 200);
+  const beforeRow = (await api('/api/trades?status=accepted', { cookie: a })).json.trades.find(x => x.id === mine.t);
+  assert.equal((await api(`/api/trades/${mine.t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } })).status, 200);
   const stillOn = (await api('/api/trades?status=accepted', { cookie: a })).json.trades.find(x => x.id === mine.t);
   assert.ok(stillOn, 'being the one who could not come must not end the trade');
-  assert.equal(new Date(stillOn.meet_after).toISOString(), soon);
+  assert.notEqual(
+    `${stillOn.meeting_date}-${stillOn.meeting_period}-${stillOn.meeting_sub}`,
+    `${beforeRow.meeting_date}-${beforeRow.meeting_period}-${beforeRow.meeting_sub}`,
+    'postponing must actually move the slot',
+  );
 
   // "They did not come" ends it, hands the books back, and says who reported it.
   const theirs = await setUp(2);
@@ -724,6 +730,47 @@ test('the two ways a meet-up can fail are not the same thing', async () => {
   assert.equal(notes[0].kind, 'trade_no_show', 'the other student must be told, and told which it was');
   assert.equal(notes[0].actor, 'MissA');
   assert.ok(notes.some(n => n.kind === 'trade_postponed'), 'and told separately when a meet-up only moved');
+});
+
+test('the library only fits two pairs a period, and a third waits for a spot', async () => {
+  // A slot only this test uses, so other tests filling the default
+  // availability's periods can't shift which of these three pairs waits.
+  const avail = ['after-3'];
+  const makePair = async (n) => {
+    const x = await register(`CapX${n}`, `capx${n}${Math.random()}@s.edu`, avail);
+    const y = await register(`CapY${n}`, `capy${n}${Math.random()}@s.edu`, avail, '4');
+    const bx = await addBook(x, `CapBookX${n}`, 100);
+    const by = await addBook(y, `CapBookY${n}`, 100);
+    const t = (await api('/api/trades', { method: 'POST', cookie: x, body: { offered_book_id: bx, wanted_book_id: by } })).json.trade.id;
+    await api(`/api/trades/${t}`, { method: 'PATCH', cookie: y, body: { status: 'accepted' } });
+    const row = (await api('/api/trades?status=accepted', { cookie: x })).json.trades.find(r => r.id === t);
+    return { t, x, y, row };
+  };
+
+  const p1 = await makePair(1);
+  const p2 = await makePair(2);
+  const p3 = await makePair(3);
+
+  assert.equal(p1.row.meeting_period, 'after');
+  assert.equal(p2.row.meeting_period, 'after');
+  assert.equal(p1.row.meeting_date, p2.row.meeting_date, 'both pairs land on the same soonest occurrence of their only shared period');
+  assert.deepEqual([p1.row.meeting_sub, p2.row.meeting_sub].sort(), [0, 1], 'the period\'s two seats go to sub 0 and sub 1');
+
+  assert.equal(p3.row.meeting_date, null, 'a third pair sharing only a full period must wait, not be pushed to a future week');
+  assert.equal(p3.row.meeting_period, null);
+
+  // Cancelling one of the two occupying trades frees its seat for the pair
+  // that was waiting, and both of that pair's students are told.
+  await api(`/api/trades/${p1.t}`, { method: 'PATCH', cookie: p1.x, body: { status: 'cancelled' } });
+
+  const p3After = (await api('/api/trades?status=accepted', { cookie: p3.x })).json.trades.find(r => r.id === p3.t);
+  assert.ok(p3After.meeting_date, 'the waiting pair must be swept into the freed slot');
+  assert.equal(p3After.meeting_period, 'after');
+
+  const notesX = (await api('/api/notifications', { cookie: p3.x })).json.notifications ?? [];
+  const notesY = (await api('/api/notifications', { cookie: p3.y })).json.notifications ?? [];
+  assert.ok(notesX.some(n => n.kind === 'trade_meeting_ready'), 'the waiting pair\'s requester must be told a spot opened up');
+  assert.ok(notesY.some(n => n.kind === 'trade_meeting_ready'), 'and so must the owner');
 });
 
 // ── "Sign in with Google" ───────────────────────────────────────────────

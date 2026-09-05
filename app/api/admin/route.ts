@@ -74,7 +74,8 @@ export async function GET(req: NextRequest) {
                 JOIN books ob ON t.offered_book_id = ob.id
                 JOIN books wb ON t.wanted_book_id = wb.id
                 ORDER BY t.id DESC LIMIT 200`),
-    db.execute(`SELECT t.id, t.created_at, t.updated_at, t.requester_confirm, t.owner_confirm, t.meet_after,
+    db.execute(`SELECT t.id, t.created_at, t.updated_at, t.requester_confirm, t.owner_confirm,
+                  t.meeting_date, t.meeting_period, t.meeting_sub,
                   ru.name AS requester_name, ru.real_name AS requester_real, ru.grade AS requester_grade,
                   ru.class_no AS requester_class, ru.contact AS requester_contact, ru.availability AS requester_availability,
                   ou.name AS owner_name, ou.real_name AS owner_real, ou.grade AS owner_grade,

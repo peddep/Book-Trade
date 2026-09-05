@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { getDb, ensureBookColumns, ensureUserColumns, addMissingColumns } from './db';
+import { getDb, ensureBookColumns, ensureUserColumns, ensureTradeColumns, addMissingColumns } from './db';
+import { overlap } from './meeting';
+import { SUB_SLOT_TIMES, SLOTS_PER_PERIOD, type Period } from './meetingSlots';
 
 // Premium Plan limits (this app runs everyone on the Premium Plan).
 export const PLAN = {
@@ -168,6 +170,141 @@ export async function announceTrade(tradeId: number) {
   });
 }
 
+
+// ── Assigning an actual meet-up appointment ─────────────────────────────
+//
+// The library has room for one pair at a time, so a period is only ever
+// good for two: whoever gets there first, and whoever comes right after.
+// Deciding who gets which of a period's two ten-minute windows — and what
+// happens once both are taken — needs to see every other pair's
+// appointment, which a browser cannot: two students accepting a trade
+// don't know about each other's plans. So, unlike the shared-period math in
+// lib/meeting.ts, this runs server-side and is stored once decided.
+//
+// The stored calendar date is the school's own wall-clock date (e.g.
+// "2026-09-08"), not a UTC instant — deliberately, so a server that always
+// runs in UTC never has to be trusted to also be in Bangkok. The only place
+// that matters here is figuring out, from the real current instant, what
+// day *in Bangkok* "next Monday" or "still before 16:05" means; once that's
+// settled the result is plain wall-clock fields a browser in the same
+// timezone can read back at face value.
+const BANGKOK_OFFSET_MS = 7 * 60 * 60_000;
+
+// `instant` shifted by the Bangkok offset, so its own UTC getters
+// (getUTCDay, getUTCHours, ...) read as Bangkok wall-clock fields instead.
+function asBangkokFields(instant: Date): Date {
+  return new Date(instant.getTime() + BANGKOK_OFFSET_MS);
+}
+
+// The next time `targetDow` (JS convention: Sunday = 0) falls at `hh:mm`
+// Bangkok time, strictly after `from` — as a wall-clock 'YYYY-MM-DD' date
+// string, plus the shifted instant (for sorting several of these against
+// each other; never compare it to a real, un-shifted Date).
+function nextBangkokOccurrence(from: Date, targetDow: number, hh: number, mm: number): { dateStr: string; shiftedAt: number } | null {
+  const bkNow = asBangkokFields(from);
+  for (let add = 0; add <= 7; add++) {
+    const cand = new Date(bkNow);
+    cand.setUTCDate(bkNow.getUTCDate() + add);
+    cand.setUTCHours(hh, mm, 0, 0);
+    if (cand.getUTCDay() === targetDow && cand.getTime() > bkNow.getTime()) {
+      const y = cand.getUTCFullYear();
+      const m = String(cand.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(cand.getUTCDate()).padStart(2, '0');
+      return { dateStr: `${y}-${m}-${d}`, shiftedAt: cand.getTime() };
+    }
+  }
+  return null;
+}
+
+// The Bangkok instant of a stored (date, period, sub) — the inverse of
+// nextBangkokOccurrence's dateStr, for using an existing appointment as the
+// `from` of a new search ("strictly after the one you're being moved off").
+export function bangkokInstantOf(dateStr: string, period: Period, sub: number): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = SUB_SLOT_TIMES[period][sub] ?? SUB_SLOT_TIMES[period][0];
+  return new Date(Date.UTC(y, m - 1, d, hh, mm, 0, 0) - BANGKOK_OFFSET_MS);
+}
+
+export interface MeetingAssignment { date: string; period: Period; sub: number }
+
+// Finds the soonest shared period, after `from`, that still has room — trying
+// every period the two share, in true chronological order (not grid order:
+// the soonest *actual* date wins, whichever period it is), and picking the
+// first whose two seats for that specific calendar date aren't both taken.
+// Returns null when every shared period is full for its next occurrence —
+// callers leave the trade "waiting" rather than searching further weeks
+// ahead, so a spot freeing up (someone cancels, or moves on) is what lets it
+// resolve, not an ever-later date nobody asked for.
+export async function assignMeetingSlot(
+  availA: string | null | undefined,
+  availB: string | null | undefined,
+  from: Date,
+): Promise<MeetingAssignment | null> {
+  const shared = overlap(availA, availB);
+  if (shared.length === 0) return null;
+  await ensureTradeColumns();
+  const db = getDb();
+
+  const candidates: Array<{ period: Period; dateStr: string; shiftedAt: number }> = [];
+  for (const key of shared) {
+    const [slot, dayStr] = key.split('-') as [Period, string];
+    if (!(slot in SUB_SLOT_TIMES)) continue;
+    const targetDow = Number(dayStr) + 1; // grid day 0 = Monday; JS Sunday = 0
+    const [hh, mm] = SUB_SLOT_TIMES[slot][0]; // the period's own day, not which sub-slot
+    const occ = nextBangkokOccurrence(from, targetDow, hh, mm);
+    if (occ) candidates.push({ period: slot, dateStr: occ.dateStr, shiftedAt: occ.shiftedAt });
+  }
+  candidates.sort((a, b) => a.shiftedAt - b.shiftedAt);
+
+  for (const c of candidates) {
+    const taken = await db.execute({
+      sql: "SELECT COUNT(*) AS n FROM trades WHERE status = 'accepted' AND meeting_date = ? AND meeting_period = ?",
+      args: [c.dateStr, c.period],
+    });
+    const n = Number(taken.rows[0]?.n ?? 0);
+    if (n < SLOTS_PER_PERIOD) return { date: c.dateStr, period: c.period, sub: n };
+  }
+  return null;
+}
+
+// Re-tries every currently-waiting trade (one whose shared periods were all
+// full when it last looked) against the slots as they stand now — called
+// after something frees one up (a cancellation, a no-show, a trade completing,
+// or someone else's meet-up moving on). Oldest wait first. Returns what
+// changed, so the caller — which already has lib/notify.ts in scope, and
+// importing it here would cycle back through lib/push.ts to this file — can
+// tell the newly-scheduled pairs.
+export async function sweepWaitingMeetings(): Promise<Array<{ id: number; requesterId: number; ownerId: number; assignment: MeetingAssignment }>> {
+  await ensureTradeColumns();
+  const db = getDb();
+  const waiting = await db.execute(
+    `SELECT t.id, t.requester_id, t.owner_id,
+            ru.availability AS requester_availability, ru.grade AS requester_grade, ru.class_no AS requester_class,
+            ou.availability AS owner_availability, ou.grade AS owner_grade, ou.class_no AS owner_class
+     FROM trades t JOIN users ru ON t.requester_id = ru.id JOIN users ou ON t.owner_id = ou.id
+     WHERE t.status = 'accepted' AND t.meeting_date IS NULL
+     ORDER BY t.updated_at ASC`
+  );
+  const resolved: Array<{ id: number; requesterId: number; ownerId: number; assignment: MeetingAssignment }> = [];
+  for (const r of waiting.rows as unknown as Array<{
+    id: number; requester_id: number; owner_id: number;
+    requester_availability: string | null; requester_grade: string | null; requester_class: string | null;
+    owner_availability: string | null; owner_grade: string | null; owner_class: string | null;
+  }>) {
+    // Same-class pairs are never given a library slot at all (they swap in
+    // class), so a null meeting_date here means "not applicable", not
+    // "waiting" — nothing must ever sweep them into a seat.
+    if (r.requester_grade === r.owner_grade && r.requester_class === r.owner_class) continue;
+    const assignment = await assignMeetingSlot(r.requester_availability, r.owner_availability, new Date());
+    if (!assignment) continue;
+    await db.execute({
+      sql: 'UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ? WHERE id = ?',
+      args: [assignment.date, assignment.period, assignment.sub, r.id],
+    });
+    resolved.push({ id: r.id, requesterId: Number(r.requester_id), ownerId: Number(r.owner_id), assignment });
+  }
+  return resolved;
+}
 
 // Removing a book, for the owner and for the admin alike.
 //
