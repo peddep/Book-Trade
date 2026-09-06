@@ -123,10 +123,14 @@ export default function IrlTradePage() {
         body: JSON.stringify({ skip_meeting: true }),
       });
       if (!res.ok) { alert(t('trades.actionFailed')); return; }
-      // The new slot only exists once this resolves — starting the flash
-      // beforehand animated the card while it still showed the old time, so
-      // the "moved" flourish landed on nothing actually moving yet.
-      await fetchTrades();
+      // The response already carries the new slot the server just decided —
+      // patch it straight into state instead of waiting on a whole second
+      // round trip (a fetchTrades() call also re-checks every other accepted
+      // trade for a stale slot, which is real work this button never needed).
+      const { meeting } = await res.json() as { meeting: { date: string; period: string; sub: number } | null };
+      setTrades(prev => prev.map(tr => (tr.id === trade.id
+        ? { ...tr, meeting_date: meeting?.date ?? null, meeting_period: meeting?.period ?? null, meeting_sub: meeting?.sub ?? null }
+        : tr)));
       setMovedId(trade.id);
       setTimeout(() => setMovedId(id => (id === trade.id ? null : id)), 900);
     } catch {
