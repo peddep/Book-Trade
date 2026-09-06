@@ -9,7 +9,7 @@ import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { coverFor } from '@/lib/cover';
 import { overlap } from '@/lib/meeting';
-import { meetingWindowText, type Period } from '@/lib/meetingSlots';
+import { meetingWindow, meetingWindowText, type Period } from '@/lib/meetingSlots';
 
 
 interface Trade {
@@ -239,6 +239,13 @@ export default function IrlTradePage() {
               const meetingText = hasMeeting
                 ? meetingWindowText(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0, lang)
                 : null;
+              // The slot's own start, not its end — a range on screen reads as
+              // "any time in this window", but the other student is only there
+              // for the ten minutes booked, so arriving late eats into it.
+              const arriveByText = hasMeeting
+                ? meetingWindow(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0)
+                  .start.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+                : null;
               // No slot yet: either they share nothing at all, or they share a
               // period but both its ten-minute windows are already taken by
               // other pairs — worth telling apart, since the second one is
@@ -303,6 +310,11 @@ export default function IrlTradePage() {
                               school shortens periods they move, and only the two
                               students know that. */}
                           <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{t('irl.normalSchedule')}</p>
+                          {/* A range on its own reads as "any time within it" —
+                              say the moment that actually matters: the start. */}
+                          <p className="text-[11px] font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                            ⏰ {t('irl.arriveByTime', { time: arriveByText ?? '' })}
+                          </p>
                           <button onClick={() => skipMeeting(trade)}
                             className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
                             style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>

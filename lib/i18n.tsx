@@ -158,6 +158,7 @@ const STRINGS: Dict = {
   'irl.theyDidntCome': { th: '✕ อีกฝ่ายไม่มา', en: '✕ They did not come' },
   'irl.noShowConfirm': { th: 'แจ้งว่า {name} ไม่มาตามนัด? การแลกเปลี่ยนจะถูกยกเลิก และหนังสือจะกลับไปอยู่ชั้นของทั้งคู่', en: 'Report that {name} did not turn up? The trade is called off and both books go back on the shelves.' },
   'irl.normalSchedule': { th: 'เวลานี้คิดจากคาบปกติ ไม่ร่นคาบ', en: 'This time assumes the normal timetable — periods not shortened' },
+  'irl.arriveByTime': { th: 'มาตรงเวลา {time} น. นะ', en: 'Come right at {time} — don\'t be late' },
   'irl.meetOn': { th: 'นัดเจอกันวันที่', en: 'Meet on' },
   'irl.noOverlap': { th: 'ไม่มีเวลาตรงกัน — นัดหมายกันเอง', en: 'No shared time — arrange one together' },
   'irl.reachOut': { th: 'ทักไปนัดเวลาได้ที่ {contact}', en: 'Message {contact} to arrange a time.' },
