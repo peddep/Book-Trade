@@ -116,20 +116,20 @@ export default function IrlTradePage() {
     // window.confirm, not this page's own confirm() for a meet-up, which the
     // name would otherwise reach first.
     if (!window.confirm(t('irl.skipConfirm'))) return;
-    const before = trades;
-    setMovedId(trade.id);
-    setTimeout(() => setMovedId(id => (id === trade.id ? null : id)), 900);
     try {
       const res = await fetch(`/api/trades/${trade.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skip_meeting: true }),
       });
-      if (!res.ok) { setTrades(before); setMovedId(null); alert(t('trades.actionFailed')); return; }
-      fetchTrades();
+      if (!res.ok) { alert(t('trades.actionFailed')); return; }
+      // The new slot only exists once this resolves — starting the flash
+      // beforehand animated the card while it still showed the old time, so
+      // the "moved" flourish landed on nothing actually moving yet.
+      await fetchTrades();
+      setMovedId(trade.id);
+      setTimeout(() => setMovedId(id => (id === trade.id ? null : id)), 900);
     } catch {
-      setTrades(before);
-      setMovedId(null);
       alert(t('trades.actionFailed'));
     }
   }
