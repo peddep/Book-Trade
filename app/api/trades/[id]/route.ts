@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { announceTrade, isBanned, priceDiffOk, assignMeetingSlot, sweepWaitingMeetings, bangkokInstantOf, bangkokDateStr } from '@/lib/hub';
@@ -85,12 +85,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       args: [assignment?.date ?? null, assignment?.period ?? null, assignment?.sub ?? null, id],
     });
 
-    // The other student is expecting to stand in the library at that period.
+    // The other student is expecting to stand in the library at that period,
+    // and this pair's old slot (if they had one) just freed up for whoever
+    // else was waiting on that same period — neither of those is something
+    // the student who just clicked the button is waiting to see happen, so
+    // don't make their own button wait on notifying someone else, or on a
+    // sweep of every other waiting trade in the whole school.
     const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
-    await notify(other, 'trade_postponed', { actor: user.name, link: '/trade/irl' });
-    // This pair's old slot (if they had one) just freed up for whoever else
-    // was waiting on that same period.
-    if (hadSlot) await notifyFreedSlot();
+    after(async () => {
+      await notify(other, 'trade_postponed', { actor: user.name, link: '/trade/irl' });
+      if (hadSlot) await notifyFreedSlot();
+    });
     return NextResponse.json({ ok: true, meeting: assignment, postponesLeft: 3 - (postponesUsed + 1) });
   }
 
