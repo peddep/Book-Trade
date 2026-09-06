@@ -99,8 +99,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true, meeting: assignment, postponesLeft: 3 - (postponesUsed + 1) });
   }
 
-  // ── IRL meet-up confirmation: each side reports happened / not ──
-  if (body.confirm === 'happened' || body.confirm === 'not') {
+  // ── IRL meet-up confirmation ──
+  //
+  // "Did you come?" splits into "no" (skip_meeting, handled above — moves the
+  // meet-up on rather than ending the trade) and "yes", which then asks what
+  // happened: 'happened', 'not_happened' (both showed up, but the trade did
+  // not go through), or 'no_show' (the other person never showed).
+  //
+  // 'no_show' is unilateral and immediate — someone who was not there may
+  // never answer, so this cannot wait on them. The other two need both
+  // sides' word before anything is decided: two 'happened's complete it, two
+  // 'not_happened's cancel it quietly (both agree nothing occurred), and any
+  // other combination — one says it happened, the other says it did not — is
+  // a straight contradiction neither side can resolve, so it is left for an
+  // admin to look at instead of guessing which student to believe.
+  if (['happened', 'not_happened', 'no_show'].includes(body.confirm)) {
     await ensureTradeColumns();
     if (trade.status !== 'accepted') {
       return NextResponse.json({ error: 'Trade is not in progress' }, { status: 400 });
@@ -114,22 +127,30 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const rConfirm = isRequester ? body.confirm : trade.requester_confirm;
     const oConfirm = isOwner ? body.confirm : trade.owner_confirm;
+    const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
 
-    // Either side says it didn't happen → cancel and return the books.
-    if (rConfirm === 'not' || oConfirm === 'not') {
+    const releaseBooks = () => db.execute({
+      sql: 'UPDATE books SET available = 1 WHERE id = ? OR id = ?',
+      args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
+    });
+
+    if (rConfirm === 'no_show' || oConfirm === 'no_show') {
       await db.execute({ sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?", args: [id] });
-      await db.execute({
-        sql: 'UPDATE books SET available = 1 WHERE id = ? OR id = ?',
-        args: [Number(trade.offered_book_id), Number(trade.wanted_book_id)],
-      });
+      await releaseBooks();
       // The other student had a meet-up in their week and two books held for
       // it; they were told none of this before, and would have found out by
       // noticing the trade had quietly gone.
-      const other = isRequester ? Number(trade.owner_id) : Number(trade.requester_id);
-      await notify(other, body.reason === 'no_show' ? 'trade_no_show' : 'trade_cancelled',
-        { actor: user.name, link: '/trades' });
-      // Whatever library slot this pair held (if any) is free again.
-      if (trade.meeting_date) await notifyFreedSlot();
+      after(async () => {
+        await notify(other, 'trade_no_show', { actor: user.name, link: '/trades' });
+        if (trade.meeting_date) await notifyFreedSlot();
+      });
+    } else if (rConfirm && oConfirm && rConfirm === 'not_happened' && oConfirm === 'not_happened') {
+      await db.execute({ sql: "UPDATE trades SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?", args: [id] });
+      await releaseBooks();
+      after(async () => {
+        await notify(other, 'trade_cancelled', { actor: user.name, link: '/trades' });
+        if (trade.meeting_date) await notifyFreedSlot();
+      });
     } else if (rConfirm === 'happened' && oConfirm === 'happened') {
       // Never move a book that has since left the hands it was promised from.
       // Accepting locks both books, so this should be unreachable — but the
@@ -168,10 +189,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         args: [Number(trade.requester_id), Number(trade.wanted_book_id)],
       });
       await announceTrade(Number(id));
-      await notifyBoth(Number(trade.requester_id), Number(trade.owner_id), 'trade_completed', { link: '/trades' });
-      // The slot this pair used is free for the next appointment now.
-      if (trade.meeting_date) await notifyFreedSlot();
+      after(async () => {
+        await notifyBoth(Number(trade.requester_id), Number(trade.owner_id), 'trade_completed', { link: '/trades' });
+        // The slot this pair used is free for the next appointment now.
+        if (trade.meeting_date) await notifyFreedSlot();
+      });
+    } else if (rConfirm && oConfirm) {
+      // One said it happened, the other said it did not — hold the books
+      // rather than guess who is right, and put it in front of an admin.
+      await db.execute({ sql: "UPDATE trades SET status = 'disputed', updated_at = datetime('now') WHERE id = ?", args: [id] });
+      await releaseBooks();
+      after(async () => {
+        await notifyBoth(Number(trade.requester_id), Number(trade.owner_id), 'trade_disputed', { link: '/trades' });
+        if (trade.meeting_date) await notifyFreedSlot();
+      });
     }
+    // Otherwise only one side has answered so far — recorded, and left to
+    // wait for the other.
 
     return NextResponse.json({ ok: true });
   }

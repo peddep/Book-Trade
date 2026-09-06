@@ -89,9 +89,14 @@ export default function IrlTradePage() {
   // The meet-up that has just been moved on, so only that card animates.
   const [movedId, setMovedId] = useState<number | null>(null);
 
+  // "Did you come?" splits in two before anything else: a card that has not
+  // picked "I came" yet only shows that fork, not the three outcomes that
+  // only make sense once both people were actually there.
+  const [camePicked, setCamePicked] = useState<Set<number>>(new Set());
+
   const [history, setHistory] = useState<Trade[] | null>(null);
   const fetchHistory = useCallback(async () => {
-    const res = await fetch('/api/trades?status=completed,cancelled');
+    const res = await fetch('/api/trades?status=completed,cancelled,disputed');
     if (res.ok) setHistory((await res.json()).trades ?? []);
   }, []);
 
@@ -157,10 +162,19 @@ export default function IrlTradePage() {
   // go back on the shelves, so this asks before doing it.
   async function noShow(trade: Trade, otherName: string) {
     if (!window.confirm(t('irl.noShowConfirm', { name: otherName }))) return;
-    await confirm(trade.id, 'not', 'no_show');
+    await confirm(trade.id, 'no_show');
   }
 
-  async function confirm(id: number, value: 'happened' | 'not', reason?: 'no_show') {
+  // Both showed up, but the swap did not go through (a book's condition
+  // turned out not to match, someone changed their mind). This is the one
+  // outcome that needs both sides to agree before anything is decided — say
+  // so, rather than let it feel as final as the other two buttons.
+  async function notHappened(trade: Trade) {
+    if (!window.confirm(t('irl.notHappenedConfirm'))) return;
+    await confirm(trade.id, 'not_happened');
+  }
+
+  async function confirm(id: number, value: 'happened' | 'not_happened' | 'no_show') {
     // Say so at once. Reporting the swap is something the student has just
     // done in person; watching the whole list reload before the card admits it
     // makes the button feel like it did not register.
@@ -171,7 +185,7 @@ export default function IrlTradePage() {
       const res = await fetch(`/api/trades/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirm: value, reason }),
+        body: JSON.stringify({ confirm: value }),
       });
       if (!res.ok) {
         setTrades(before);
@@ -394,44 +408,65 @@ export default function IrlTradePage() {
                       {meetingText && (
                         <p className="text-[11px] text-[#9ca3af] mb-2">{t('irl.normalSchedule')}</p>
                       )}
-                      <p className="text-sm font-semibold text-[#2e1065] mb-1">{t('irl.didItHappen')}</p>
-                      <p className="text-xs text-[#9ca3af] mb-3">{t('irl.bothConfirm')}</p>
                       {myConfirm ? (
                         <div className="p-3 rounded-xl text-sm font-semibold" style={{ background: '#ede9fe', color: '#7c3aed' }}>
                           {myConfirm === 'happened' ? t('irl.youConfirmed') : t('irl.notHappened')}
-                          {myConfirm === 'happened' && !otherConfirm && (
+                          {myConfirm !== 'no_show' && !otherConfirm && (
                             <p className="text-xs font-normal mt-1 text-[#6b7280]">{t('irl.waitingOther', { name: otherName })}</p>
                           )}
                         </div>
-                      ) : (
+                      ) : !camePicked.has(trade.id) ? (
+                        // Level 1: did you come at all? "No" is not the end of
+                        // the trade — it moves the meet-up on, same as the
+                        // upcoming tab — so it goes through skipMeeting directly
+                        // rather than the three outcomes below, which only make
+                        // sense once both people were actually there.
                         <div className="flex flex-col gap-2">
+                          <p className="text-sm font-semibold text-[#2e1065] mb-1">{t('irl.didYouCome')}</p>
+                          <button onClick={() => setCamePicked(prev => new Set(prev).add(trade.id))}
+                            className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
+                            style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                            {t('irl.iCame')}
+                          </button>
+                          {hasMeeting && canPostpone ? (
+                            <>
+                              <button onClick={() => skipMeeting(trade, isRequester)}
+                                className="w-full py-2.5 rounded-xl text-xs font-bold"
+                                style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                                {t('irl.iCouldntCome')}
+                              </button>
+                              <p className="text-[10px] text-center" style={{ color: '#9ca3af' }}>
+                                {t('irl.postponesLeft', { count: String(3 - myPostponesUsed) })}
+                              </p>
+                            </>
+                          ) : hasMeeting && (
+                            <p className="text-[11px] text-center" style={{ color: '#9ca3af' }}>
+                              {tooSoonToPostpone ? t('irl.tooSoonToPostpone') : t('irl.noPostponesLeft')}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        // Level 2: you were there — what happened?
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm font-semibold text-[#2e1065] mb-1">{t('irl.didItHappen')}</p>
+                          <p className="text-xs text-[#9ca3af] mb-1">{t('irl.bothConfirm')}</p>
                           <button onClick={() => confirm(trade.id, 'happened')}
                             className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
                             style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
                             {t('irl.happened')}
                           </button>
                           <div className="flex gap-2">
-                            {/* Being the one who could not come is not a reason
-                                to end the trade: it moves to the next period
-                                they both have free, as on the other tab. */}
-                            {hasMeeting && canPostpone && (
-                              <button onClick={() => skipMeeting(trade, isRequester)}
-                                className="flex-1 py-2.5 rounded-xl text-xs font-bold"
-                                style={{ background: '#ede9fe', color: '#7c3aed' }}>
-                                {t('irl.iCouldntCome')}
-                              </button>
-                            )}
+                            <button onClick={() => notHappened(trade)}
+                              className="flex-1 py-2.5 rounded-xl text-xs font-bold"
+                              style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                              {t('irl.notHappened')}
+                            </button>
                             <button onClick={() => noShow(trade, otherName)}
                               className="flex-1 py-2.5 rounded-xl text-xs font-bold"
                               style={{ background: '#fee2e2', color: '#ef4444' }}>
                               {t('irl.theyDidntCome')}
                             </button>
                           </div>
-                          {hasMeeting && canPostpone && (
-                            <p className="text-[10px] text-center" style={{ color: '#9ca3af' }}>
-                              {t('irl.postponesLeft', { count: String(3 - myPostponesUsed) })}
-                            </p>
-                          )}
                         </div>
                       )}
                     </div>
@@ -441,8 +476,12 @@ export default function IrlTradePage() {
                     <div className="p-3 rounded-xl text-sm font-semibold"
                       style={trade.status === 'completed'
                         ? { background: '#dcfce7', color: '#10b981' }
-                        : { background: '#f3f4f6', color: '#9ca3af' }}>
-                      {trade.status === 'completed' ? t('irl.completed') : t('irl.cancelled')}
+                        : trade.status === 'disputed'
+                          ? { background: '#fef3c7', color: '#b45309' }
+                          : { background: '#f3f4f6', color: '#9ca3af' }}>
+                      {trade.status === 'completed' ? t('irl.completed')
+                        : trade.status === 'disputed' ? t('trades.disputed')
+                        : t('irl.cancelled')}
                     </div>
                   )}
                 </div>

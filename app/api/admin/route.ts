@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
                 FROM users ORDER BY id`),
     db.execute(booksSql),
     db.execute(`SELECT t.id, t.status, t.message, t.created_at, t.updated_at,
+                  t.requester_confirm, t.owner_confirm,
                   ru.name AS requester_name, ou.name AS owner_name,
                   ob.title AS offered_title, wb.title AS wanted_title
                 FROM trades t
@@ -126,6 +127,9 @@ export async function GET(req: NextRequest) {
       books: (await db.execute('SELECT COUNT(*) AS n FROM books')).rows[0].n,
       trades: (await db.execute('SELECT COUNT(*) AS n FROM trades')).rows[0].n,
       completed: (await db.execute("SELECT COUNT(*) AS n FROM trades WHERE status = 'completed'")).rows[0].n,
+      // Reports from the two sides disagreed and nobody auto-resolved it —
+      // an admin needs to actually look at these.
+      disputed: (await db.execute("SELECT COUNT(*) AS n FROM trades WHERE status = 'disputed'")).rows[0].n,
       messages: (await db.execute('SELECT COUNT(*) AS n FROM messages')).rows[0].n,
       openReports: (await db.execute("SELECT COUNT(*) AS n FROM reports WHERE status = 'open'")).rows[0].n,
       meetups: meetups.rows.length,

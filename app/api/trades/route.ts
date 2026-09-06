@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   // agreed trades; its history is a separate tab most students never open, and
   // sending years of finished trades to draw a list of this week's meet-ups is
   // most of the wait before that page appears.
-  const ALLOWED = ['pending', 'accepted', 'rejected', 'cancelled', 'completed'];
+  const ALLOWED = ['pending', 'accepted', 'rejected', 'cancelled', 'completed', 'disputed'];
   const wanted = (new URL(req.url).searchParams.get('status') ?? '')
     .split(',').map(s => s.trim()).filter(s => ALLOWED.includes(s));
   const statusFilter = wanted.length ? ` AND t.status IN (${wanted.map(() => '?').join(', ')})` : '';

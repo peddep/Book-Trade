@@ -13,7 +13,7 @@ import { parseDbTime } from '@/lib/time';
 type Row = Record<string, unknown>;
 
 interface AdminData {
-  stats: { users: number; books: number; trades: number; completed: number; messages: number; openReports: number; catalog: number; meetups: number };
+  stats: { users: number; books: number; trades: number; completed: number; disputed: number; messages: number; openReports: number; catalog: number; meetups: number };
   users: Row[];
   books: Row[];
   trades: Row[];
@@ -40,7 +40,9 @@ const COLUMNS: Record<Tab, string[]> = {
   users: ['id', 'name', 'real_name', 'email', 'grade', 'class_no', 'contact', 'banned', 'books_count', 'trades_completed', 'created_at'],
   books: ['id', 'title', 'title_en', 'volume', 'publisher', 'author', 'subject', 'condition', 'price', 'available', 'owner_name', 'created_at'],
   catalog: ['id', 'title', 'author', 'publisher', 'source', 'created_at'],
-  trades: ['id', 'status', 'requester_name', 'offered_title', 'owner_name', 'wanted_title', 'message', 'created_at', 'updated_at'],
+  // requester_confirm/owner_confirm matter most on a 'disputed' row — that's
+  // the two conflicting reports an admin is here to weigh against each other.
+  trades: ['id', 'status', 'requester_name', 'offered_title', 'owner_name', 'wanted_title', 'requester_confirm', 'owner_confirm', 'message', 'created_at', 'updated_at'],
   wonderbox: ['id', 'user_name', 'title', 'status', 'created_at'],
   messages: ['id', 'kind', 'user_name', 'body', 'created_at'],
 };
@@ -189,6 +191,7 @@ export default function AdminPage() {
 
   const stats = [
     { label: t('adm.meetups'), value: data.stats.meetups ?? 0 },
+    { label: t('adm.disputed'), value: data.stats.disputed ?? 0 },
     { label: t('adm.openReports'), value: data.stats.openReports ?? 0 },
     { label: t('adm.users'), value: data.stats.users },
     { label: t('adm.books'), value: data.stats.books },

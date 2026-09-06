@@ -24,6 +24,7 @@ const ICONS: Record<string, string> = {
   trade_completed: '🎉',
   wonderbox_match: '✨',
   trade_meeting_ready: '📍',
+  trade_disputed: '⚠️',
 };
 
 // Bell with an unread count. The site is the only place a student finds out

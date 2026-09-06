@@ -62,6 +62,9 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: strin
   // it did not recognise "cancelled" — so every trade a student actually
   // completed told them it had been called off.
   completed: { bg: '#ede9fe', color: '#7c3aed', labelKey: 'trades.completed' },
+  // Both sides showed up but disagreed on what happened — held for an admin
+  // to look at rather than resolved automatically either way.
+  disputed:  { bg: '#fef3c7', color: '#b45309', labelKey: 'trades.disputed' },
 };
 
 // Anything not listed above is shown plainly rather than dressed up as one of

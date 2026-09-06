@@ -463,7 +463,7 @@ test('a banned student cannot go on trading', async () => {
 
   // The other student is not trapped: they can still call the meet-up off and
   // get their own book back.
-  assert.equal((await api(`/api/trades/${trade}`, { method: 'PATCH', cookie: other, body: { confirm: 'not' } })).status, 200);
+  assert.equal((await api(`/api/trades/${trade}`, { method: 'PATCH', cookie: other, body: { confirm: 'no_show' } })).status, 200);
 });
 
 test('signing up requires every box, not only the ones the form marks', async () => {
@@ -778,7 +778,7 @@ test('the two ways a meet-up can fail are not the same thing', async () => {
 
   // "They did not come" ends it, hands the books back, and says who reported it.
   const theirs = await setUp(2);
-  assert.equal((await api(`/api/trades/${theirs.t}`, { method: 'PATCH', cookie: a, body: { confirm: 'not', reason: 'no_show' } })).status, 200);
+  assert.equal((await api(`/api/trades/${theirs.t}`, { method: 'PATCH', cookie: a, body: { confirm: 'no_show' } })).status, 200);
   const list = (await api('/api/trades', { cookie: a })).json.trades;
   assert.equal(list.find(x => x.id === theirs.t).status, 'cancelled');
   const books = (await api('/api/books?mine=1', { cookie: a })).json.books;
@@ -788,6 +788,58 @@ test('the two ways a meet-up can fail are not the same thing', async () => {
   assert.equal(notes[0].kind, 'trade_no_show', 'the other student must be told, and told which it was');
   assert.equal(notes[0].actor, 'MissA');
   assert.ok(notes.some(n => n.kind === 'trade_postponed'), 'and told separately when a meet-up only moved');
+});
+
+test('two sides confirming the same thing settles it; disagreeing goes to an admin', async () => {
+  const a = await register('AgreeA', `agreea${Math.random()}@s.edu`);
+  const b = await register('AgreeB', `agreeb${Math.random()}@s.edu`, undefined, '4');
+  const setUp = async (n) => {
+    const ba = await addBook(a, `AgreeBookA${n}`, 100);
+    const bb = await addBook(b, `AgreeBookB${n}`, 100);
+    const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+    await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+    return { t, ba, bb };
+  };
+
+  // One side alone reporting "it didn't happen" must not decide anything —
+  // unlike a no-show, this needs both people's word.
+  const waits = await setUp(1);
+  await api(`/api/trades/${waits.t}`, { method: 'PATCH', cookie: a, body: { confirm: 'not_happened' } });
+  const stillPending = (await api('/api/trades?status=accepted', { cookie: a })).json.trades.find(x => x.id === waits.t);
+  assert.ok(stillPending, 'a single "not_happened" report must wait for the other side');
+
+  // Both sides agreeing it didn't happen: a quiet cancel, books back, no dispute.
+  await api(`/api/trades/${waits.t}`, { method: 'PATCH', cookie: b, body: { confirm: 'not_happened' } });
+  const agreed = (await api('/api/trades', { cookie: a })).json.trades.find(x => x.id === waits.t);
+  assert.equal(agreed.status, 'cancelled', 'both sides agreeing must resolve as an ordinary cancel, not a dispute');
+  const agreedBooks = (await api('/api/books?mine=1', { cookie: a })).json.books;
+  assert.equal(agreedBooks.find(x => x.id === waits.ba).available, 1);
+
+  // One side says it happened, the other says it didn't: a real contradiction,
+  // left for an admin rather than guessed at.
+  const clash = await setUp(2);
+  await api(`/api/trades/${clash.t}`, { method: 'PATCH', cookie: a, body: { confirm: 'happened' } });
+  await api(`/api/trades/${clash.t}`, { method: 'PATCH', cookie: b, body: { confirm: 'not_happened' } });
+  const disputed = (await api('/api/trades', { cookie: a })).json.trades.find(x => x.id === clash.t);
+  assert.equal(disputed.status, 'disputed', 'mismatched reports must be flagged, not resolved either way');
+  const disputedBooks = (await api('/api/books?mine=1', { cookie: a })).json.books;
+  assert.equal(disputedBooks.find(x => x.id === clash.ba).available, 1, 'books are freed rather than left stuck on a disputed trade');
+
+  const notesA = (await api('/api/notifications', { cookie: a })).json.notifications ?? [];
+  const notesB = (await api('/api/notifications', { cookie: b })).json.notifications ?? [];
+  assert.ok(notesA.some(n => n.kind === 'trade_disputed'), 'both sides of a dispute must be told');
+  assert.ok(notesB.some(n => n.kind === 'trade_disputed'));
+
+  // An admin can see both sides' answers on the disputed trade. (admin-one@s.edu
+  // was already registered by an earlier test — log back in rather than
+  // re-registering an email that must stay unique.)
+  const adminLogin = await api('/api/auth/login', { method: 'POST', body: { email: 'admin-one@s.edu', password: 'secret6' } });
+  const admin = adminLogin.cookie;
+  const adminData = (await api('/api/admin', { cookie: admin })).json;
+  const adminRow = adminData.trades.find(t => t.id === clash.t);
+  assert.equal(adminRow.status, 'disputed');
+  assert.equal(adminRow.requester_confirm, 'happened');
+  assert.equal(adminRow.owner_confirm, 'not_happened');
 });
 
 test('the library only fits two pairs a period, and a third waits for a spot', async () => {
