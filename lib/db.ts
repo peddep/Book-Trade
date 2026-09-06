@@ -156,6 +156,10 @@ export async function ensureTradeColumns() {
     // ten-minute windows this pair got). NULL on all three means "waiting
     // for a spot" — every period this pair shares is already double-booked.
     'meeting_date TEXT', 'meeting_period TEXT', 'meeting_sub INTEGER',
+    // How many times each side has pressed "I can't make it" on this trade.
+    // Capped at 3 apiece — otherwise one side could keep bumping the other
+    // student's library slot indefinitely.
+    'requester_postpones INTEGER NOT NULL DEFAULT 0', 'owner_postpones INTEGER NOT NULL DEFAULT 0',
   ]);
   tradeColumnsEnsured = true;
 }

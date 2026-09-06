@@ -22,6 +22,8 @@ interface Trade {
   meeting_date?: string | null;
   meeting_period?: string | null;
   meeting_sub?: number | null;
+  requester_postpones?: number;
+  owner_postpones?: number;
   requester_name: string;
   requester_avatar: string;
   requester_availability?: string | null;
@@ -112,7 +114,7 @@ export default function IrlTradePage() {
   // "I cannot be there" — take the period being shown off the table and let the
   // next one they both have free stand instead, and tell the other student,
   // who would otherwise be waiting in the library.
-  async function skipMeeting(trade: Trade) {
+  async function skipMeeting(trade: Trade, isRequester: boolean) {
     // window.confirm, not this page's own confirm() for a meet-up, which the
     // name would otherwise reach first.
     if (!window.confirm(t('irl.skipConfirm'))) return;
@@ -122,14 +124,23 @@ export default function IrlTradePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skip_meeting: true }),
       });
-      if (!res.ok) { alert(t('trades.actionFailed')); return; }
+      if (!res.ok) {
+        const failed = await res.json().catch(() => null) as { error?: string } | null;
+        alert(failed?.error === 'too_many_postpones' ? t('irl.tooManyPostpones') : t('trades.actionFailed'));
+        return;
+      }
       // The response already carries the new slot the server just decided —
       // patch it straight into state instead of waiting on a whole second
       // round trip (a fetchTrades() call also re-checks every other accepted
       // trade for a stale slot, which is real work this button never needed).
       const { meeting } = await res.json() as { meeting: { date: string; period: string; sub: number } | null };
+      const postponeField = isRequester ? 'requester_postpones' : 'owner_postpones';
       setTrades(prev => prev.map(tr => (tr.id === trade.id
-        ? { ...tr, meeting_date: meeting?.date ?? null, meeting_period: meeting?.period ?? null, meeting_sub: meeting?.sub ?? null }
+        ? {
+          ...tr,
+          meeting_date: meeting?.date ?? null, meeting_period: meeting?.period ?? null, meeting_sub: meeting?.sub ?? null,
+          [postponeField]: (tr[postponeField] ?? 0) + 1,
+        }
         : tr)));
       setMovedId(trade.id);
       setTimeout(() => setMovedId(id => (id === trade.id ? null : id)), 900);
@@ -256,6 +267,8 @@ export default function IrlTradePage() {
               // temporary.
               const sharesAnyPeriod = !hasMeeting && !sameClass &&
                 overlap(trade.requester_availability, trade.owner_availability).length > 0;
+              const myPostponesUsed = isRequester ? (trade.requester_postpones ?? 0) : (trade.owner_postpones ?? 0);
+              const canPostpone = myPostponesUsed < 3;
 
               return (
                 <div key={trade.id} className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
@@ -319,11 +332,17 @@ export default function IrlTradePage() {
                           <p className="text-[11px] font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.9)' }}>
                             ⏰ {t('irl.arriveByTime', { time: arriveByText ?? '' })}
                           </p>
-                          <button onClick={() => skipMeeting(trade)}
-                            className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
-                            style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>
-                            {t('irl.cantMakeIt')}
-                          </button>
+                          {canPostpone ? (
+                            <button onClick={() => skipMeeting(trade, isRequester)}
+                              className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
+                              style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>
+                              {t('irl.cantMakeIt')}
+                            </button>
+                          ) : (
+                            <p className="mt-2 text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                              {t('irl.noPostponesLeft')}
+                            </p>
+                          )}
                         </div>
                       ) : sharesAnyPeriod ? (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
@@ -375,8 +394,8 @@ export default function IrlTradePage() {
                             {/* Being the one who could not come is not a reason
                                 to end the trade: it moves to the next period
                                 they both have free, as on the other tab. */}
-                            {hasMeeting && (
-                              <button onClick={() => skipMeeting(trade)}
+                            {hasMeeting && canPostpone && (
+                              <button onClick={() => skipMeeting(trade, isRequester)}
                                 className="flex-1 py-2.5 rounded-xl text-xs font-bold"
                                 style={{ background: '#ede9fe', color: '#7c3aed' }}>
                                 {t('irl.iCouldntCome')}

@@ -59,6 +59,8 @@ export interface TradeRow {
   meeting_date: string | null;
   meeting_period: string | null;
   meeting_sub: number | null;
+  requester_postpones: number;
+  owner_postpones: number;
   created_at: string | null;
   updated_at: string | null;
 }

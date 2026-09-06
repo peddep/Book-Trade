@@ -48,6 +48,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (trade.status !== 'accepted') {
       return NextResponse.json({ error: 'Trade is not in progress' }, { status: 400 });
     }
+    // Each side gets 3 postpones on a given trade — otherwise one student
+    // could keep bumping the other's library slot indefinitely.
+    const postponeCol = isRequester ? 'requester_postpones' : 'owner_postpones';
+    const postponesUsed = Number(trade[postponeCol] ?? 0);
+    if (postponesUsed >= 3) {
+      return NextResponse.json({ error: 'too_many_postpones' }, { status: 400 });
+    }
     const hadSlot = Boolean(trade.meeting_date && trade.meeting_period);
     const from = hadSlot
       ? bangkokInstantOf(String(trade.meeting_date), trade.meeting_period as Period, Number(trade.meeting_sub ?? 0))
@@ -65,7 +72,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       from,
     );
     await db.execute({
-      sql: 'UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ?, updated_at = datetime(\'now\') WHERE id = ?',
+      sql: `UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ?, ${postponeCol} = ${postponeCol} + 1, updated_at = datetime('now') WHERE id = ?`,
       args: [assignment?.date ?? null, assignment?.period ?? null, assignment?.sub ?? null, id],
     });
 
@@ -75,7 +82,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // This pair's old slot (if they had one) just freed up for whoever else
     // was waiting on that same period.
     if (hadSlot) await notifyFreedSlot();
-    return NextResponse.json({ ok: true, meeting: assignment });
+    return NextResponse.json({ ok: true, meeting: assignment, postponesLeft: 3 - (postponesUsed + 1) });
   }
 
   // ── IRL meet-up confirmation: each side reports happened / not ──

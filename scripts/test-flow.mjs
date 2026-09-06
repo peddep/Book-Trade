@@ -670,6 +670,28 @@ test('a student who cannot make the meet-up can move it on, and the other is tol
   assert.equal((await api(`/api/trades/${t}`, { method: 'PATCH', cookie: c, body: { skip_meeting: true } })).status, 403);
 });
 
+test('each side of a meet-up only gets 3 postpones', async () => {
+  const a = await register('CapSkipA', `capskipa${Math.random()}@s.edu`);
+  const b = await register('CapSkipB', `capskipb${Math.random()}@s.edu`, undefined, '4');
+  const ba = await addBook(a, 'CapSkipBookA', 100);
+  const bb = await addBook(b, 'CapSkipBookB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+
+  // The requester uses up all 3 of their own postpones.
+  for (let i = 0; i < 3; i++) {
+    const r = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } });
+    assert.equal(r.status, 200, `postpone ${i + 1} should still be allowed`);
+  }
+  const blocked = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } });
+  assert.equal(blocked.status, 400);
+  assert.equal(blocked.json.error, 'too_many_postpones');
+
+  // The other side's own count is untouched — they still get their 3.
+  const stillGood = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { skip_meeting: true } });
+  assert.equal(stillGood.status, 200, "one side using up their postpones must not affect the other's");
+});
+
 test('times the database wrote are read back as the moment they happened', async () => {
   // datetime('now') writes UTC with nothing in the string to say so, and a
   // browser handed it reads it as local time — which is how a notification
