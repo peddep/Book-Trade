@@ -348,11 +348,16 @@ export default function IrlTradePage() {
                             ⏰ {t('irl.arriveByTime', { time: arriveByText ?? '' })}
                           </p>
                           {canPostpone ? (
-                            <button onClick={() => skipMeeting(trade, isRequester)}
-                              className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
-                              style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>
-                              {t('irl.cantMakeIt')}
-                            </button>
+                            <>
+                              <button onClick={() => skipMeeting(trade, isRequester)}
+                                className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
+                                style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>
+                                {t('irl.cantMakeIt')}
+                              </button>
+                              <p className="mt-1 text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                                {t('irl.postponesLeft', { count: String(3 - myPostponesUsed) })}
+                              </p>
+                            </>
                           ) : (
                             <p className="mt-2 text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.75)' }}>
                               {tooSoonToPostpone ? t('irl.tooSoonToPostpone') : t('irl.noPostponesLeft')}
@@ -422,6 +427,11 @@ export default function IrlTradePage() {
                               {t('irl.theyDidntCome')}
                             </button>
                           </div>
+                          {hasMeeting && canPostpone && (
+                            <p className="text-[10px] text-center" style={{ color: '#9ca3af' }}>
+                              {t('irl.postponesLeft', { count: String(3 - myPostponesUsed) })}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
