@@ -22,6 +22,7 @@ interface Trade {
   meeting_date?: string | null;
   meeting_period?: string | null;
   meeting_sub?: number | null;
+  accepted_date?: string | null;
   requester_postpones?: number;
   owner_postpones?: number;
   requester_name: string;
@@ -126,7 +127,10 @@ export default function IrlTradePage() {
       });
       if (!res.ok) {
         const failed = await res.json().catch(() => null) as { error?: string } | null;
-        alert(failed?.error === 'too_many_postpones' ? t('irl.tooManyPostpones') : t('trades.actionFailed'));
+        const message = failed?.error === 'too_many_postpones' ? t('irl.tooManyPostpones')
+          : failed?.error === 'too_soon' ? t('irl.tooSoonToPostpone')
+          : t('trades.actionFailed');
+        alert(message);
         return;
       }
       // The response already carries the new slot the server just decided —
@@ -254,12 +258,14 @@ export default function IrlTradePage() {
               const meetingText = hasMeeting
                 ? meetingWindowText(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0, lang)
                 : null;
+              const meetingStart = hasMeeting
+                ? meetingWindow(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0).start
+                : null;
               // The slot's own start, not its end — a range on screen reads as
               // "any time in this window", but the other student is only there
               // for the ten minutes booked, so arriving late eats into it.
-              const arriveByText = hasMeeting
-                ? meetingWindow(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0)
-                  .start.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+              const arriveByText = meetingStart
+                ? meetingStart.toLocaleTimeString(lang === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit' })
                 : null;
               // No slot yet: either they share nothing at all, or they share a
               // period but both its ten-minute windows are already taken by
@@ -268,7 +274,16 @@ export default function IrlTradePage() {
               const sharesAnyPeriod = !hasMeeting && !sameClass &&
                 overlap(trade.requester_availability, trade.owner_availability).length > 0;
               const myPostponesUsed = isRequester ? (trade.requester_postpones ?? 0) : (trade.owner_postpones ?? 0);
-              const canPostpone = myPostponesUsed < 3;
+              // A meet-up still booked for the day it was accepted was never
+              // firmly agreed on in advance, so it can always be bumped to a
+              // later day. One booked for a day already settled ahead of time
+              // is locked in once it is within 3 hours — too late for the
+              // other student to still adjust their own plans around it.
+              const bookedForAcceptDay = hasMeeting && trade.meeting_date === trade.accepted_date;
+              const tooSoonToPostpone = Boolean(
+                meetingStart && !bookedForAcceptDay && meetingStart.getTime() - Date.now() < 3 * 60 * 60 * 1000
+              );
+              const canPostpone = myPostponesUsed < 3 && !tooSoonToPostpone;
 
               return (
                 <div key={trade.id} className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
@@ -340,7 +355,7 @@ export default function IrlTradePage() {
                             </button>
                           ) : (
                             <p className="mt-2 text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                              {t('irl.noPostponesLeft')}
+                              {tooSoonToPostpone ? t('irl.tooSoonToPostpone') : t('irl.noPostponesLeft')}
                             </p>
                           )}
                         </div>

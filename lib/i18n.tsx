@@ -157,6 +157,7 @@ const STRINGS: Dict = {
   'irl.iCouldntCome': { th: '🕐 ฉันไปไม่ได้', en: '🕐 I could not be there' },
   'irl.tooManyPostpones': { th: 'คุณเลื่อนนัดนี้ครบ 3 ครั้งแล้ว ไปตามเวลาที่นัดไว้ หรือทักคุยกับอีกฝ่ายโดยตรง', en: 'You have already postponed this meet-up 3 times. Go at the time already set, or reach out to the other student directly.' },
   'irl.noPostponesLeft': { th: 'เลื่อนนัดนี้ครบ 3 ครั้งแล้ว', en: 'You have used all 3 postpones for this meet-up.' },
+  'irl.tooSoonToPostpone': { th: 'อีกไม่ถึง 3 ชั่วโมงจะถึงเวลานัด เลื่อนไม่ได้แล้ว ไปตามเวลาที่นัดไว้ หรือทักคุยกับอีกฝ่ายโดยตรง', en: 'Less than 3 hours until this meet-up — it can no longer be postponed. Go at the time already set, or reach out to the other student directly.' },
   'irl.theyDidntCome': { th: '✕ อีกฝ่ายไม่มา', en: '✕ They did not come' },
   'irl.noShowConfirm': { th: 'แจ้งว่า {name} ไม่มาตามนัด? การแลกเปลี่ยนจะถูกยกเลิก และหนังสือจะกลับไปอยู่ชั้นของทั้งคู่', en: 'Report that {name} did not turn up? The trade is called off and both books go back on the shelves.' },
   'irl.normalSchedule': { th: 'เวลานี้คิดจากคาบปกติ ไม่ร่นคาบ', en: 'This time assumes the normal timetable — periods not shortened' },

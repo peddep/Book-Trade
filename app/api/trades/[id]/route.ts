@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import { announceTrade, isBanned, priceDiffOk, assignMeetingSlot, sweepWaitingMeetings, bangkokInstantOf } from '@/lib/hub';
+import { announceTrade, isBanned, priceDiffOk, assignMeetingSlot, sweepWaitingMeetings, bangkokInstantOf, bangkokDateStr } from '@/lib/hub';
 import type { Period } from '@/lib/meetingSlots';
 import { notify, notifyBoth } from '@/lib/notify';
 import type { TradeRow } from '@/lib/dbTypes';
@@ -59,6 +59,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const from = hadSlot
       ? bangkokInstantOf(String(trade.meeting_date), trade.meeting_period as Period, Number(trade.meeting_sub ?? 0))
       : new Date();
+    // A meet-up booked for the same day the trade was accepted can still be
+    // moved to a later day whenever — that day was never firmly agreed on in
+    // advance. One for a day already settled on ahead of time is protected
+    // from a last-minute bump: once it is within 3 hours, it is too late for
+    // the other student to be told and still adjust their own plans around it.
+    const bookedForAcceptDay = hadSlot && trade.meeting_date === trade.accepted_date;
+    if (hadSlot && !bookedForAcceptDay && from.getTime() - Date.now() < 3 * 60 * 60_000) {
+      return NextResponse.json({ error: 'too_soon' }, { status: 400 });
+    }
     const users = await db.execute({
       sql: 'SELECT id, availability FROM users WHERE id IN (?, ?)',
       args: [Number(trade.requester_id), Number(trade.owner_id)],
@@ -296,9 +305,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     );
     if (!sameClass) {
       const assignment = await assignMeetingSlot(reqInfo?.availability, ownInfo?.availability, new Date());
+      // Stamped once, here, and never touched again — updated_at moves on
+      // every postpone, so it can't tell "booked for today" from "booked for
+      // a day agreed on in advance" the way this needs to (see skip_meeting).
       await db.execute({
-        sql: 'UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ? WHERE id = ?',
-        args: [assignment?.date ?? null, assignment?.period ?? null, assignment?.sub ?? null, id],
+        sql: 'UPDATE trades SET meeting_date = ?, meeting_period = ?, meeting_sub = ?, accepted_date = ? WHERE id = ?',
+        args: [assignment?.date ?? null, assignment?.period ?? null, assignment?.sub ?? null, bangkokDateStr(new Date()), id],
       });
     }
   }

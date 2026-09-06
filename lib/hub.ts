@@ -216,6 +216,17 @@ function nextBangkokOccurrence(from: Date, targetDow: number, hh: number, mm: nu
   return null;
 }
 
+// The Bangkok wall-clock date (as 'YYYY-MM-DD') of a real instant — used to
+// stamp the day a trade was accepted, so a same-day meet-up can be told apart
+// from one on a later day (see the postpone-window rule below).
+export function bangkokDateStr(instant: Date): string {
+  const bk = asBangkokFields(instant);
+  const y = bk.getUTCFullYear();
+  const m = String(bk.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(bk.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // The Bangkok instant of a stored (date, period, sub) — the inverse of
 // nextBangkokOccurrence's dateStr, for using an existing appointment as the
 // `from` of a new search ("strictly after the one you're being moved off").

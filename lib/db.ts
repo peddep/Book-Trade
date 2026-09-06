@@ -160,6 +160,12 @@ export async function ensureTradeColumns() {
     // Capped at 3 apiece — otherwise one side could keep bumping the other
     // student's library slot indefinitely.
     'requester_postpones INTEGER NOT NULL DEFAULT 0', 'owner_postpones INTEGER NOT NULL DEFAULT 0',
+    // The Bangkok calendar date the trade was accepted, stamped once and never
+    // touched again (updated_at moves on every postpone, so it can't stand in
+    // for this). A meet-up booked for that same day can always still be moved
+    // to a later day; one booked for a day already agreed on in advance is
+    // protected from a last-minute postpone within 3 hours of it.
+    'accepted_date TEXT',
   ]);
   tradeColumnsEnsured = true;
 }

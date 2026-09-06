@@ -692,6 +692,42 @@ test('each side of a meet-up only gets 3 postpones', async () => {
   assert.equal(stillGood.status, 200, "one side using up their postpones must not affect the other's");
 });
 
+test('a meet-up within 3 hours cannot be postponed, unless it is still on the day it was accepted', async () => {
+  const a = await register('SoonA', `soona${Math.random()}@s.edu`);
+  const b = await register('SoonB', `soonb${Math.random()}@s.edu`, undefined, '4');
+  const ba = await addBook(a, 'SoonBookA', 100);
+  const bb = await addBook(b, 'SoonBookB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+
+  // A real assignment always lands on a fixed period's clock time, which in
+  // practice is more than 3 hours out — force it into "already close" instead,
+  // via the database directly, the same way an earlier test forces a race.
+  const db = createClient({ url: `file:${DB}` });
+  const day = (daysAgo) => new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 10);
+  const meetingDay = day(1);
+  const earlierDay = day(2);
+
+  // Booked for a day different from the one the trade was accepted on: once
+  // it's within 3 hours (here, already past), it can no longer be postponed.
+  await db.execute({
+    sql: "UPDATE trades SET meeting_date = ?, meeting_period = 'p4', meeting_sub = 0, accepted_date = ? WHERE id = ?",
+    args: [meetingDay, earlierDay, t],
+  });
+  const blocked = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } });
+  assert.equal(blocked.status, 400);
+  assert.equal(blocked.json.error, 'too_soon');
+
+  // Still booked for the very day it was accepted: always postponable, no
+  // matter how close (that day was never firmly agreed on in advance).
+  await db.execute({
+    sql: "UPDATE trades SET meeting_date = ?, meeting_period = 'p4', meeting_sub = 0, accepted_date = ? WHERE id = ?",
+    args: [meetingDay, meetingDay, t],
+  });
+  const allowed = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } });
+  assert.equal(allowed.status, 200);
+});
+
 test('times the database wrote are read back as the moment they happened', async () => {
   // datetime('now') writes UTC with nothing in the string to say so, and a
   // browser handed it reads it as local time — which is how a notification
