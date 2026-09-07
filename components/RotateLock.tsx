@@ -32,7 +32,7 @@ export default function RotateLock() {
       style={{ background: '#ffffff' }}
     >
       <div className="text-6xl mb-4 animate-pulse">📱</div>
-      <p className="text-lg font-semibold text-[#2e1065]">{t('rotate.msg')}</p>
+      <p className="text-lg font-semibold text-[#3D2A39]">{t('rotate.msg')}</p>
     </div>
   );
 }

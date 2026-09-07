@@ -54,13 +54,13 @@ export default function BookPicker({ excludeIds = [], selected, onSelect, filter
           onClick={() => onSelect(b.id)}
           className="flex items-center gap-3 p-3 rounded-xl text-left"
           style={{
-            background: selected === b.id ? '#ede9fe' : '#ffffff',
-            border: `1px solid ${selected === b.id ? '#8b5cf6' : '#e9d5ff'}`,
+            background: selected === b.id ? '#EFE3D0' : '#ffffff',
+            border: `1px solid ${selected === b.id ? '#A67C9C' : '#D9CAB3'}`,
           }}
         >
           <BookThumb coverUrl={coverSrc(b)} coverColor={b.cover_color} />
           <div>
-            <p className="text-sm font-semibold text-[#2e1065]">{b.title}</p>
+            <p className="text-sm font-semibold text-[#3D2A39]">{b.title}</p>
             <p className="text-xs text-[#6b7280]">{b.author}</p>
           </div>
           {selected === b.id && <span className="ml-auto text-purple-400">✓</span>}

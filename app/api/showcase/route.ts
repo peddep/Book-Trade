@@ -31,7 +31,7 @@ export async function GET() {
       title: String(r.title ?? ''),
       title_en: r.title_en ?? null,
       cover_url: r.cover_url ?? null,
-      cover_color: r.cover_color ?? '#7c3aed',
+      cover_color: r.cover_color ?? '#986D8E',
       price: r.price ?? null,
     }));
     return NextResponse.json(

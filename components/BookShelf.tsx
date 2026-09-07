@@ -72,7 +72,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   style={{
                     aspectRatio: '2 / 3',
                     background: b.cover_color,
-                    boxShadow: (open || selected) ? '0 0 0 2px #8b5cf6, 0 6px 14px rgba(0,0,0,0.4)' : '0 4px 10px rgba(0,0,0,0.35)',
+                    boxShadow: (open || selected) ? '0 0 0 2px #A67C9C, 0 6px 14px rgba(0,0,0,0.4)' : '0 4px 10px rgba(0,0,0,0.35)',
                     opacity: disabled ? 0.35 : b.available ? 1 : 0.55,
                     filter: disabled ? 'grayscale(0.8)' : undefined,
                     cursor: disabled ? 'not-allowed' : 'pointer',
@@ -105,7 +105,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   {/* In the Wonder Box: purple ✨ ribbon */}
                   {!!b.in_wonderbox && (
                     <span className="absolute top-1 left-1 z-10 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
-                      style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#ffffff', boxShadow: '0 1px 5px rgba(76,29,149,0.5)' }}>
+                      style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)', color: '#ffffff', boxShadow: '0 1px 5px rgba(76,29,149,0.5)' }}>
                       ✨ {t('shelf.inWonderbox')}
                     </span>
                   )}
@@ -128,7 +128,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   </button>
                 )}
                 {selected && (
-                  <span className="absolute top-1 right-1 z-10 rounded-full flex items-center justify-center text-white text-[13px]" style={{ width: 22, height: 22, background: '#8b5cf6' }}>✓</span>
+                  <span className="absolute top-1 right-1 z-10 rounded-full flex items-center justify-center text-white text-[13px]" style={{ width: 22, height: 22, background: '#A67C9C' }}>✓</span>
                 )}
                 {disabled && disabledLabel && (
                   <span className="absolute inset-x-1 top-1/2 -translate-y-1/2 z-10 text-center text-[9px] font-bold px-1 py-0.5 rounded-md"
@@ -143,12 +143,12 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
 
               {/* Expanded actions — floats on top of the book (doesn't push the grid) */}
               {!selectMode && open && (
-                <div className="absolute left-0 right-0 top-1 z-30 flex flex-col gap-1.5 rounded-xl p-2 shadow-xl" style={{ background: '#ffffff', border: '1px solid #8b5cf6' }}>
+                <div className="absolute left-0 right-0 top-1 z-30 flex flex-col gap-1.5 rounded-xl p-2 shadow-xl" style={{ background: '#ffffff', border: '1px solid #A67C9C' }}>
                   <p className="text-[11px] text-[#6b7280] text-center truncate">{b.author}</p>
-                  <button onClick={() => onEdit?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                  <button onClick={() => onEdit?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
                     ✏️ {t('shelf.edit')}
                   </button>
-                  <button onClick={() => onChangeCover?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#e9d5ff', color: '#2e1065' }}>
+                  <button onClick={() => onChangeCover?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#D9CAB3', color: '#3D2A39' }}>
                     {coverSrc(b) ? t('card.changeCover') : t('card.addCover')}
                   </button>
                   <button onClick={() => onDelete?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: '#fee2e2', color: '#ef4444' }}>

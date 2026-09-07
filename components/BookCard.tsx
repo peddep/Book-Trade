@@ -50,7 +50,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
-      style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+      style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
     >
       {/* Book cover. Portrait, and the artwork is contained rather than cropped:
           a real cover is 2:3, so filling a squat landscape box cut the title
@@ -117,9 +117,9 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
       {/* Info */}
       <div className="p-3.5 flex flex-col gap-1.5 flex-1">
         <div>
-          <h3 className="font-bold text-[#2e1065] leading-tight line-clamp-2">
+          <h3 className="font-bold text-[#3D2A39] leading-tight line-clamp-2">
             {bookTitle(book.title, book.title_en)}
-            {book.volume && <span className="font-semibold" style={{ color: '#7c3aed' }}> · {t('book.vol', { n: book.volume })}</span>}
+            {book.volume && <span className="font-semibold" style={{ color: '#986D8E' }}> · {t('book.vol', { n: book.volume })}</span>}
           </h3>
           <p className="text-sm text-[#6b7280] mt-0.5">{book.author}</p>
           {book.publisher && <p className="text-xs text-[#9ca3af]">{book.publisher}</p>}
@@ -127,12 +127,12 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
 
         <div className="flex flex-wrap gap-1">
           {book.subject && book.subject.split(',').filter(Boolean).map(tag => (
-            <span key={tag} className="text-[11px] px-1.5 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
+            <span key={tag} className="text-[11px] px-1.5 py-0.5 rounded-full" style={{ background: '#D9CAB3', color: '#986D8E' }}>
               {t(`subj.${tag}`)}
             </span>
           ))}
           {book.grade_level && (
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#6b7280' }}>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#D9CAB3', color: '#6b7280' }}>
               {t('card.gr')} {book.grade_level}
             </span>
           )}
@@ -156,7 +156,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
         {book.owner_name && !isOwner && !hideOwner && (
           <div className="flex items-center gap-1.5 mt-auto pt-2 min-w-0">
             <div
-              className="w-5 h-5 rounded-full flex items-center justify-center text-[#2e1065] text-[10px] font-bold flex-shrink-0"
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[#3D2A39] text-[10px] font-bold flex-shrink-0"
               style={{ background: book.owner_avatar_color }}
             >
               {book.owner_name[0].toUpperCase()}
@@ -172,9 +172,9 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
                 onClick={onToggleAvailable}
                 className="flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors"
                 style={{
-                  background: book.available ? '#dcfce7' : '#e9d5ff',
+                  background: book.available ? '#dcfce7' : '#D9CAB3',
                   color: book.available ? '#10b981' : '#6b7280',
-                  border: `1px solid ${book.available ? '#10b981' : '#e9d5ff'}`
+                  border: `1px solid ${book.available ? '#10b981' : '#D9CAB3'}`
                 }}
               >
                 {book.available ? t('card.available') : t('card.unavailable')}
@@ -193,7 +193,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
                 <button
                   onClick={onTrade}
                   className="flex-1 py-2 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                  style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
                 >
                   {t('card.offerTrade')}
                 </button>

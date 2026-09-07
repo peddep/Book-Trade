@@ -7,13 +7,13 @@ import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 
 // Same purple-and-white palette as the rest of the site.
-const PAPER = '#faf5ff';
+const PAPER = '#EFE3D0';
 const SURFACE = '#ffffff';
-const INK = '#2e1065';
+const INK = '#3D2A39';
 const MUTED = '#6b7280';
-const RULE = '#e9d5ff';
-const ACCENT = '#7c3aed';
-const BAND = '#f3e8ff';
+const RULE = '#D9CAB3';
+const ACCENT = '#986D8E';
+const BAND = '#EFE3D0';
 
 const serif = { fontFamily: 'var(--font-serif), Georgia, serif' } as const;
 
@@ -31,9 +31,9 @@ interface ShowcaseBook {
 // Decorative shelf. Deliberately not real listings — the front page shows
 // totals only, so these are just spines, not anyone's books.
 const SPINES = [
-  { h: 96, c: '#7c3aed' }, { h: 112, c: '#6366f1' }, { h: 88, c: '#a78bfa' },
-  { h: 120, c: '#5b21b6' }, { h: 100, c: '#8b5cf6' }, { h: 108, c: '#818cf8' },
-  { h: 92, c: '#c084fc' }, { h: 116, c: '#7c3aed' }, { h: 96, c: '#6d28d9' },
+  { h: 96, c: '#986D8E' }, { h: 112, c: '#87A8A4' }, { h: 88, c: '#B98FAE' },
+  { h: 120, c: '#63425C' }, { h: 100, c: '#A67C9C' }, { h: 108, c: '#818cf8' },
+  { h: 92, c: '#c084fc' }, { h: 116, c: '#986D8E' }, { h: 96, c: '#7C5773' },
 ];
 
 // Counts up to the real figure once it arrives. Skipped entirely when the
@@ -124,7 +124,7 @@ export default function Home() {
   ) : signedIn ? (
     <div className="flex gap-3 justify-center flex-wrap">
       <Link href="/trade" className="px-7 py-3 rounded-xl font-bold text-white text-base shadow-sm"
-        style={{ background: 'linear-gradient(135deg, #5b21b6, #7c3aed)' }}>
+        style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
         {t('home.continueTrading')}
       </Link>
       <Link href="/profile" className="px-7 py-3 rounded-xl font-bold text-base"
@@ -135,7 +135,7 @@ export default function Home() {
   ) : (
     <div className="flex gap-3 justify-center flex-wrap">
       <Link href="/register" className="px-7 py-3 rounded-xl font-bold text-white text-base shadow-sm"
-        style={{ background: 'linear-gradient(135deg, #5b21b6, #7c3aed)' }}>
+        style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
         {t('home.startTrading')}
       </Link>
       <Link href="/login" className="px-7 py-3 rounded-xl font-bold text-base"
@@ -153,7 +153,7 @@ export default function Home() {
           {/* Soft wash behind the hero, drawn rather than loaded as an image */}
           <div className="absolute inset-0 pointer-events-none opacity-40" style={{
             backgroundImage:
-              'radial-gradient(circle at 15% 20%, #ddd6fe 0%, transparent 45%), radial-gradient(circle at 85% 10%, #ede9fe 0%, transparent 40%)',
+              'radial-gradient(circle at 15% 20%, #D9CAB3 0%, transparent 45%), radial-gradient(circle at 85% 10%, #EFE3D0 0%, transparent 40%)',
           }} />
           {/* Wider from lg so the heading sits on one line: it needs about 940px
               set in English, and a 768px column forced "Your Classmates" onto
@@ -187,7 +187,7 @@ export default function Home() {
                   } as React.CSSProperties} />
               ))}
             </div>
-            <div className="h-2 rounded-sm" style={{ background: '#6d28d9', boxShadow: '0 3px 6px rgba(46,16,101,0.18)' }} />
+            <div className="h-2 rounded-sm" style={{ background: '#7C5773', boxShadow: '0 3px 6px rgba(46,16,101,0.18)' }} />
           </div>
         </section>
 
@@ -328,7 +328,7 @@ export default function Home() {
             <p className="text-sm text-center leading-relaxed mb-6" style={{ color: MUTED }}>{t('home.gateBody')}</p>
             <div className="flex flex-col gap-2">
               <Link href="/register" className="w-full py-2.5 rounded-xl font-bold text-white text-center"
-                style={{ background: 'linear-gradient(135deg, #5b21b6, #7c3aed)' }}>
+                style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                 {t('home.startTrading')}
               </Link>
               <Link href="/login" className="w-full py-2.5 rounded-xl font-bold text-center"

@@ -36,8 +36,8 @@ export default function AvailabilityGrid({ value, onChange }: Props) {
         aria-pressed={flexible}
         className="w-full mb-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-left bt-press"
         style={flexible
-          ? { background: '#7c3aed', color: '#ffffff', border: '1px solid #7c3aed' }
-          : { background: '#faf5ff', color: '#4b5563', border: '1px solid #e9d5ff' }}
+          ? { background: '#986D8E', color: '#ffffff', border: '1px solid #986D8E' }
+          : { background: '#EFE3D0', color: '#4b5563', border: '1px solid #D9CAB3' }}
       >
         {flexible ? '✓ ' : ''}⏰ {t('avail.any')}
         <span className="block text-[11px] font-normal mt-0.5" style={{ color: flexible ? 'rgba(255,255,255,0.8)' : '#9ca3af' }}>
@@ -51,7 +51,7 @@ export default function AvailabilityGrid({ value, onChange }: Props) {
             <tr>
               <th className="p-1"></th>
               {DAYS.map(d => (
-                <th key={d} className="p-1 text-xs font-semibold text-[#7c3aed]">{t(d)}</th>
+                <th key={d} className="p-1 text-xs font-semibold text-[#986D8E]">{t(d)}</th>
               ))}
             </tr>
           </thead>
@@ -72,9 +72,9 @@ export default function AvailabilityGrid({ value, onChange }: Props) {
                         className="w-full rounded-lg flex items-center justify-center text-sm font-bold transition-colors"
                         style={{
                           height: 34,
-                          background: on ? '#7c3aed' : '#faf5ff',
+                          background: on ? '#986D8E' : '#EFE3D0',
                           color: on ? '#ffffff' : '#d1d5db',
-                          border: `1px solid ${on ? '#7c3aed' : '#e9d5ff'}`,
+                          border: `1px solid ${on ? '#986D8E' : '#D9CAB3'}`,
                         }}
                       >
                         {on ? '✓' : ''}

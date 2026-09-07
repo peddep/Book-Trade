@@ -92,7 +92,7 @@ export default function NotificationBell() {
       <button
         onClick={() => { setOpen(o => !o); if (!open) load(); }}
         className="relative w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 bt-press"
-        style={{ background: '#e9d5ff' }}
+        style={{ background: '#D9CAB3' }}
         aria-label={t('notif.title')}
       >
         <span className="text-base leading-none">🔔</span>
@@ -106,11 +106,11 @@ export default function NotificationBell() {
 
       {open && (
         <div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-xl shadow-lg z-50 overflow-hidden bt-pop-in"
-          style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-          <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid #e9d5ff' }}>
-            <p className="text-sm font-bold text-[#2e1065]">{t('notif.title')}</p>
+          style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+          <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid #D9CAB3' }}>
+            <p className="text-sm font-bold text-[#3D2A39]">{t('notif.title')}</p>
             {unread > 0 && (
-              <button onClick={markAll} className="text-[11px] font-semibold" style={{ color: '#7c3aed' }}>
+              <button onClick={markAll} className="text-[11px] font-semibold" style={{ color: '#986D8E' }}>
                 {t('notif.markAll')}
               </button>
             )}
@@ -124,24 +124,24 @@ export default function NotificationBell() {
                 <button
                   key={n.id}
                   onClick={() => openItem(n)}
-                  className="block w-full text-left px-4 py-2.5 hover:bg-[#faf5ff]"
-                  style={{ borderBottom: '1px solid #f3e8ff', background: n.read ? undefined : '#f5f3ff' }}
+                  className="block w-full text-left px-4 py-2.5 hover:bg-[#EFE3D0]"
+                  style={{ borderBottom: '1px solid #EFE3D0', background: n.read ? undefined : '#EFE3D0' }}
                 >
                   <div className="flex items-start gap-2.5">
                     <span className="text-base leading-none mt-0.5">{ICONS[n.kind] ?? '🔔'}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs leading-snug text-[#2e1065]">
+                      <p className="text-xs leading-snug text-[#3D2A39]">
                         {t(`notif.${n.kind}`, { actor: n.actor ?? '', subject: n.subject ?? '' })}
                       </p>
                       <p className="text-[10px] mt-0.5" style={{ color: '#9ca3af' }}>{timeAgo(n.created_at, t, lang)}</p>
                     </div>
-                    {!n.read && <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ background: '#7c3aed' }} />}
+                    {!n.read && <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ background: '#986D8E' }} />}
                   </div>
                 </button>
               ))
             )}
           </div>
-          <div className="px-3 py-2" style={{ borderTop: '1px solid #e9d5ff' }}>
+          <div className="px-3 py-2" style={{ borderTop: '1px solid #D9CAB3' }}>
             <PushToggle />
           </div>
         </div>

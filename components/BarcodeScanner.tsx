@@ -386,14 +386,14 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-4" style={{ background: 'rgba(17, 6, 41, 0.92)' }}>
       <p className="text-white font-bold mb-3 text-center px-2">{heading}</p>
-      <div className="relative w-full max-w-sm rounded-2xl overflow-hidden" style={{ border: '2px solid #8b5cf6' }}>
+      <div className="relative w-full max-w-sm rounded-2xl overflow-hidden" style={{ border: '2px solid #A67C9C' }}>
         <video ref={videoRef} playsInline muted className="w-full" style={{ maxHeight: '55vh', objectFit: 'cover' }} />
         {/* Aiming guide: a barcode strip while scanning, a cover-shaped frame after */}
         {coverPhase ? (
           // Dimming everything outside the frame keeps the guide readable
           // against a white book cover, where a white outline would vanish.
           <div ref={frameRef} className="absolute inset-y-4 left-1/2 -translate-x-1/2 rounded-lg pointer-events-none"
-            style={{ aspectRatio: '2 / 3', border: '3px dashed #c4b5fd', boxShadow: '0 0 0 9999px rgba(17, 6, 41, 0.45)' }} />
+            style={{ aspectRatio: '2 / 3', border: '3px dashed #CBA9BE', boxShadow: '0 0 0 9999px rgba(17, 6, 41, 0.45)' }} />
         ) : (
           <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-16 rounded-lg pointer-events-none"
             style={{ border: `2px dashed ${identified ? '#34d399' : 'rgba(255,255,255,0.7)'}` }} />
@@ -404,16 +404,16 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
             style={{ background: 'rgba(17, 6, 41, 0.55)' }}>
             <div className="w-10 h-10 rounded-full animate-spin"
-              style={{ border: '3px solid rgba(255,255,255,0.25)', borderTopColor: '#c4b5fd' }} />
+              style={{ border: '3px solid rgba(255,255,255,0.25)', borderTopColor: '#CBA9BE' }} />
           </div>
         )}
       </div>
-      <p className="text-xs mt-3 text-center max-w-sm" style={{ color: (retryMsg || wrongCode) && !lookingPhase && !coverPhase ? '#fca5a5' : '#ddd6fe' }}>{hint}</p>
+      <p className="text-xs mt-3 text-center max-w-sm" style={{ color: (retryMsg || wrongCode) && !lookingPhase && !coverPhase ? '#fca5a5' : '#D9CAB3' }}>{hint}</p>
       {error && <p className="text-sm mt-2 text-red-300">{error}</p>}
       <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
         {!coverPhase && torchable && (
           <button onClick={toggleTorch} className="px-4 py-2.5 rounded-xl font-semibold text-sm"
-            style={{ background: torchOn ? '#fbbf24' : 'rgba(255,255,255,0.15)', color: torchOn ? '#2e1065' : '#ffffff' }}>
+            style={{ background: torchOn ? '#fbbf24' : 'rgba(255,255,255,0.15)', color: torchOn ? '#3D2A39' : '#ffffff' }}>
             🔦 {t('scan.torch')}
           </button>
         )}
@@ -425,11 +425,11 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
         )}
         {coverPhase && (
           <button onClick={capture} className="px-6 py-2.5 rounded-xl font-bold text-sm text-white"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+            style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
             📸 {t('scan.shutter')}
           </button>
         )}
-        <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#ffffff', color: '#2e1065' }}>
+        <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#ffffff', color: '#3D2A39' }}>
           {coverPhase && mode === 'scan' ? t('scan.skipCover') : t('scan.close')}
         </button>
       </div>

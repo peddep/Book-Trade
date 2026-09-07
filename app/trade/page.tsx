@@ -111,7 +111,7 @@ export default function TradePage() {
 
         <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065] mb-1">🔍 {t('hub.browse')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#3D2A39] mb-1">🔍 {t('hub.browse')}</h1>
             <p className="text-[#6b7280] text-sm">{t('books.subtitle')}</p>
           </div>
 
@@ -122,7 +122,7 @@ export default function TradePage() {
               <Badge n={gifts} />
               <Link href="/trade/wonderbox"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full text-white bt-press"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+                style={{ background: 'linear-gradient(135deg, #87A8A4, #4f46e5)' }}>
                 ✨ {t('hub.wonderbox')}
               </Link>
             </span>
@@ -130,7 +130,7 @@ export default function TradePage() {
               <Badge n={awaitingConfirm} />
               <Link href="/trade/irl"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full text-white bt-press"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
                 🤝 {t('hub.irl')}
               </Link>
             </span>
@@ -138,7 +138,7 @@ export default function TradePage() {
               <Badge n={pending} />
               <Link href="/trades"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full bt-press"
-                style={{ background: '#ffffff', color: '#6d28d9', border: '1px solid #e9d5ff' }}>
+                style={{ background: '#ffffff', color: '#7C5773', border: '1px solid #D9CAB3' }}>
                 🔔 {t('nav.trades')}
               </Link>
             </span>
@@ -158,13 +158,13 @@ export default function TradePage() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="flex-1 p-3 rounded-xl text-sm"
-            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
           />
           <select
             value={subject}
             onChange={e => setSubject(e.target.value)}
             className="sm:w-48 p-3 rounded-xl text-sm"
-            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: subject ? '#2e1065' : '#9ca3af', outline: 'none' }}
+            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: subject ? '#3D2A39' : '#9ca3af', outline: 'none' }}
           >
             <option value="">{t('books.allSubjects')}</option>
             {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}

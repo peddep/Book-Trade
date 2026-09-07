@@ -9,8 +9,8 @@ export default function Loading({ full = true }: { full?: boolean }) {
         style={{
           width: 44,
           height: 44,
-          border: '4px solid #e9d5ff',
-          borderTopColor: '#7c3aed',
+          border: '4px solid #D9CAB3',
+          borderTopColor: '#986D8E',
         }}
       />
       <span className="text-2xl animate-pulse">📚</span>

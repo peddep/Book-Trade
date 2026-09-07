@@ -264,11 +264,11 @@ export default function AdminPage() {
   return (
     <>
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <Link href="/room" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
+        <Link href="/room" className="text-sm text-[#6b7280] hover:text-[#3D2A39]">{t('hub.back')}</Link>
         <div className="flex items-center justify-between gap-3 mt-2 mb-5">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#2e1065]">🛠️ {t('adm.title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#3D2A39]">🛠️ {t('adm.title')}</h1>
           <a href="/api/admin?export=1" className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex-shrink-0"
-            style={{ background: '#ede9fe', color: '#7c3aed', border: '1px solid #ddd6fe' }}>
+            style={{ background: '#EFE3D0', color: '#986D8E', border: '1px solid #D9CAB3' }}>
             {t('adm.export')}
           </a>
         </div>
@@ -276,19 +276,19 @@ export default function AdminPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {stats.map(s => (
-            <div key={s.label} className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-              <p className="text-2xl font-bold text-[#2e1065]">{String(s.value)}</p>
+            <div key={s.label} className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+              <p className="text-2xl font-bold text-[#3D2A39]">{String(s.value)}</p>
               <p className="text-xs text-[#6b7280] mt-1">{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* Table tabs */}
-        <div className="flex gap-1 p-1 rounded-xl mb-4 overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+        <div className="flex gap-1 p-1 rounded-xl mb-4 overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
           {TABS.map(k => (
             <button key={k} onClick={() => setTab(k)}
               className="px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors"
-              style={tab === k ? { background: '#7c3aed', color: 'white' } : { color: '#6b7280' }}>
+              style={tab === k ? { background: '#986D8E', color: 'white' } : { color: '#6b7280' }}>
               {t(`adm.${k}`)} ({(data[k] ?? []).length})
             </button>
           ))}
@@ -298,8 +298,8 @@ export default function AdminPage() {
         <AdminHarvestCard />
 
         {/* Add titles to the suggestion catalog (e.g. school textbooks) */}
-        <details className="mb-6 rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
-          <summary className="px-4 py-3 cursor-pointer text-sm font-bold text-[#2e1065]">📚 {t('adm.catalogTitle')}</summary>
+        <details className="mb-6 rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+          <summary className="px-4 py-3 cursor-pointer text-sm font-bold text-[#3D2A39]">📚 {t('adm.catalogTitle')}</summary>
           <div className="px-4 pb-4">
             <p className="text-xs text-[#6b7280] mb-2">{t('adm.catalogHint')}</p>
             <textarea
@@ -308,12 +308,12 @@ export default function AdminPage() {
               rows={6}
               placeholder={'คณิตศาสตร์พื้นฐาน ม.4 เล่ม 1 | สสวท.\nภาษาไทย วรรณคดีวิจักษ์ ม.5\nAccess M.3 Student Book | Aksorn'}
               className="w-full p-3 rounded-xl text-sm font-mono"
-              style={{ background: '#faf5ff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+              style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
             />
             <div className="flex items-center gap-3 mt-2">
               <button onClick={addToCatalog} disabled={catalogBusy || !catalogLines.trim()}
                 className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>
+                style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
                 {t('adm.catalogAdd')}
               </button>
               {catalogResult && <p className="text-sm font-semibold" style={{ color: '#10b981' }}>{catalogResult}</p>}
@@ -338,7 +338,7 @@ export default function AdminPage() {
             onChange={e => setCatalogQ(e.target.value)}
             placeholder={t('adm.catalogSearch')}
             className="w-full mb-3 px-3 py-2 rounded-xl text-sm"
-            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
           />
         )}
 
@@ -350,8 +350,8 @@ export default function AdminPage() {
               onClick={() => setMissingCover(v => !v)}
               className="px-3 py-1.5 rounded-full text-xs font-bold"
               style={missingCover
-                ? { background: '#7c3aed', color: '#ffffff' }
-                : { background: '#e9d5ff', color: '#2e1065' }}
+                ? { background: '#986D8E', color: '#ffffff' }
+                : { background: '#D9CAB3', color: '#3D2A39' }}
             >
               {missingCover ? `✓ ${t('adm.missingCover')}` : t('adm.missingCover')}
             </button>
@@ -385,22 +385,22 @@ export default function AdminPage() {
         )}
 
         {/* Data table */}
-        <div className="rounded-2xl overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+        <div className="rounded-2xl overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
           <table className="w-full text-left text-xs">
             <thead>
-              <tr style={{ background: '#faf5ff' }}>
+              <tr style={{ background: '#EFE3D0' }}>
                 {cols.map(c => (
-                  <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap" style={{ color: '#7c3aed' }}>{c}</th>
+                  <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap" style={{ color: '#986D8E' }}>{c}</th>
                 ))}
-                {tab === 'books' && <th className="px-3 py-2 font-semibold" style={{ color: '#7c3aed' }}>cover</th>}
+                {tab === 'books' && <th className="px-3 py-2 font-semibold" style={{ color: '#986D8E' }}>cover</th>}
                 {(tab === 'users' || tab === 'reports' || tab === 'donations' || tab === 'feedback') && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} style={{ borderTop: '1px solid #f3e8ff' }}>
+                <tr key={i} style={{ borderTop: '1px solid #EFE3D0' }}>
                   {cols.map(c => (
-                    <td key={c} className="px-3 py-2 text-[#2e1065] align-top" style={{ maxWidth: 260 }}>
+                    <td key={c} className="px-3 py-2 text-[#3D2A39] align-top" style={{ maxWidth: 260 }}>
                       <span className="line-clamp-2 break-words">{r[c] == null ? '—' : String(r[c])}</span>
                     </td>
                   ))}
@@ -414,14 +414,14 @@ export default function AdminPage() {
                           <span className="text-[#d1d5db]">—</span>
                         )}
                         <label className="px-2 py-1 rounded-lg font-semibold cursor-pointer"
-                          style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                          style={{ background: '#EFE3D0', color: '#986D8E' }}>
                           🖼 {r.cover_url ? t('adm.changeCover') : t('adm.addCover')}
                           <input type="file" accept="image/*" className="hidden"
                             onChange={e => uploadCover(r.id, e.target.files?.[0])} />
                         </label>
                         <button onClick={() => setEditBook({ ...r })}
                           className="px-2 py-1 rounded-lg font-semibold"
-                          style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                          style={{ background: '#EFE3D0', color: '#986D8E' }}>
                           ✏️ {t('adm.editBook')}
                         </button>
                         <button onClick={() => adminAction({ action: 'delete_book', book_id: r.id }, `${t('adm.deleteBook')}: ${String(r.title)}?`)}
@@ -538,9 +538,9 @@ export default function AdminPage() {
         {/* Full book editor (admin can change any field) */}
         {editBook && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46,16,101,0.4)' }} onClick={() => setEditBook(null)}>
-            <div className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #f3e8ff' }}>
-                <p className="font-bold text-[#2e1065]">✏️ {t('adm.editBook')} #{String(editBook.id)}</p>
+            <div className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden" style={{ background: '#ffffff', border: '1px solid #D9CAB3', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #EFE3D0' }}>
+                <p className="font-bold text-[#3D2A39]">✏️ {t('adm.editBook')} #{String(editBook.id)}</p>
                 <button onClick={() => setEditBook(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b7280] text-xl" style={{ background: '#f3f4f6' }}>✕</button>
               </div>
               <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto">
@@ -559,29 +559,29 @@ export default function AdminPage() {
                       type={f.type ?? 'text'}
                       value={String(editBook[f.k] ?? '')}
                       onChange={e => setEditBook(b => b && ({ ...b, [f.k]: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', outline: 'none' }} />
+                      className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', outline: 'none' }} />
                   </div>
                 ))}
                 <div>
                   <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fCondition')}</label>
                   <select value={String(editBook.condition ?? 'Good')} onChange={e => setEditBook(b => b && ({ ...b, condition: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
                     {['Like New', 'Good', 'Fair', 'Poor'].map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fDescription')}</label>
                   <textarea rows={2} value={String(editBook.description ?? '')} onChange={e => setEditBook(b => b && ({ ...b, description: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm text-[#2e1065] resize-none" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', outline: 'none' }} />
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39] resize-none" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', outline: 'none' }} />
                 </div>
-                <label className="flex items-center gap-2 text-sm text-[#2e1065]">
+                <label className="flex items-center gap-2 text-sm text-[#3D2A39]">
                   <input type="checkbox" checked={!!Number(editBook.available)} onChange={e => setEditBook(b => b && ({ ...b, available: e.target.checked ? 1 : 0 }))} />
                   {t('adm.bookAvailable')}
                 </label>
               </div>
-              <div className="flex gap-2 px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid #f3e8ff' }}>
+              <div className="flex gap-2 px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid #EFE3D0' }}>
                 <button onClick={() => setEditBook(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>{t('profile2.cancel')}</button>
-                <button onClick={saveBookEdit} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #6366f1)' }}>{t('profile2.save')}</button>
+                <button onClick={saveBookEdit} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>{t('profile2.save')}</button>
               </div>
             </div>
           </div>

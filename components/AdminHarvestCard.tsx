@@ -76,10 +76,10 @@ export default function AdminHarvestCard() {
   const pct = state.totalQueries ? Math.round((Math.min(state.nextIndex, state.totalQueries) / state.totalQueries) * 100) : 0;
 
   return (
-    <div className="mb-8 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #6d28d9' }}>
+    <div className="mb-8 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #7C5773' }}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h3 className="font-bold text-[#2e1065] flex items-center gap-2">🛠️ {t('admin.title')}</h3>
+          <h3 className="font-bold text-[#3D2A39] flex items-center gap-2">🛠️ {t('admin.title')}</h3>
           <p className="text-sm text-[#6b7280] mt-1">
             {t('admin.subtitle', { count: state.catalogCount })}
           </p>
@@ -89,7 +89,7 @@ export default function AdminHarvestCard() {
             onClick={() => run(state.done)}
             disabled={running}
             className="px-4 py-2 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+            style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
           >
             {running ? t('admin.running', { pct }) : state.done ? t('admin.runAgain') : state.nextIndex > 0 ? t('admin.continue') : t('admin.start')}
           </button>
@@ -97,7 +97,7 @@ export default function AdminHarvestCard() {
             <button
               onClick={stop}
               className="px-4 py-2 rounded-xl font-semibold text-sm"
-              style={{ background: '#e9d5ff', color: '#6b7280' }}
+              style={{ background: '#D9CAB3', color: '#6b7280' }}
             >
               {t('admin.stop')}
             </button>
@@ -108,16 +108,16 @@ export default function AdminHarvestCard() {
       {(running || (state.nextIndex > 0 && !state.done)) && (
         <div className="mt-4">
           <div className="h-2 rounded-full overflow-hidden" style={{ background: '#ffffff' }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
+            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #87A8A4, #A67C9C)' }} />
           </div>
           <p className="text-xs text-[#6b7280] mt-1.5">
             {t('admin.progress', { current: Math.min(state.nextIndex, state.totalQueries), total: state.totalQueries, count: state.catalogCount })}
           </p>
-          {running && <p className="text-xs mt-1" style={{ color: '#7c3aed' }}>{t('admin.keepsRunning')}</p>}
+          {running && <p className="text-xs mt-1" style={{ color: '#986D8E' }}>{t('admin.keepsRunning')}</p>}
         </div>
       )}
 
-      {message && <p className="text-sm mt-3" style={{ color: '#7c3aed' }}>{message}</p>}
+      {message && <p className="text-sm mt-3" style={{ color: '#986D8E' }}>{message}</p>}
     </div>
   );
 }

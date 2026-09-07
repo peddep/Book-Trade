@@ -180,7 +180,7 @@ export async function initDb() {
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         grade TEXT,
-        avatar_color TEXT DEFAULT '#6366f1',
+        avatar_color TEXT DEFAULT '#87A8A4',
         availability TEXT,
         class_no TEXT,
         contact TEXT,

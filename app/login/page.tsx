@@ -80,10 +80,10 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">📚</div>
-            <h1 className="text-2xl font-bold text-[#2e1065]">{t('login.welcome')}</h1>
+            <h1 className="text-2xl font-bold text-[#3D2A39]">{t('login.welcome')}</h1>
             <p className="text-[#6b7280] text-sm mt-1">{t('login.subtitle')}</p>
           </div>
-          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
             <div>
               <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.email')}</label>
               <input
@@ -92,7 +92,7 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
                 placeholder="XXXXX.somchai@student.nssc.ac.th"
               />
             </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                 onChange={e => setPassword(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
                 placeholder="••••••••"
               />
             </div>
@@ -113,7 +113,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+              style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
             >
               {loading ? t('login.signingIn') : t('login.signIn')}
             </button>
@@ -126,9 +126,9 @@ export default function LoginPage() {
             <p className="text-center text-xs text-[#9ca3af]">{t('login.forgot')}</p>
 
             <div className="flex items-center gap-3 my-1">
-              <div className="flex-1 h-px" style={{ background: '#e9d5ff' }} />
+              <div className="flex-1 h-px" style={{ background: '#D9CAB3' }} />
               <span className="text-xs text-[#9ca3af]">{t('auth.orDivider')}</span>
-              <div className="flex-1 h-px" style={{ background: '#e9d5ff' }} />
+              <div className="flex-1 h-px" style={{ background: '#D9CAB3' }} />
             </div>
             <GoogleSignInButton label={t('auth.googleSignIn')} />
           </form>

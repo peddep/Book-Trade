@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
 
   const sessionUser = {
     id: Number(row.id), name: row.name, email: row.email,
-    grade: row.grade, class_no: row.class_no ?? null, avatar_color: row.avatar_color ?? '#6366f1',
+    grade: row.grade, class_no: row.class_no ?? null, avatar_color: row.avatar_color ?? '#87A8A4',
   };
   const res = NextResponse.redirect(new URL('/trade', req.url));
   res.cookies.set('google_oauth_state', '', { httpOnly: true, path: '/', maxAge: 0 });

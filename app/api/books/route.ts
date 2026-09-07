@@ -54,7 +54,7 @@ const BUSY_EXPR = `(
   OR EXISTS(SELECT 1 FROM trades t WHERE t.status = 'pending' AND t.offered_book_id = b.id)
 )`;
 
-const COVER_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+const COVER_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#A67C9C', '#ec4899', '#14b8a6', '#f97316'];
 
 // Max size for a user-uploaded cover (base64 data URL). ~400KB of base64 keeps
 // rows small; the client resizes to well under this before uploading.

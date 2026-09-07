@@ -66,16 +66,16 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl flex flex-col overflow-hidden bt-pop-in" style={{ background: '#ffffff', border: '1px solid #e9d5ff', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-2xl flex flex-col overflow-hidden bt-pop-in" style={{ background: '#ffffff', border: '1px solid #D9CAB3', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         {/* Sticky header with the close button */}
-        <div className="flex justify-between items-center px-6 pt-5 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #f3e8ff' }}>
-          <h2 className="text-lg font-bold text-[#2e1065]">{t('modal.title')}</h2>
-          <button onClick={onClose} aria-label={t('modal.cancel')} className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b7280] hover:text-[#2e1065] text-xl flex-shrink-0" style={{ background: '#f3f4f6' }}>✕</button>
+        <div className="flex justify-between items-center px-6 pt-5 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #EFE3D0' }}>
+          <h2 className="text-lg font-bold text-[#3D2A39]">{t('modal.title')}</h2>
+          <button onClick={onClose} aria-label={t('modal.cancel')} className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b7280] hover:text-[#3D2A39] text-xl flex-shrink-0" style={{ background: '#f3f4f6' }}>✕</button>
         </div>
 
         {/* Scrollable body */}
         <div className="flex flex-col gap-4 px-6 py-4 overflow-y-auto flex-1">
-        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#f5f3ff', border: '1px solid #e9d5ff' }}>
+        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
           {/* Book-shaped cover of the book being requested */}
           <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0" style={{ width: 56, aspectRatio: '2 / 3', background: targetBook.cover_color, boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }}>
             {coverSrc(targetBook) ? (
@@ -89,9 +89,9 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
           </div>
           <div className="min-w-0">
             <p className="text-xs text-[#6b7280]">{t('modal.youWant')}</p>
-            <p className="font-semibold text-[#2e1065] text-sm">
+            <p className="font-semibold text-[#3D2A39] text-sm">
               {bookTitle(targetBook.title, targetBook.title_en)}
-              {targetBook.volume && <span style={{ color: '#7c3aed' }}> · {t('book.vol', { n: targetBook.volume })}</span>}
+              {targetBook.volume && <span style={{ color: '#986D8E' }}> · {t('book.vol', { n: targetBook.volume })}</span>}
             </p>
             <p className="text-xs text-[#6b7280] truncate">{targetBook.author}</p>
             {(targetBook.subject || targetBook.price != null) && (
@@ -102,7 +102,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
                   </span>
                 )}
                 {targetBook.subject && targetBook.subject.split(',').filter(Boolean).map(tag => (
-                  <span key={tag} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#e9d5ff', color: '#7c3aed' }}>
+                  <span key={tag} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#D9CAB3', color: '#986D8E' }}>
                     {t(`subj.${tag}`)}
                   </span>
                 ))}
@@ -120,7 +120,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             const blocked = new Set(myBooks.filter(b => !priceDiffOk(b.price, targetBook.price)).map(b => b.id));
             return (
               <>
-                <p className="text-xs mb-2" style={{ color: '#7c3aed' }}>{t('modal.priceRange', { min, max })}</p>
+                <p className="text-xs mb-2" style={{ color: '#986D8E' }}>{t('modal.priceRange', { min, max })}</p>
                 {myBooks.length === 0 ? (
                   <p className="text-sm text-[#6b7280]">{t('modal.noBooks')}</p>
                 ) : blocked.size === myBooks.length ? (
@@ -148,7 +148,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             onChange={e => setMessage(e.target.value)}
             placeholder={t('modal.messagePlaceholder')}
             className="w-full text-sm p-2.5 rounded-xl resize-none"
-            style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
             rows={3}
           />
         </div>
@@ -157,11 +157,11 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         {/* Sticky footer with the actions */}
-        <div className="flex gap-2 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid #f3e8ff' }}>
+        <div className="flex gap-2 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid #EFE3D0' }}>
           <button
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl font-semibold text-sm"
-            style={{ background: '#e9d5ff', color: '#6b7280' }}
+            style={{ background: '#D9CAB3', color: '#6b7280' }}
           >
             {t('modal.cancel')}
           </button>
@@ -169,7 +169,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             onClick={submit}
             disabled={!selectedBook || loading}
             className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+            style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
           >
             {loading ? t('modal.sending') : t('modal.send')}
           </button>

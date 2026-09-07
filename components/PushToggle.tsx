@@ -73,7 +73,7 @@ export default function PushToggle() {
       onClick={enable}
       disabled={busy}
       className="w-full text-center text-xs font-semibold py-2 rounded-lg disabled:opacity-50"
-      style={{ background: '#ede9fe', color: '#7c3aed' }}
+      style={{ background: '#EFE3D0', color: '#986D8E' }}
     >
       {t('push.enable')}
     </button>

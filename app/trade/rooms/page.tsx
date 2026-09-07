@@ -102,8 +102,8 @@ export default function RoomsPage() {
   return (
     <>
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
-        <h1 className="text-3xl font-bold text-[#2e1065] mt-2 mb-1">🚪 {t('hub.rooms')}</h1>
+        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#3D2A39]">{t('hub.back')}</Link>
+        <h1 className="text-3xl font-bold text-[#3D2A39] mt-2 mb-1">🚪 {t('hub.rooms')}</h1>
         <p className="text-sm text-[#6b7280] mb-6">{t('room.desc')}</p>
 
         {!room && (
@@ -111,20 +111,20 @@ export default function RoomsPage() {
             <div className="grid sm:grid-cols-2 gap-3 mb-5">
               <button onClick={() => { setMode(mode === 'create' ? null : 'create'); setErr(''); }}
                 className="p-5 rounded-2xl text-left"
-                style={{ background: mode === 'create' ? '#ede9fe' : '#ffffff', border: `1px solid ${mode === 'create' ? '#8b5cf6' : '#e9d5ff'}` }}>
-                <p className="font-bold text-[#2e1065]">➕ {t('room.create')}</p>
+                style={{ background: mode === 'create' ? '#EFE3D0' : '#ffffff', border: `1px solid ${mode === 'create' ? '#A67C9C' : '#D9CAB3'}` }}>
+                <p className="font-bold text-[#3D2A39]">➕ {t('room.create')}</p>
                 <p className="text-xs mt-1" style={{ color: '#f59e0b' }}>⭐ {t('room.createNote')}</p>
               </button>
               <button onClick={() => { setMode(mode === 'join' ? null : 'join'); setErr(''); }}
                 className="p-5 rounded-2xl text-left"
-                style={{ background: mode === 'join' ? '#ede9fe' : '#ffffff', border: `1px solid ${mode === 'join' ? '#8b5cf6' : '#e9d5ff'}` }}>
-                <p className="font-bold text-[#2e1065]">🔑 {t('room.join')}</p>
+                style={{ background: mode === 'join' ? '#EFE3D0' : '#ffffff', border: `1px solid ${mode === 'join' ? '#A67C9C' : '#D9CAB3'}` }}>
+                <p className="font-bold text-[#3D2A39]">🔑 {t('room.join')}</p>
                 <p className="text-xs text-[#6b7280] mt-1">{t('room.codePlaceholder')}</p>
               </button>
             </div>
 
             {mode && (
-              <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+              <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
                 {mode === 'join' && (
                   <input
                     value={code}
@@ -132,7 +132,7 @@ export default function RoomsPage() {
                     placeholder={t('room.codePlaceholder')}
                     maxLength={6}
                     className="w-full p-3 rounded-xl text-sm mb-4 font-mono tracking-widest text-center"
-                    style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+                    style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
                   />
                 )}
                 <p className="text-sm font-semibold text-[#4b5563] mb-2">{t('hub.pickBook')}</p>
@@ -142,7 +142,7 @@ export default function RoomsPage() {
                   onClick={() => (mode === 'create' ? act('create', { book_id: picked }) : act('join', { code, book_id: picked }))}
                   disabled={!picked || busy || (mode === 'join' && code.length !== 6)}
                   className="mt-4 w-full py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}
+                  style={{ background: 'linear-gradient(135deg, #A67C9C, #986D8E)' }}
                 >
                   {mode === 'create' ? t('room.create') : t('room.join')}
                 </button>
@@ -152,11 +152,11 @@ export default function RoomsPage() {
         )}
 
         {room && (
-          <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+          <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
             <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
               <div>
                 <p className="text-xs text-[#6b7280]">{t('room.shareCode')}</p>
-                <p className="font-mono text-2xl font-bold tracking-widest" style={{ color: '#7c3aed' }}>{room.code}</p>
+                <p className="font-mono text-2xl font-bold tracking-widest" style={{ color: '#986D8E' }}>{room.code}</p>
               </div>
               <span className="text-sm font-semibold text-[#4b5563]">{t('room.members', { n: room.members.length, max: room.max })}</span>
             </div>
@@ -164,10 +164,10 @@ export default function RoomsPage() {
             <div className="flex flex-col gap-2 mb-4">
               {room.members.map(m => (
                 <div key={m.user_id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: '#ffffff' }}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[#2e1065] text-xs font-bold flex-shrink-0" style={{ background: m.avatar_color }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[#3D2A39] text-xs font-bold flex-shrink-0" style={{ background: m.avatar_color }}>
                     {m.name[0].toUpperCase()}
                   </div>
-                  <span className="text-sm text-[#2e1065] font-semibold">{m.name}</span>
+                  <span className="text-sm text-[#3D2A39] font-semibold">{m.name}</span>
                   <span className="ml-auto flex items-center gap-2 text-xs text-[#6b7280] min-w-0">
                     <BookThumb coverUrl={m.cover_url} coverColor={m.cover_color} size={24} />
                     <span className="truncate max-w-[10rem]">{bookTitle(m.title, m.title_en)}</span>
@@ -181,7 +181,7 @@ export default function RoomsPage() {
                 {room.is_owner ? (
                   <button onClick={() => act('shuffle', { code: room.code })} disabled={busy || room.members.length < 2}
                     className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}>
+                    style={{ background: 'linear-gradient(135deg, #A67C9C, #ec4899)' }}>
                     {t('room.shuffle')}
                   </button>
                 ) : (
@@ -189,7 +189,7 @@ export default function RoomsPage() {
                 )}
                 {err && <p className="text-sm text-red-400 mt-2">{err}</p>}
                 <button onClick={() => act('leave', { code: room.code })} className="mt-3 w-full py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: '#e9d5ff', color: '#6b7280' }}>
+                  style={{ background: '#D9CAB3', color: '#6b7280' }}>
                   {t('room.leave')}
                 </button>
               </>
@@ -199,8 +199,8 @@ export default function RoomsPage() {
                 {myResult?.received_title ? (
                   <>
                     <div className="flex items-center gap-3 mt-1">
-                      <BookThumb coverUrl={myResult.received_cover_url} coverColor={myResult.received_color ?? '#e9d5ff'} size={40} />
-                      <p className="text-sm text-[#2e1065] font-semibold">{bookTitle(myResult.received_title, myResult.received_title_en)}</p>
+                      <BookThumb coverUrl={myResult.received_cover_url} coverColor={myResult.received_color ?? '#D9CAB3'} size={40} />
+                      <p className="text-sm text-[#3D2A39] font-semibold">{bookTitle(myResult.received_title, myResult.received_title_en)}</p>
                     </div>
                     <p className="text-xs mt-1" style={{ color: '#059669' }}>{t('wb.meetHint')}</p>
                   </>

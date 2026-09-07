@@ -122,8 +122,8 @@ export default function GtsPage() {
   return (
     <>
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#2e1065]">{t('hub.back')}</Link>
-        <h1 className="text-3xl font-bold text-[#2e1065] mt-2 mb-1">🌐 {t('hub.gts')}</h1>
+        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#3D2A39]">{t('hub.back')}</Link>
+        <h1 className="text-3xl font-bold text-[#3D2A39] mt-2 mb-1">🌐 {t('hub.gts')}</h1>
         <p className="text-sm text-[#6b7280] mb-6">{t('gts.desc')}</p>
 
         {msg && (
@@ -133,12 +133,12 @@ export default function GtsPage() {
         )}
 
         {/* My deposits */}
-        <div className="p-5 rounded-2xl mb-6" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+        <div className="p-5 rounded-2xl mb-6" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-[#2e1065]">{t('gts.myDeposits', { used: mine.length, total: slots })}</h2>
+            <h2 className="font-bold text-[#3D2A39]">{t('gts.myDeposits', { used: mine.length, total: slots })}</h2>
             {mine.length < slots && (
               <button onClick={() => setShowDeposit(!showDeposit)} className="px-3 py-1.5 rounded-xl font-semibold text-xs text-white"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
                 {t('gts.deposit')}
               </button>
             )}
@@ -148,8 +148,8 @@ export default function GtsPage() {
             <div key={d.id} className="flex items-center gap-3 py-2">
               <BookThumb coverUrl={d.cover_url} coverColor={d.cover_color} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[#2e1065] truncate">{bookTitle(d.title, d.title_en)}</p>
-                <p className="text-xs truncate" style={{ color: '#7c3aed' }}>{t('gts.wants', { want: wishText(d) })}</p>
+                <p className="text-sm font-semibold text-[#3D2A39] truncate">{bookTitle(d.title, d.title_en)}</p>
+                <p className="text-xs truncate" style={{ color: '#986D8E' }}>{t('gts.wants', { want: wishText(d) })}</p>
               </div>
               <button onClick={() => withdraw(d.id)} className="text-xs px-2.5 py-1 rounded-full flex-shrink-0"
                 style={{ background: '#fee2e2', color: '#ef4444' }}>
@@ -159,7 +159,7 @@ export default function GtsPage() {
           ))}
 
           {showDeposit && (
-            <div className="mt-4 pt-4" style={{ borderTop: '1px solid #e9d5ff' }}>
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid #D9CAB3' }}>
               <p className="text-sm font-semibold text-[#4b5563] mb-2">{t('hub.pickBook')}</p>
               <BookPicker selected={picked} onSelect={setPicked} />
               <div className="grid sm:grid-cols-2 gap-3 mt-3">
@@ -176,14 +176,14 @@ export default function GtsPage() {
                   value={wantSubject}
                   onChange={e => setWantSubject(e.target.value)}
                   className="p-2.5 rounded-xl text-sm"
-                  style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: wantSubject ? '#2e1065' : '#9ca3af', outline: 'none' }}
+                  style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: wantSubject ? '#3D2A39' : '#9ca3af', outline: 'none' }}
                 >
                   <option value="">{t('gts.anySubject')}</option>
                   {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}
                 </select>
               </div>
               <button onClick={deposit} disabled={!picked || busy} className="mt-3 w-full py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
                 {t('gts.submit')}
               </button>
             </div>
@@ -192,13 +192,13 @@ export default function GtsPage() {
         </div>
 
         {/* Open offers */}
-        <h2 className="font-bold text-[#2e1065] mb-3">{t('gts.openOffers')}</h2>
+        <h2 className="font-bold text-[#3D2A39] mb-3">{t('gts.openOffers')}</h2>
         <input
           value={q}
           onChange={e => setQ(e.target.value)}
           placeholder={t('gts.searchPlaceholder')}
           className="w-full p-3 rounded-xl text-sm mb-4"
-          style={{ background: '#ffffff', border: '1px solid #e9d5ff', color: '#2e1065', outline: 'none' }}
+          style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
         />
 
         {open.length === 0 ? (
@@ -206,16 +206,16 @@ export default function GtsPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {open.map(o => (
-              <div key={o.id} className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}>
+              <div key={o.id} className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
                 <div className="flex items-center gap-3">
                   <BookThumb coverUrl={o.cover_url} coverColor={o.cover_color} size={40} />
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#2e1065] truncate">{bookTitle(o.title, o.title_en)}</p>
+                    <p className="font-semibold text-[#3D2A39] truncate">{bookTitle(o.title, o.title_en)}</p>
                     <p className="text-xs text-[#6b7280] truncate">{o.author} • {t(`cond.${o.condition}`)}</p>
-                    <p className="text-xs mt-0.5 truncate" style={{ color: '#7c3aed' }}>💭 {t('gts.wants', { want: wishText(o) })}</p>
+                    <p className="text-xs mt-0.5 truncate" style={{ color: '#986D8E' }}>💭 {t('gts.wants', { want: wishText(o) })}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[#2e1065] text-xs font-bold" style={{ background: o.owner_avatar }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[#3D2A39] text-xs font-bold" style={{ background: o.owner_avatar }}>
                       {o.owner_name[0].toUpperCase()}
                     </div>
                     <button
@@ -229,7 +229,7 @@ export default function GtsPage() {
                 </div>
 
                 {fulfilling?.id === o.id && (
-                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid #e9d5ff' }}>
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid #D9CAB3' }}>
                     <p className="text-sm font-semibold text-[#4b5563] mb-2">{t('gts.pickMatching')}</p>
                     <BookPicker
                       selected={fulfillBook}

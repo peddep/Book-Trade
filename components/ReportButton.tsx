@@ -48,17 +48,17 @@ export default function ReportButton({ targetType, targetId, variant = 'icon' }:
       {open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(46,16,101,0.4)' }}
           onClick={() => setOpen(false)}>
-          <div className="w-full max-w-sm p-5 rounded-2xl shadow-2xl bt-pop-in" style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+          <div className="w-full max-w-sm p-5 rounded-2xl shadow-2xl bt-pop-in" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
             onClick={e => e.stopPropagation()}>
             {sent ? (
               <p className="text-center text-sm font-semibold py-4" style={{ color: '#10b981' }}>✓ {t('report.thanks')}</p>
             ) : (
               <>
-                <p className="text-base font-bold text-[#2e1065] mb-1">{t('report.title')}</p>
+                <p className="text-base font-bold text-[#3D2A39] mb-1">{t('report.title')}</p>
                 <p className="text-xs text-[#6b7280] mb-3">{t('report.hint')}</p>
                 <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} maxLength={500}
                   placeholder={t('report.placeholder')}
-                  className="w-full p-2.5 rounded-xl text-sm mb-3 text-[#2e1065]" style={{ background: '#faf5ff', border: '1px solid #e9d5ff', outline: 'none' }} />
+                  className="w-full p-2.5 rounded-xl text-sm mb-3 text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', outline: 'none' }} />
                 <div className="flex gap-2">
                   <button onClick={() => setOpen(false)} className="flex-1 py-2 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>
                     {t('report.cancel')}

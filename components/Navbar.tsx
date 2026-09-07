@@ -52,12 +52,12 @@ export default function Navbar() {
   }
 
   return (
-    <nav style={{ background: '#ffffff', borderBottom: '1px solid #e9d5ff' }} className="sticky top-0 z-50">
+    <nav style={{ background: '#ffffff', borderBottom: '1px solid #D9CAB3' }} className="sticky top-0 z-50">
       <div className="w-full px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between">
         <div className="flex items-center gap-8 min-w-0">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <span className="text-2xl hidden sm:inline">📚</span>
-            <span className="font-bold text-lg sm:text-xl whitespace-nowrap" style={{ color: '#7c3aed' }}>{t('brand.name')}</span>
+            <span className="font-bold text-lg sm:text-xl whitespace-nowrap" style={{ color: '#986D8E' }}>{t('brand.name')}</span>
           </Link>
 
           {/* Desktop navigation. On a phone these three live in the tab strip on
@@ -73,7 +73,7 @@ export default function Navbar() {
                     href={item.href}
                     className="relative px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
                     style={active
-                      ? { background: '#f3e8ff', color: '#6d28d9' }
+                      ? { background: '#EFE3D0', color: '#7C5773' }
                       : { color: '#6b7280' }}
                   >
                     {t(item.key)}
@@ -94,7 +94,7 @@ export default function Navbar() {
           <button
             onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
             className="text-sm font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap"
-            style={{ background: '#e9d5ff', color: '#2e1065' }}
+            style={{ background: '#D9CAB3', color: '#3D2A39' }}
             title="Change language"
             aria-label="Change language"
           >
@@ -113,7 +113,7 @@ export default function Navbar() {
                 aria-label="Menu"
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#2e1065] font-bold text-sm"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#3D2A39] font-bold text-sm"
                   style={{ background: user.avatar_color }}
                 >
                   {user.name[0].toUpperCase()}
@@ -127,27 +127,27 @@ export default function Navbar() {
               {menuOpen && (
                 <div
                   className="absolute right-0 mt-2 w-52 rounded-xl shadow-lg py-2 z-50"
-                  style={{ background: '#ffffff', border: '1px solid #e9d5ff' }}
+                  style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
                   onClick={() => setMenuOpen(false)}
                 >
-                  <div className="px-4 py-2 border-b" style={{ borderColor: '#e9d5ff' }}>
+                  <div className="px-4 py-2 border-b" style={{ borderColor: '#D9CAB3' }}>
                     <p className="font-semibold text-sm">{user.name}</p>
                     {user.grade && <p className="text-xs text-[#6b7280]">{gradeLabel(user.grade, user.class_no)}</p>}
                   </div>
                   {/* Between sm and md the inline links are not shown yet, so
                       keep them reachable here. */}
                   <div className="md:hidden">
-                    <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]" style={{ color: '#7c3aed' }}>✨ {t('tabs.trade')}</Link>
-                    <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.room')}</Link>
-                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-[#f5f3ff]">{t('tabs.books')}</Link>
-                    <Link href="/trades" className="flex items-center justify-between px-4 py-2 text-sm hover:bg-[#f5f3ff]">
+                    <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#EFE3D0]" style={{ color: '#986D8E' }}>✨ {t('tabs.trade')}</Link>
+                    <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#EFE3D0]">{t('tabs.room')}</Link>
+                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-[#EFE3D0]">{t('tabs.books')}</Link>
+                    <Link href="/trades" className="flex items-center justify-between px-4 py-2 text-sm hover:bg-[#EFE3D0]">
                       <span>{t('nav.trades')}</span>
                       {pending > 0 && (
                         <span className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: '#ef4444' }}>{pending}</span>
                       )}
                     </Link>
                   </div>
-                  <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#f5f3ff]">
+                  <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#EFE3D0]">
                     {t('nav.signOut')}
                   </button>
                 </div>
@@ -157,14 +157,14 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden min-[360px]:inline text-sm text-[#4b5563] hover:text-[#2e1065] px-2 sm:px-3 py-1.5 whitespace-nowrap"
+                className="hidden min-[360px]:inline text-sm text-[#4b5563] hover:text-[#3D2A39] px-2 sm:px-3 py-1.5 whitespace-nowrap"
               >
                 {t('nav.signIn')}
               </Link>
               <Link
                 href="/register"
                 className="text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-lg text-white whitespace-nowrap"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
               >
                 <span className="sm:hidden">{t('nav.joinShort')}</span>
                 <span className="hidden sm:inline">{t('nav.join')}</span>

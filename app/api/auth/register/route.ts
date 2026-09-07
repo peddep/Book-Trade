@@ -7,7 +7,7 @@ import { ipRateLimit } from '@/lib/ratelimit';
 import { domainError } from '@/lib/emailDomain';
 import { verifyGooglePending, clearGooglePendingCookie } from '@/lib/googleAuth';
 
-const AVATAR_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
+const AVATAR_COLORS = ['#87A8A4', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#A67C9C'];
 
 export async function POST(req: NextRequest) {
   // Registering while signed in would create a second account and move the
