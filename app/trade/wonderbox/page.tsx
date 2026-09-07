@@ -123,9 +123,9 @@ export default function WonderBoxPage() {
         <div
           className="relative overflow-hidden rounded-3xl mb-6 px-6 py-10 flex flex-col items-center"
           style={{
-            background: 'linear-gradient(160deg, var(--text-heading) 0%, #4c1d95 45%, #7C5773 100%)',
+            background: 'linear-gradient(160deg, #2e1065 0%, #4c1d95 45%, #6d28d9 100%)',
             boxShadow: '0 14px 40px rgba(76, 29, 149, 0.45)',
-            border: '1px solid #B98FAE',
+            border: '1px solid #a78bfa',
           }}
         >
           {/* Twinkling stars */}
