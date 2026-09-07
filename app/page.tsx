@@ -125,7 +125,7 @@ export default function Home() {
   ) : signedIn ? (
     <div className="flex gap-3 justify-center flex-wrap">
       <Link href="/trade" className="px-7 py-3 rounded-xl font-bold text-white text-base shadow-sm"
-        style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
+        style={{ background: '#986D8E' }}>
         {t('home.continueTrading')}
       </Link>
       <Link href="/profile" className="px-7 py-3 rounded-xl font-bold text-base"
@@ -136,7 +136,7 @@ export default function Home() {
   ) : (
     <div className="flex gap-3 justify-center flex-wrap">
       <Link href="/register" className="px-7 py-3 rounded-xl font-bold text-white text-base shadow-sm"
-        style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
+        style={{ background: '#986D8E' }}>
         {t('home.startTrading')}
       </Link>
       <Link href="/login" className="px-7 py-3 rounded-xl font-bold text-base"
@@ -329,7 +329,7 @@ export default function Home() {
             <p className="text-sm text-center leading-relaxed mb-6" style={{ color: MUTED }}>{t('home.gateBody')}</p>
             <div className="flex flex-col gap-2">
               <Link href="/register" className="w-full py-2.5 rounded-xl font-bold text-white text-center"
-                style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
+                style={{ background: '#986D8E' }}>
                 {t('home.startTrading')}
               </Link>
               <Link href="/login" className="w-full py-2.5 rounded-xl font-bold text-center"
