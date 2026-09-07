@@ -12,6 +12,7 @@ import PushToggle from '@/components/PushToggle';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 import { useI18n, type Lang } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
+import { useTheme } from '@/lib/theme';
 
 interface User {
   id: number;
@@ -34,6 +35,7 @@ function Card({ children }: { children: React.ReactNode }) {
 
 export default function RoomPage() {
   const { t, lang, setLang, gradeLabel } = useI18n();
+  const { theme, setTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [tradesMade, setTradesMade] = useState(0);
   const [booksListed, setBooksListed] = useState(0);
@@ -296,6 +298,21 @@ export default function RoomPage() {
                   </div>
                 )}
 
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm text-[var(--text-mid)]">{t('room2.appearance')}</span>
+                  <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--tint)' }}>
+                    {(['light', 'dark'] as const).map(th => (
+                      <button
+                        key={th}
+                        onClick={() => setTheme(th)}
+                        className="px-3 py-1.5 rounded-lg text-sm font-semibold"
+                        style={theme === th ? { background: '#87A8A4', color: 'white' } : { color: 'var(--text-secondary)' }}
+                      >
+                        {th === 'light' ? `☀️ ${t('room2.themeLight')}` : `🌙 ${t('room2.themeDark')}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-[var(--text-mid)]">{t('room2.language')}</span>
                   <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--tint)' }}>

@@ -6,7 +6,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import NotificationBell from '@/components/NotificationBell';
-import ThemeToggle from '@/components/ThemeToggle';
 
 const NAV = [
   { href: '/trade', key: 'tabs.trade' },
@@ -101,7 +100,6 @@ export default function Navbar() {
           >
             {lang === 'th' ? '🇹🇭' : '🇬🇧'}<span className="hidden sm:inline"> {lang === 'th' ? 'ไทย' : 'EN'}</span>
           </button>
-          <ThemeToggle />
           {user && <NotificationBell />}
           {user ? (
             // Hidden on phone: the three tabs sit on the page itself, sign-out
