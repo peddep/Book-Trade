@@ -8,7 +8,7 @@ export default function GoogleSignInButton({ label, href = '/api/auth/google' }:
     <a
       href={href}
       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold"
-      style={{ background: '#ffffff', border: '1px solid #e5e7eb', color: '#3c4043' }}
+      style={{ background: 'var(--card)', border: '1px solid var(--divider)', color: '#3c4043' }}
     >
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.9c1.7-1.57 2.7-3.87 2.7-6.61Z" />

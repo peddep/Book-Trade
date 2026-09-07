@@ -16,7 +16,7 @@ export default function TopTabs() {
   const pathname = usePathname();
 
   return (
-    <div className="flex justify-center gap-2 mb-6 md:hidden p-1 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+    <div className="flex justify-center gap-2 mb-6 md:hidden p-1 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       {TABS.map(tab => {
         const active = pathname === tab.href;
         return (

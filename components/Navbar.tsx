@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import NotificationBell from '@/components/NotificationBell';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const NAV = [
   { href: '/trade', key: 'tabs.trade' },
@@ -52,7 +53,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav style={{ background: '#ffffff', borderBottom: '1px solid #D9CAB3' }} className="sticky top-0 z-50">
+    <nav style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)' }} className="sticky top-0 z-50">
       <div className="w-full px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between">
         <div className="flex items-center gap-8 min-w-0">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
@@ -73,8 +74,8 @@ export default function Navbar() {
                     href={item.href}
                     className="relative px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
                     style={active
-                      ? { background: '#EFE3D0', color: '#7C5773' }
-                      : { color: '#6b7280' }}
+                      ? { background: 'var(--tint)', color: '#7C5773' }
+                      : { color: 'var(--text-secondary)' }}
                   >
                     {t(item.key)}
                     {item.href === '/trades' && pending > 0 && (
@@ -94,12 +95,13 @@ export default function Navbar() {
           <button
             onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
             className="text-sm font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap"
-            style={{ background: '#D9CAB3', color: '#3D2A39' }}
+            style={{ background: 'var(--border)', color: 'var(--text-heading)' }}
             title="Change language"
             aria-label="Change language"
           >
             {lang === 'th' ? '🇹🇭' : '🇬🇧'}<span className="hidden sm:inline"> {lang === 'th' ? 'ไทย' : 'EN'}</span>
           </button>
+          <ThemeToggle />
           {user && <NotificationBell />}
           {user ? (
             // Hidden on phone: the three tabs sit on the page itself, sign-out
@@ -113,7 +115,7 @@ export default function Navbar() {
                 aria-label="Menu"
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#3D2A39] font-bold text-sm"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-heading)] font-bold text-sm"
                   style={{ background: user.avatar_color }}
                 >
                   {user.name[0].toUpperCase()}
@@ -127,27 +129,27 @@ export default function Navbar() {
               {menuOpen && (
                 <div
                   className="absolute right-0 mt-2 w-52 rounded-xl shadow-lg py-2 z-50"
-                  style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                   onClick={() => setMenuOpen(false)}
                 >
-                  <div className="px-4 py-2 border-b" style={{ borderColor: '#D9CAB3' }}>
+                  <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
                     <p className="font-semibold text-sm">{user.name}</p>
-                    {user.grade && <p className="text-xs text-[#6b7280]">{gradeLabel(user.grade, user.class_no)}</p>}
+                    {user.grade && <p className="text-xs text-[var(--text-secondary)]">{gradeLabel(user.grade, user.class_no)}</p>}
                   </div>
                   {/* Between sm and md the inline links are not shown yet, so
                       keep them reachable here. */}
                   <div className="md:hidden">
-                    <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[#EFE3D0]" style={{ color: '#986D8E' }}>✨ {t('tabs.trade')}</Link>
-                    <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[#EFE3D0]">{t('tabs.room')}</Link>
-                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-[#EFE3D0]">{t('tabs.books')}</Link>
-                    <Link href="/trades" className="flex items-center justify-between px-4 py-2 text-sm hover:bg-[#EFE3D0]">
+                    <Link href="/trade" className="block px-4 py-2 text-sm hover:bg-[var(--tint)]" style={{ color: '#986D8E' }}>✨ {t('tabs.trade')}</Link>
+                    <Link href="/room" className="block px-4 py-2 text-sm hover:bg-[var(--tint)]">{t('tabs.room')}</Link>
+                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-[var(--tint)]">{t('tabs.books')}</Link>
+                    <Link href="/trades" className="flex items-center justify-between px-4 py-2 text-sm hover:bg-[var(--tint)]">
                       <span>{t('nav.trades')}</span>
                       {pending > 0 && (
                         <span className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center" style={{ background: '#ef4444' }}>{pending}</span>
                       )}
                     </Link>
                   </div>
-                  <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#EFE3D0]">
+                  <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[var(--tint)]">
                     {t('nav.signOut')}
                   </button>
                 </div>
@@ -157,7 +159,7 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden min-[360px]:inline text-sm text-[#4b5563] hover:text-[#3D2A39] px-2 sm:px-3 py-1.5 whitespace-nowrap"
+                className="hidden min-[360px]:inline text-sm text-[var(--text-mid)] hover:text-[var(--text-heading)] px-2 sm:px-3 py-1.5 whitespace-nowrap"
               >
                 {t('nav.signIn')}
               </Link>

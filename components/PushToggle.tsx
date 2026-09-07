@@ -64,8 +64,8 @@ export default function PushToggle() {
   }
 
   if (state === 'checking') return null;
-  if (state === 'unsupported') return <p className="text-xs text-[#9ca3af] text-center py-2">{t('push.unsupported')}</p>;
-  if (state === 'denied') return <p className="text-xs text-[#9ca3af] text-center py-2">{t('push.denied')}</p>;
+  if (state === 'unsupported') return <p className="text-xs text-[var(--text-muted)] text-center py-2">{t('push.unsupported')}</p>;
+  if (state === 'denied') return <p className="text-xs text-[var(--text-muted)] text-center py-2">{t('push.denied')}</p>;
   if (state === 'on') return <p className="text-xs font-semibold text-center py-2" style={{ color: '#10b981' }}>{t('push.enabled')}</p>;
 
   return (
@@ -73,7 +73,7 @@ export default function PushToggle() {
       onClick={enable}
       disabled={busy}
       className="w-full text-center text-xs font-semibold py-2 rounded-lg disabled:opacity-50"
-      style={{ background: '#EFE3D0', color: '#986D8E' }}
+      style={{ background: 'var(--tint)', color: '#986D8E' }}
     >
       {t('push.enable')}
     </button>

@@ -9,7 +9,7 @@ export default function Loading({ full = true }: { full?: boolean }) {
         style={{
           width: 44,
           height: 44,
-          border: '4px solid #D9CAB3',
+          border: '4px solid var(--border)',
           borderTopColor: '#986D8E',
         }}
       />

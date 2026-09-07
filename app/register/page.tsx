@@ -145,12 +145,12 @@ export default function RegisterPage() {
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <div className="text-5xl mb-3">📚</div>
-              <h1 className="text-2xl font-bold text-[#3D2A39]">{t('reg.googleOnlyTitle')}</h1>
-              <p className="text-[#6b7280] text-sm mt-2 leading-relaxed">{t('reg.googleOnlyBody')}</p>
+              <h1 className="text-2xl font-bold text-[var(--text-heading)]">{t('reg.googleOnlyTitle')}</h1>
+              <p className="text-[var(--text-secondary)] text-sm mt-2 leading-relaxed">{t('reg.googleOnlyBody')}</p>
             </div>
-            <div className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+            <div className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
               <GoogleSignInButton label={t('auth.googleSignUp')} />
-              <p className="text-center text-sm text-[#6b7280]">
+              <p className="text-center text-sm text-[var(--text-secondary)]">
                 {t('reg.haveAccount')}{' '}
                 <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
                   {t('login.signIn')}
@@ -169,24 +169,24 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">📚</div>
-            <h1 className="text-2xl font-bold text-[#3D2A39]">{t('reg.join')}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">{t('reg.subtitle')}</p>
+            <h1 className="text-2xl font-bold text-[var(--text-heading)]">{t('reg.join')}</h1>
+            <p className="text-[var(--text-secondary)] text-sm mt-1">{t('reg.subtitle')}</p>
           </div>
-          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.yourName')}</label>
+              <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('reg.yourName')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
                 placeholder="bookworm123"
               />
             </div>
             <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.realName')}</label>
+              <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('reg.realName')}</label>
               <input
                 type="text"
                 value={realName}
@@ -194,12 +194,12 @@ export default function RegisterPage() {
                 required
                 maxLength={120}
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
                 placeholder={t('reg.realNamePlaceholder')}
               />
             </div>
             <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.email')}</label>
+              <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('auth.email')}</label>
               <input
                 type="email"
                 value={email}
@@ -210,8 +210,8 @@ export default function RegisterPage() {
                 // do nothing, since the server uses the one Google verified.
                 className="w-full p-2.5 rounded-xl text-sm"
                 style={{
-                  background: googleMode ? '#EFE3D0' : '#ffffff', border: '1px solid #D9CAB3',
-                  color: googleMode ? '#6b7280' : '#3D2A39', outline: 'none',
+                  background: googleMode ? 'var(--tint)' : 'var(--card)', border: '1px solid var(--border)',
+                  color: googleMode ? 'var(--text-secondary)' : 'var(--text-heading)', outline: 'none',
                 }}
                 placeholder="XXXXX.somchai@student.nssc.ac.th"
               />
@@ -223,7 +223,7 @@ export default function RegisterPage() {
             ) : (
               <>
                 <div>
-                  <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.password')}</label>
+                  <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('auth.password')}</label>
                   <input
                     type="password"
                     value={password}
@@ -231,12 +231,12 @@ export default function RegisterPage() {
                     required
                     minLength={6}
                     className="w-full p-2.5 rounded-xl text-sm"
-                    style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+                    style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
                     placeholder={t('reg.passwordHint')}
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.confirmPassword')}</label>
+                  <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('reg.confirmPassword')}</label>
                   <input
                     type="password"
                     value={confirmPassword}
@@ -245,7 +245,7 @@ export default function RegisterPage() {
                     minLength={6}
                     autoComplete="new-password"
                     className="w-full p-2.5 rounded-xl text-sm"
-                    style={{ background: '#ffffff', border: `1px solid ${confirmPassword && confirmPassword !== password ? '#ef4444' : '#D9CAB3'}`, color: '#3D2A39', outline: 'none' }}
+                    style={{ background: 'var(--card)', border: `1px solid ${confirmPassword && confirmPassword !== password ? '#ef4444' : 'var(--border)'}`, color: 'var(--text-heading)', outline: 'none' }}
                     placeholder={t('reg.confirmPasswordHint')}
                   />
                   {confirmPassword && confirmPassword !== password && (
@@ -256,26 +256,26 @@ export default function RegisterPage() {
             )}
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.grade')}</label>
+                <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('reg.grade')}</label>
                 <select
                   value={grade}
                   onChange={e => setGrade(e.target.value)}
                   required
                   className="w-full p-2.5 rounded-xl text-sm"
-                  style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: grade ? '#3D2A39' : '#9ca3af', outline: 'none' }}
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)', color: grade ? 'var(--text-heading)' : 'var(--text-muted)', outline: 'none' }}
                 >
                   <option value="">{t('reg.selectGrade')}</option>
                   {GRADES.map(g => <option key={g} value={g}>{gradeLabel(g)}</option>)}
                 </select>
               </div>
               <div className="flex-1">
-                <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.class')}</label>
+                <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('reg.class')}</label>
                 <select
                   value={classNo}
                   onChange={e => setClassNo(e.target.value)}
                   required
                   className="w-full p-2.5 rounded-xl text-sm"
-                  style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: classNo ? '#3D2A39' : '#9ca3af', outline: 'none' }}
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)', color: classNo ? 'var(--text-heading)' : 'var(--text-muted)', outline: 'none' }}
                 >
                   <option value="">{t('reg.selectClass')}</option>
                   {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -283,7 +283,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('reg.contact')}</label>
+              <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('reg.contact')}</label>
               <input
                 type="text"
                 value={contact}
@@ -291,19 +291,19 @@ export default function RegisterPage() {
                 required
                 maxLength={100}
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
                 placeholder={t('reg.contactHint')}
               />
             </div>
             {/* Where trades happen + weekly availability */}
-            <div className="p-3 rounded-xl" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
-              <p className="text-sm font-bold text-[#3D2A39] mb-1">{t('reg.libraryTitle')}</p>
-              <p className="text-xs text-[#6b7280] leading-relaxed">{t('reg.libraryBody')}</p>
+            <div className="p-3 rounded-xl" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
+              <p className="text-sm font-bold text-[var(--text-heading)] mb-1">{t('reg.libraryTitle')}</p>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('reg.libraryBody')}</p>
             </div>
 
             <div>
-              <label className="text-sm text-[#4b5563] mb-1 block">{t('reg.availabilityTitle')}</label>
-              <p className="text-xs text-[#9ca3af] mb-2">{t('reg.availabilityHint')}</p>
+              <label className="text-sm text-[var(--text-mid)] mb-1 block">{t('reg.availabilityTitle')}</label>
+              <p className="text-xs text-[var(--text-muted)] mb-2">{t('reg.availabilityHint')}</p>
               <AvailabilityGrid value={availability} onChange={setAvailability} />
 
             </div>
@@ -311,14 +311,14 @@ export default function RegisterPage() {
             {/* Agreement. A ticked box the student has to reach for, rather
                 than fine print under the button they have already pressed. */}
             <label className="flex gap-2.5 items-start p-3 rounded-xl cursor-pointer"
-              style={{ background: '#EFE3D0', border: `1px solid ${error === t('reg.termsRequired') ? '#ef4444' : '#D9CAB3'}` }}>
+              style={{ background: 'var(--tint)', border: `1px solid ${error === t('reg.termsRequired') ? '#ef4444' : 'var(--border)'}` }}>
               <input
                 type="checkbox"
                 checked={acceptTerms}
                 onChange={e => setAcceptTerms(e.target.checked)}
                 className="mt-0.5 w-4 h-4 flex-shrink-0 accent-[#986D8E]"
               />
-              <span className="text-xs text-[#4b5563] leading-relaxed">
+              <span className="text-xs text-[var(--text-mid)] leading-relaxed">
                 {t('reg.agreeRead')}{' '}
                 <Link href="/rules" className="underline font-semibold text-[#986D8E]">{t('rules.title')}</Link>
                 {' '}{t('reg.agreeAnd')}{' '}
@@ -335,7 +335,7 @@ export default function RegisterPage() {
             >
               {loading ? t('reg.creating') : t('reg.createAccount')}
             </button>
-            <p className="text-center text-sm text-[#6b7280]">
+            <p className="text-center text-sm text-[var(--text-secondary)]">
               {t('reg.haveAccount')}{' '}
               <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold">
                 {t('login.signIn')}
@@ -345,9 +345,9 @@ export default function RegisterPage() {
             {!googleMode && (
               <>
                 <div className="flex items-center gap-3 my-1">
-                  <div className="flex-1 h-px" style={{ background: '#D9CAB3' }} />
-                  <span className="text-xs text-[#9ca3af]">{t('auth.orDivider')}</span>
-                  <div className="flex-1 h-px" style={{ background: '#D9CAB3' }} />
+                  <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                  <span className="text-xs text-[var(--text-muted)]">{t('auth.orDivider')}</span>
+                  <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
                 </div>
                 <GoogleSignInButton label={t('auth.googleSignUp')} />
               </>

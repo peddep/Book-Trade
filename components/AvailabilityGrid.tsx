@@ -37,10 +37,10 @@ export default function AvailabilityGrid({ value, onChange }: Props) {
         className="w-full mb-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-left bt-press"
         style={flexible
           ? { background: '#986D8E', color: '#ffffff', border: '1px solid #986D8E' }
-          : { background: '#EFE3D0', color: '#4b5563', border: '1px solid #D9CAB3' }}
+          : { background: 'var(--tint)', color: 'var(--text-mid)', border: '1px solid var(--border)' }}
       >
         {flexible ? '✓ ' : ''}⏰ {t('avail.any')}
-        <span className="block text-[11px] font-normal mt-0.5" style={{ color: flexible ? 'rgba(255,255,255,0.8)' : '#9ca3af' }}>
+        <span className="block text-[11px] font-normal mt-0.5" style={{ color: flexible ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}>
           {t('avail.anyHint')}
         </span>
       </button>
@@ -58,7 +58,7 @@ export default function AvailabilityGrid({ value, onChange }: Props) {
           <tbody>
             {SLOTS.map(slot => (
               <tr key={slot.key}>
-                <td className="p-1 text-[11px] text-left font-semibold text-[#4b5563] whitespace-nowrap pr-2">{t(slot.label)}</td>
+                <td className="p-1 text-[11px] text-left font-semibold text-[var(--text-mid)] whitespace-nowrap pr-2">{t(slot.label)}</td>
                 {DAYS.map((_, col) => {
                   const key = `${slot.key}-${col}`;
                   const on = value.includes(key);
@@ -72,9 +72,9 @@ export default function AvailabilityGrid({ value, onChange }: Props) {
                         className="w-full rounded-lg flex items-center justify-center text-sm font-bold transition-colors"
                         style={{
                           height: 34,
-                          background: on ? '#986D8E' : '#EFE3D0',
-                          color: on ? '#ffffff' : '#d1d5db',
-                          border: `1px solid ${on ? '#986D8E' : '#D9CAB3'}`,
+                          background: on ? '#986D8E' : 'var(--tint)',
+                          color: on ? '#ffffff' : 'var(--toggle-off)',
+                          border: `1px solid ${on ? '#986D8E' : 'var(--border)'}`,
                         }}
                       >
                         {on ? '✓' : ''}

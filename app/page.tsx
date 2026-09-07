@@ -6,14 +6,15 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 
-// Same purple-and-white palette as the rest of the site.
-const PAPER = '#EFE3D0';
-const SURFACE = '#ffffff';
-const INK = '#3D2A39';
-const MUTED = '#6b7280';
-const RULE = '#D9CAB3';
+// Same palette as the rest of the site, as CSS variables so this page follows
+// dark mode too instead of staying frozen in its light-mode values.
+const PAPER = 'var(--tint)';
+const SURFACE = 'var(--card)';
+const INK = 'var(--text-heading)';
+const MUTED = 'var(--text-secondary)';
+const RULE = 'var(--border)';
 const ACCENT = '#986D8E';
-const BAND = '#EFE3D0';
+const BAND = 'var(--tint)';
 
 const serif = { fontFamily: 'var(--font-serif), Georgia, serif' } as const;
 
@@ -153,7 +154,7 @@ export default function Home() {
           {/* Soft wash behind the hero, drawn rather than loaded as an image */}
           <div className="absolute inset-0 pointer-events-none opacity-40" style={{
             backgroundImage:
-              'radial-gradient(circle at 15% 20%, #D9CAB3 0%, transparent 45%), radial-gradient(circle at 85% 10%, #EFE3D0 0%, transparent 40%)',
+              'radial-gradient(circle at 15% 20%, var(--border) 0%, transparent 45%), radial-gradient(circle at 85% 10%, var(--tint) 0%, transparent 40%)',
           }} />
           {/* Wider from lg so the heading sits on one line: it needs about 940px
               set in English, and a 768px column forced "Your Classmates" onto

@@ -14,8 +14,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
     <main className="min-h-[70vh] flex items-center justify-center px-4 py-16">
       <div className="text-center max-w-sm">
         <div className="text-5xl mb-3">😵</div>
-        <h1 className="text-2xl font-bold text-[#3D2A39] mb-2">เกิดข้อผิดพลาด</h1>
-        <p className="text-[#6b7280] text-sm mb-6">
+        <h1 className="text-2xl font-bold text-[var(--text-heading)] mb-2">เกิดข้อผิดพลาด</h1>
+        <p className="text-[var(--text-secondary)] text-sm mb-6">
           Something went wrong. ลองใหม่อีกครั้ง หรือกลับหน้าแรก
         </p>
         <div className="flex gap-3 justify-center">
@@ -28,8 +28,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           </button>
           <a
             href="/trade"
-            className="py-2.5 px-6 rounded-xl font-bold text-[#4b5563]"
-            style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
+            className="py-2.5 px-6 rounded-xl font-bold text-[var(--text-mid)]"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
           >
             หน้าแรก · Home
           </a>

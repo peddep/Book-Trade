@@ -408,12 +408,12 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
           </div>
         )}
       </div>
-      <p className="text-xs mt-3 text-center max-w-sm" style={{ color: (retryMsg || wrongCode) && !lookingPhase && !coverPhase ? '#fca5a5' : '#D9CAB3' }}>{hint}</p>
+      <p className="text-xs mt-3 text-center max-w-sm" style={{ color: (retryMsg || wrongCode) && !lookingPhase && !coverPhase ? '#fca5a5' : 'var(--border)' }}>{hint}</p>
       {error && <p className="text-sm mt-2 text-red-300">{error}</p>}
       <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
         {!coverPhase && torchable && (
           <button onClick={toggleTorch} className="px-4 py-2.5 rounded-xl font-semibold text-sm"
-            style={{ background: torchOn ? '#fbbf24' : 'rgba(255,255,255,0.15)', color: torchOn ? '#3D2A39' : '#ffffff' }}>
+            style={{ background: torchOn ? '#fbbf24' : 'rgba(255,255,255,0.15)', color: torchOn ? 'var(--text-heading)' : 'var(--card)' }}>
             🔦 {t('scan.torch')}
           </button>
         )}
@@ -429,7 +429,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
             📸 {t('scan.shutter')}
           </button>
         )}
-        <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#ffffff', color: '#3D2A39' }}>
+        <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-semibold text-sm" style={{ background: 'var(--card)', color: 'var(--text-heading)' }}>
           {coverPhase && mode === 'scan' ? t('scan.skipCover') : t('scan.close')}
         </button>
       </div>

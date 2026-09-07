@@ -35,12 +35,12 @@ export default function ReportButton({ targetType, targetId, variant = 'icon' }:
           onClick={e => { e.stopPropagation(); setOpen(true); }}
           title={t('report.button')}
           aria-label={t('report.button')}
-          className="text-xs text-[#9ca3af] hover:text-[#ef4444]"
+          className="text-xs text-[var(--text-muted)] hover:text-[#ef4444]"
         >
           ⚑
         </button>
       ) : (
-        <button type="button" onClick={() => setOpen(true)} className="text-xs font-semibold text-[#9ca3af] hover:text-[#ef4444]">
+        <button type="button" onClick={() => setOpen(true)} className="text-xs font-semibold text-[var(--text-muted)] hover:text-[#ef4444]">
           ⚑ {t('report.button')}
         </button>
       )}
@@ -48,19 +48,19 @@ export default function ReportButton({ targetType, targetId, variant = 'icon' }:
       {open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(46,16,101,0.4)' }}
           onClick={() => setOpen(false)}>
-          <div className="w-full max-w-sm p-5 rounded-2xl shadow-2xl bt-pop-in" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
+          <div className="w-full max-w-sm p-5 rounded-2xl shadow-2xl bt-pop-in" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
             onClick={e => e.stopPropagation()}>
             {sent ? (
               <p className="text-center text-sm font-semibold py-4" style={{ color: '#10b981' }}>✓ {t('report.thanks')}</p>
             ) : (
               <>
-                <p className="text-base font-bold text-[#3D2A39] mb-1">{t('report.title')}</p>
-                <p className="text-xs text-[#6b7280] mb-3">{t('report.hint')}</p>
+                <p className="text-base font-bold text-[var(--text-heading)] mb-1">{t('report.title')}</p>
+                <p className="text-xs text-[var(--text-secondary)] mb-3">{t('report.hint')}</p>
                 <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} maxLength={500}
                   placeholder={t('report.placeholder')}
-                  className="w-full p-2.5 rounded-xl text-sm mb-3 text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', outline: 'none' }} />
+                  className="w-full p-2.5 rounded-xl text-sm mb-3 text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)', outline: 'none' }} />
                 <div className="flex gap-2">
-                  <button onClick={() => setOpen(false)} className="flex-1 py-2 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                  <button onClick={() => setOpen(false)} className="flex-1 py-2 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: 'var(--text-secondary)' }}>
                     {t('report.cancel')}
                   </button>
                   <button onClick={submit} className="flex-1 py-2 rounded-xl font-semibold text-sm text-white" style={{ background: '#ef4444' }}>

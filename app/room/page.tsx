@@ -28,7 +28,7 @@ interface User {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>{children}</div>
+    <div className="p-5 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>{children}</div>
   );
 }
 
@@ -163,22 +163,22 @@ export default function RoomPage() {
         )}
 
         {/* User card */}
-        <div className="flex items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, #ffffff, #EFE3D0)', border: '1px solid #D9CAB3' }}>
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-[#3D2A39] text-2xl font-bold flex-shrink-0" style={{ background: user.avatar_color }}>
+        <div className="flex items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, var(--card), var(--tint))', border: '1px solid var(--border)' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-[var(--text-heading)] text-2xl font-bold flex-shrink-0" style={{ background: user.avatar_color }}>
             {user.name[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-[#3D2A39] truncate">{user.name}</h1>
-            <p className="text-[#6b7280] text-sm truncate">{user.email}</p>
+            <h1 className="text-2xl font-bold text-[var(--text-heading)] truncate">{user.name}</h1>
+            <p className="text-[var(--text-secondary)] text-sm truncate">{user.email}</p>
             {user.grade && <p className="text-sm mt-0.5" style={{ color: '#986D8E' }}>{gradeLabel(user.grade, user.class_no)}</p>}
           </div>
           <button onClick={openEdit} className="ml-auto flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: '#EFE3D0', color: '#986D8E', border: '1px solid #D9CAB3' }}>
+            style={{ background: 'var(--tint)', color: '#986D8E', border: '1px solid var(--border)' }}>
             ✏️ {t('room2.editProfile')}
           </button>
           <button onClick={() => setShowSettings(true)} aria-label={t('room2.settings')}
             className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base"
-            style={{ background: '#EFE3D0', color: '#986D8E', border: '1px solid #D9CAB3' }}>
+            style={{ background: 'var(--tint)', color: '#986D8E', border: '1px solid var(--border)' }}>
             ⚙️
           </button>
         </div>
@@ -186,12 +186,12 @@ export default function RoomPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Card>
-            <p className="text-3xl font-bold text-[#3D2A39]">{tradesMade}</p>
-            <p className="text-xs text-[#6b7280] mt-1">{t('room2.tradesMade')}</p>
+            <p className="text-3xl font-bold text-[var(--text-heading)]">{tradesMade}</p>
+            <p className="text-xs text-[var(--text-secondary)] mt-1">{t('room2.tradesMade')}</p>
           </Card>
           <Card>
-            <p className="text-3xl font-bold text-[#3D2A39]">{booksListed}</p>
-            <p className="text-xs text-[#6b7280] mt-1">{t('room2.booksListed')}</p>
+            <p className="text-3xl font-bold text-[var(--text-heading)]">{booksListed}</p>
+            <p className="text-xs text-[var(--text-secondary)] mt-1">{t('room2.booksListed')}</p>
           </Card>
         </div>
 
@@ -199,8 +199,8 @@ export default function RoomPage() {
             the navbar menu that used to hold it is hidden. */}
         <Link href="/trades"
           className="flex items-center justify-between gap-3 mb-6 px-5 py-3.5 rounded-2xl bt-press"
-          style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
-          <span className="font-semibold text-sm text-[#3D2A39]">🤝 {t('nav.trades')}</span>
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <span className="font-semibold text-sm text-[var(--text-heading)]">🤝 {t('nav.trades')}</span>
           <span className="flex items-center gap-2">
             {pendingOffers > 0 && (
               <span className="min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold text-white flex items-center justify-center"
@@ -208,7 +208,7 @@ export default function RoomPage() {
                 {pendingOffers}
               </span>
             )}
-            <span style={{ color: '#9ca3af' }}>›</span>
+            <span style={{ color: 'var(--text-muted)' }}>›</span>
           </span>
         </Link>
 
@@ -218,12 +218,12 @@ export default function RoomPage() {
         <div className="grid md:grid-cols-2 gap-6">
           {/* News */}
           <div>
-            <h2 className="font-bold text-[#3D2A39] mb-3">📰 {t('room2.news')}</h2>
+            <h2 className="font-bold text-[var(--text-heading)] mb-3">📰 {t('room2.news')}</h2>
             <div className="flex flex-col gap-3">
               {news.map((n, i) => (
                 <Card key={i}>
-                  <p className="font-semibold text-[#3D2A39] text-sm">{n.title}</p>
-                  <p className="text-xs text-[#6b7280] mt-1 leading-relaxed">{n.body}</p>
+                  <p className="font-semibold text-[var(--text-heading)] text-sm">{n.title}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{n.body}</p>
                 </Card>
               ))}
             </div>
@@ -232,13 +232,13 @@ export default function RoomPage() {
           <div className="flex flex-col gap-6">
             {/* Challenges */}
             <div>
-              <h2 className="font-bold text-[#3D2A39] mb-3">🎯 {t('room2.challenges')}</h2>
+              <h2 className="font-bold text-[var(--text-heading)] mb-3">🎯 {t('room2.challenges')}</h2>
               <Card>
                 <div className="flex flex-col gap-2.5">
                   {challenges.map(c => (
                     <div key={c.key} className="flex items-center gap-3">
                       <span className="text-lg">{c.done ? '✅' : '⬜'}</span>
-                      <span className="text-sm" style={{ color: c.done ? '#10b981' : '#6b7280' }}>{t(c.key)}</span>
+                      <span className="text-sm" style={{ color: c.done ? '#10b981' : 'var(--text-secondary)' }}>{t(c.key)}</span>
                     </div>
                   ))}
                 </div>
@@ -247,10 +247,10 @@ export default function RoomPage() {
 
             {/* Achievements */}
             <div>
-              <h2 className="font-bold text-[#3D2A39] mb-3">🏆 {t('room2.achievements')} <span className="text-[#9ca3af] font-normal">({achievements.length}/{challenges.length})</span></h2>
+              <h2 className="font-bold text-[var(--text-heading)] mb-3">🏆 {t('room2.achievements')} <span className="text-[var(--text-muted)] font-normal">({achievements.length}/{challenges.length})</span></h2>
               <Card>
                 {achievements.length === 0 ? (
-                  <p className="text-sm text-[#6b7280]">{t('ach.locked')}</p>
+                  <p className="text-sm text-[var(--text-secondary)]">{t('ach.locked')}</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {achievements.map(a => (
@@ -273,16 +273,16 @@ export default function RoomPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46, 16, 101, 0.4)' }}
             onClick={() => setShowSettings(false)}>
             <div className="w-full max-w-sm rounded-2xl shadow-2xl bt-pop-in flex flex-col overflow-hidden"
-              style={{ background: '#ffffff', border: '1px solid #D9CAB3', maxHeight: 'calc(100dvh - 2rem)' }}
+              style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: 'calc(100dvh - 2rem)' }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 pt-6 pb-3 flex-shrink-0">
-                <p className="text-lg font-bold text-[#3D2A39]">⚙️ {t('room2.settings')}</p>
-                <button onClick={() => setShowSettings(false)} className="text-[#6b7280] hover:text-[#3D2A39] text-xl">✕</button>
+                <p className="text-lg font-bold text-[var(--text-heading)]">⚙️ {t('room2.settings')}</p>
+                <button onClick={() => setShowSettings(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-heading)] text-xl">✕</button>
               </div>
 
               <div className="px-6 pb-6 overflow-y-auto">
-                <p className="text-xs font-semibold text-[#6b7280] mb-2">{t('room2.notifications')}</p>
-                <div className="p-3 rounded-xl mb-4" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+                <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2">{t('room2.notifications')}</p>
+                <div className="p-3 rounded-xl mb-4" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
                   <PushToggle />
                 </div>
 
@@ -297,14 +297,14 @@ export default function RoomPage() {
                 )}
 
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-[#4b5563]">{t('room2.language')}</span>
-                  <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#EFE3D0' }}>
+                  <span className="text-sm text-[var(--text-mid)]">{t('room2.language')}</span>
+                  <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--tint)' }}>
                     {(['th', 'en'] as Lang[]).map(l => (
                       <button
                         key={l}
                         onClick={() => setLang(l)}
                         className="px-3 py-1.5 rounded-lg text-sm font-semibold"
-                        style={lang === l ? { background: '#87A8A4', color: 'white' } : { color: '#6b7280' }}
+                        style={lang === l ? { background: '#87A8A4', color: 'white' } : { color: 'var(--text-secondary)' }}
                       >
                         {l === 'th' ? '🇹🇭 ไทย' : '🇬🇧 EN'}
                       </button>
@@ -312,16 +312,16 @@ export default function RoomPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mb-3">
-                  <Link href="/rules" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#EFE3D0', color: '#6b7280', border: '1px solid #D9CAB3' }}>
+                  <Link href="/rules" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: 'var(--tint)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
                     📋 {t('rules.title')}
                   </Link>
-                  <Link href="/privacy" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: '#EFE3D0', color: '#6b7280', border: '1px solid #D9CAB3' }}>
+                  <Link href="/privacy" className="flex-1 py-2 rounded-xl font-semibold text-xs text-center" style={{ background: 'var(--tint)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
                     🔒 {t('priv.title')}
                   </Link>
                 </div>
                 {user.is_admin && (
                   <Link href="/admin" className="block w-full py-2.5 mb-3 rounded-xl font-semibold text-sm text-center"
-                    style={{ background: '#EFE3D0', color: '#986D8E', border: '1px solid #D9CAB3' }}>
+                    style={{ background: 'var(--tint)', color: '#986D8E', border: '1px solid var(--border)' }}>
                     {t('room2.admin')}
                   </Link>
                 )}
@@ -342,11 +342,11 @@ export default function RoomPage() {
                 phone the heading sat above the top of the screen and Save below
                 the bottom, with no way to reach either. */}
             <div className="w-full max-w-sm rounded-2xl shadow-2xl bt-pop-in flex flex-col overflow-hidden"
-              style={{ background: '#ffffff', border: '1px solid #D9CAB3', maxHeight: 'calc(100dvh - 2rem)' }}
+              style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: 'calc(100dvh - 2rem)' }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 pt-6 pb-3 flex-shrink-0">
-                <p className="text-lg font-bold text-[#3D2A39]">{t('profile2.title')}</p>
-                <button onClick={() => setEditing(false)} className="text-[#6b7280] hover:text-[#3D2A39] text-xl">✕</button>
+                <p className="text-lg font-bold text-[var(--text-heading)]">{t('profile2.title')}</p>
+                <button onClick={() => setEditing(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-heading)] text-xl">✕</button>
               </div>
 
               <div className="px-6 overflow-y-auto">
@@ -356,61 +356,61 @@ export default function RoomPage() {
                 </div>
               </div>
 
-              <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('profile2.name')}</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('profile2.name')}</label>
               <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }} />
+                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }} />
 
               <div className="flex gap-2 mb-3">
                 <div className="flex-1">
-                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.grade')}</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('reg.grade')}</label>
                   <select value={form.grade} onChange={e => setForm(f => ({ ...f, grade: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
                     <option value="">{t('reg.selectGrade')}</option>
                     {['1', '2', '3', '4', '5', '6'].map(g => <option key={g} value={g}>{gradeLabel(g)}</option>)}
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.class')}</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('reg.class')}</label>
                   <select value={form.class_no} onChange={e => setForm(f => ({ ...f, class_no: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
                     <option value="">{t('reg.selectClass')}</option>
                     {Array.from({ length: 16 }, (_, i) => String(i + 1)).map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
 
-              <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('reg.contact')}</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('reg.contact')}</label>
               <input value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))}
                 maxLength={100} placeholder={t('reg.contactHint')}
-                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }} />
+                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }} />
 
-              <label className="block text-xs font-semibold text-[#6b7280] mb-1">{t('profile2.newPassword')}</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('profile2.newPassword')}</label>
               <input type="password" value={form.new_password} minLength={6} autoComplete="new-password"
                 onChange={e => setForm(f => ({ ...f, new_password: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }} />
+                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }} />
 
-              <label className="block text-xs font-semibold text-[#6b7280] mb-2">{t('reg.availabilityTitle')}</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">{t('reg.availabilityTitle')}</label>
               <div className="mb-4">
                 <AvailabilityGrid value={availability} onChange={setAvailability} />
               </div>
 
-              <label className="block text-xs font-semibold text-[#6b7280] mb-2">{t('profile2.avatarColor')}</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">{t('profile2.avatarColor')}</label>
               {/* Eight of them: a row of four twice on a phone, rather than
                   seven and a stray one wrapped underneath. */}
               <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 justify-items-center mb-4">
                 {AVATAR_COLORS.map(c => (
                   <button key={c} onClick={() => setForm(f => ({ ...f, avatar_color: c }))}
                     className="w-8 h-8 rounded-full transition-transform"
-                    style={{ background: c, transform: form.avatar_color === c ? 'scale(1.15)' : 'scale(1)', boxShadow: form.avatar_color === c ? '0 0 0 3px #ffffff, 0 0 0 5px ' + c : 'none' }} />
+                    style={{ background: c, transform: form.avatar_color === c ? 'scale(1.15)' : 'scale(1)', boxShadow: form.avatar_color === c ? '0 0 0 3px var(--card), 0 0 0 5px ' + c : 'none' }} />
                 ))}
               </div>
 
               </div>
 
-              <div className="px-6 pt-3 pb-6 flex-shrink-0" style={{ borderTop: '1px solid #EFE3D0' }}>
+              <div className="px-6 pt-3 pb-6 flex-shrink-0" style={{ borderTop: '1px solid var(--tint)' }}>
                 {formError && <p className="text-sm text-red-500 mb-3">{formError}</p>}
                 <div className="flex gap-2">
-                  <button onClick={() => setEditing(false)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                  <button onClick={() => setEditing(false)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: 'var(--text-secondary)' }}>
                     {t('profile2.cancel')}
                   </button>
                   <button onClick={saveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50"

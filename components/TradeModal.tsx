@@ -66,16 +66,16 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl flex flex-col overflow-hidden bt-pop-in" style={{ background: '#ffffff', border: '1px solid #D9CAB3', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-2xl flex flex-col overflow-hidden bt-pop-in" style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         {/* Sticky header with the close button */}
-        <div className="flex justify-between items-center px-6 pt-5 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #EFE3D0' }}>
-          <h2 className="text-lg font-bold text-[#3D2A39]">{t('modal.title')}</h2>
-          <button onClick={onClose} aria-label={t('modal.cancel')} className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b7280] hover:text-[#3D2A39] text-xl flex-shrink-0" style={{ background: '#f3f4f6' }}>✕</button>
+        <div className="flex justify-between items-center px-6 pt-5 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--tint)' }}>
+          <h2 className="text-lg font-bold text-[var(--text-heading)]">{t('modal.title')}</h2>
+          <button onClick={onClose} aria-label={t('modal.cancel')} className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-heading)] text-xl flex-shrink-0" style={{ background: '#f3f4f6' }}>✕</button>
         </div>
 
         {/* Scrollable body */}
         <div className="flex flex-col gap-4 px-6 py-4 overflow-y-auto flex-1">
-        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
           {/* Book-shaped cover of the book being requested */}
           <div className="relative rounded-r-md rounded-l-sm overflow-hidden flex-shrink-0" style={{ width: 56, aspectRatio: '2 / 3', background: targetBook.cover_color, boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }}>
             {coverSrc(targetBook) ? (
@@ -88,12 +88,12 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             <span className="absolute left-0 top-0 bottom-0 w-1.5" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0))' }} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-[#6b7280]">{t('modal.youWant')}</p>
-            <p className="font-semibold text-[#3D2A39] text-sm">
+            <p className="text-xs text-[var(--text-secondary)]">{t('modal.youWant')}</p>
+            <p className="font-semibold text-[var(--text-heading)] text-sm">
               {bookTitle(targetBook.title, targetBook.title_en)}
               {targetBook.volume && <span style={{ color: '#986D8E' }}> · {t('book.vol', { n: targetBook.volume })}</span>}
             </p>
-            <p className="text-xs text-[#6b7280] truncate">{targetBook.author}</p>
+            <p className="text-xs text-[var(--text-secondary)] truncate">{targetBook.author}</p>
             {(targetBook.subject || targetBook.price != null) && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {targetBook.price != null && (
@@ -102,7 +102,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
                   </span>
                 )}
                 {targetBook.subject && targetBook.subject.split(',').filter(Boolean).map(tag => (
-                  <span key={tag} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#D9CAB3', color: '#986D8E' }}>
+                  <span key={tag} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--border)', color: '#986D8E' }}>
                     {t(`subj.${tag}`)}
                   </span>
                 ))}
@@ -112,7 +112,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-[#4b5563] mb-1">{t('modal.offerOne')}</p>
+          <p className="text-sm font-semibold text-[var(--text-mid)] mb-1">{t('modal.offerOne')}</p>
           {(() => {
             const target = Number(targetBook.price) || 0;
             const min = Math.max(0, target - MAX_PRICE_DIFF);
@@ -122,7 +122,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
               <>
                 <p className="text-xs mb-2" style={{ color: '#986D8E' }}>{t('modal.priceRange', { min, max })}</p>
                 {myBooks.length === 0 ? (
-                  <p className="text-sm text-[#6b7280]">{t('modal.noBooks')}</p>
+                  <p className="text-sm text-[var(--text-secondary)]">{t('modal.noBooks')}</p>
                 ) : blocked.size === myBooks.length ? (
                   <p className="text-sm font-semibold" style={{ color: '#ef4444' }}>{t('modal.noneInRange')}</p>
                 ) : (
@@ -142,13 +142,13 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-[#4b5563] mb-1">{t('modal.messageOptional')}</p>
+          <p className="text-sm font-semibold text-[var(--text-mid)] mb-1">{t('modal.messageOptional')}</p>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
             placeholder={t('modal.messagePlaceholder')}
             className="w-full text-sm p-2.5 rounded-xl resize-none"
-            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
             rows={3}
           />
         </div>
@@ -157,11 +157,11 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
         </div>
 
         {/* Sticky footer with the actions */}
-        <div className="flex gap-2 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid #EFE3D0' }}>
+        <div className="flex gap-2 px-6 py-4 flex-shrink-0" style={{ borderTop: '1px solid var(--tint)' }}>
           <button
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl font-semibold text-sm"
-            style={{ background: '#D9CAB3', color: '#6b7280' }}
+            style={{ background: 'var(--border)', color: 'var(--text-secondary)' }}
           >
             {t('modal.cancel')}
           </button>

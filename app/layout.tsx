@@ -39,9 +39,24 @@ function PreviewBanner() {
   );
 }
 
+// Sets `data-theme` before the page paints, from whatever the student picked
+// last time. Without this, the very first frame follows the OS setting (the
+// plain CSS media query already handles that on its own) and only then
+// flips to their actual choice once React mounts — a visible flash for
+// anyone who picked a theme different from their OS default.
+const THEME_INIT_SCRIPT = `
+try {
+  var t = localStorage.getItem('bt-theme');
+  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+} catch (e) {}
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th" className={serif.variable}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body>
         {/* Telling the test site apart from the real one at a glance is the
             difference between poking at a preview and editing students' data. */}

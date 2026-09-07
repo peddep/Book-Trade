@@ -106,21 +106,21 @@ export default function TitleInput({ value, onChange, onMeta, placeholder, requi
         onChange={e => { onChange(e.target.value); setOpen(true); }}
         placeholder={placeholder}
         className="w-full p-2.5 rounded-xl text-sm"
-        style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
       />
       {showList && (
         <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-xl overflow-hidden shadow-xl"
-          style={{ background: '#ffffff', border: '1px solid #D9CAB3', maxHeight: 260, overflowY: 'auto' }}>
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: 260, overflowY: 'auto' }}>
           {options.map(o => (
             <button
               key={o.value}
               type="button"
               onClick={() => pick(o)}
-              className="block w-full text-left px-3 py-2 hover:bg-[#EFE3D0]"
-              style={{ borderBottom: '1px solid #EFE3D0' }}
+              className="block w-full text-left px-3 py-2 hover:bg-[var(--tint)]"
+              style={{ borderBottom: '1px solid var(--tint)' }}
             >
-              <span className="block text-sm font-semibold text-[#3D2A39] leading-tight">{o.value}</span>
-              {o.label && <span className="block text-xs text-[#9ca3af] mt-0.5">{o.label}</span>}
+              <span className="block text-sm font-semibold text-[var(--text-heading)] leading-tight">{o.value}</span>
+              {o.label && <span className="block text-xs text-[var(--text-muted)] mt-0.5">{o.label}</span>}
             </button>
           ))}
         </div>

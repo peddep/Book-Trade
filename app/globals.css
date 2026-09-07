@@ -1,13 +1,72 @@
 @import "tailwindcss";
 
+/* ── Theme tokens ────────────────────────────────────────────────────────
+   Every surface, border and gray text color on the site reads through one
+   of these instead of a literal hex, so a page follows whichever theme is
+   active without carrying its own light/dark logic. Accent colors (mauve,
+   sage, and the semantic success/warning/danger set) are not tokenized —
+   they're mid-toned enough to read on both a cream and a near-black card,
+   so the same values just work in both themes.
+
+   Three ways a visitor ends up in dark mode: their OS is set to dark and
+   they've never touched the toggle (the plain @media block); their OS is
+   light but they picked dark in the toggle (`data-theme="dark"` wins over
+   the media query); or their OS is dark but they picked light (the media
+   block is guarded by :not([data-theme="light"]) so an explicit choice
+   always overrides the system default in both directions). */
 :root {
-  --background: #EFE3D0;
-  --foreground: #3D2A39;
+  --bg: #EFE3D0;
+  --card: #ffffff;
+  --tint: #EFE3D0;
+  --border: #D9CAB3;
+  --text-heading: #3D2A39;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-mid: #4b5563;
+  --divider: #e5e7eb;
+  --toggle-off: #d1d5db;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1E1720;
+    --card: #241C29;
+    --tint: #332B37;
+    --border: #5A4E5C;
+    --text-heading: #F3EAE0;
+    --text-secondary: #B6ABB1;
+    --text-muted: #8F8590;
+    --text-mid: #C9BEC4;
+    --divider: #4A3F4A;
+    --toggle-off: #55495A;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1E1720;
+  --card: #241C29;
+  --tint: #332B37;
+  --border: #5A4E5C;
+  --text-heading: #F3EAE0;
+  --text-secondary: #B6ABB1;
+  --text-muted: #8F8590;
+  --text-mid: #C9BEC4;
+  --divider: #4A3F4A;
+  --toggle-off: #55495A;
+  color-scheme: dark;
+}
+
+/* Kept as aliases: a few older inline styles still read the original names. */
+:root {
+  --background: var(--bg);
+  --foreground: var(--text-heading);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text-heading);
   font-family: system-ui, sans-serif;
   min-height: 100vh;
 }

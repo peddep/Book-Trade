@@ -72,7 +72,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     <>
       <main className="max-w-6xl mx-auto px-4 py-16 text-center">
         <div className="text-5xl mb-4">🤷</div>
-        <p className="text-[#6b7280] text-lg">{t('user.notFound')}</p>
+        <p className="text-[var(--text-secondary)] text-lg">{t('user.notFound')}</p>
       </main>
     </>
   );
@@ -80,24 +80,24 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <main className="max-w-6xl 2xl:max-w-[100rem] mx-auto px-4 lg:px-8 py-6">
-        <button onClick={() => router.back()} className="text-sm text-[#6b7280] hover:text-[#3D2A39] mb-3">← {t('hub.back').replace('← ', '')}</button>
+        <button onClick={() => router.back()} className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-heading)] mb-3">← {t('hub.back').replace('← ', '')}</button>
 
         {/* Profile header. Everything about this student sits together on the
             left; the shelf count is the one number worth pulling out. */}
-        <div className="flex flex-wrap items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, #ffffff, #EFE3D0)', border: '1px solid #D9CAB3' }}>
+        <div className="flex flex-wrap items-center gap-4 mb-6 p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, var(--card), var(--tint))', border: '1px solid var(--border)' }}>
           <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0" style={{ background: user.avatar_color }}>
             {user.name[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-[#3D2A39] truncate">{user.name}</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-heading)] truncate">{user.name}</h1>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
               {user.grade && <p className="text-sm" style={{ color: '#986D8E' }}>{gradeLabel(user.grade, user.class_no)}</p>}
-              <p className="text-sm text-[#6b7280]">
-                <span className="font-bold text-[#3D2A39]">{books.length}</span> {t('profile.booksListed')}
+              <p className="text-sm text-[var(--text-secondary)]">
+                <span className="font-bold text-[var(--text-heading)]">{books.length}</span> {t('profile.booksListed')}
               </p>
               {user.contact && (
-                <span className="text-sm inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', color: '#6b7280' }}>
-                  📱 <span className="font-semibold text-[#3D2A39]">{user.contact}</span>
+                <span className="text-sm inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: 'var(--tint)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+                  📱 <span className="font-semibold text-[var(--text-heading)]">{user.contact}</span>
                 </span>
               )}
             </div>
@@ -111,9 +111,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           </div>
         )}
 
-        <h2 className="text-lg font-bold text-[#3D2A39] mb-4">{t('user.booksOf', { name: user.name })}</h2>
+        <h2 className="text-lg font-bold text-[var(--text-heading)] mb-4">{t('user.booksOf', { name: user.name })}</h2>
         {books.length === 0 ? (
-          <p className="text-[#6b7280] text-sm py-10 text-center">{t('user.noBooks')}</p>
+          <p className="text-[var(--text-secondary)] text-sm py-10 text-center">{t('user.noBooks')}</p>
         ) : (
           <>
             {/* Phone: 3-column thumbnail shelf, tap a book to offer a trade */}

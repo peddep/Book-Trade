@@ -111,8 +111,8 @@ export default function TradePage() {
 
         <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#3D2A39] mb-1">🔍 {t('hub.browse')}</h1>
-            <p className="text-[#6b7280] text-sm">{t('books.subtitle')}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-heading)] mb-1">🔍 {t('hub.browse')}</h1>
+            <p className="text-[var(--text-secondary)] text-sm">{t('books.subtitle')}</p>
           </div>
 
           {/* The other three places a trade can be: a surprise swap, the
@@ -138,7 +138,7 @@ export default function TradePage() {
               <Badge n={pending} />
               <Link href="/trades"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full bt-press"
-                style={{ background: '#ffffff', color: '#7C5773', border: '1px solid #D9CAB3' }}>
+                style={{ background: 'var(--card)', color: '#7C5773', border: '1px solid var(--border)' }}>
                 🔔 {t('nav.trades')}
               </Link>
             </span>
@@ -158,13 +158,13 @@ export default function TradePage() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="flex-1 p-3 rounded-xl text-sm"
-            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
           />
           <select
             value={subject}
             onChange={e => setSubject(e.target.value)}
             className="sm:w-48 p-3 rounded-xl text-sm"
-            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: subject ? '#3D2A39' : '#9ca3af', outline: 'none' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)', color: subject ? 'var(--text-heading)' : 'var(--text-muted)', outline: 'none' }}
           >
             <option value="">{t('books.allSubjects')}</option>
             {SUBJECTS.map(s => <option key={s} value={s}>{t(`subj.${s}`)}</option>)}
@@ -172,12 +172,12 @@ export default function TradePage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-[#6b7280]">{t('books.loading')}</div>
+          <div className="text-center py-20 text-[var(--text-secondary)]">{t('books.loading')}</div>
         ) : books.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">🔍</div>
-            <p className="text-[#6b7280] text-lg">{t('books.noneFound')}</p>
-            <p className="text-[#9ca3af] text-sm mt-1">{t('books.noneFoundHint')}</p>
+            <p className="text-[var(--text-secondary)] text-lg">{t('books.noneFound')}</p>
+            <p className="text-[var(--text-muted)] text-sm mt-1">{t('books.noneFoundHint')}</p>
           </div>
         ) : (
           /* The same shelf of covers at every size — a desktop just gets more

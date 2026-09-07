@@ -107,11 +107,11 @@ export default function WonderBoxPage() {
   return (
     <>
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#3D2A39]">{t('hub.back')}</Link>
+        <Link href="/trade" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-heading)]">{t('hub.back')}</Link>
         <div className="mt-2 mb-1">
-          <h1 className="text-3xl font-bold text-[#3D2A39]">✨ {t('hub.wonderbox')}</h1>
+          <h1 className="text-3xl font-bold text-[var(--text-heading)]">✨ {t('hub.wonderbox')}</h1>
         </div>
-        <p className="text-sm text-[#6b7280] mb-6">{t('wb.desc')}</p>
+        <p className="text-sm text-[var(--text-secondary)] mb-6">{t('wb.desc')}</p>
 
         {matchedCount > 0 && (
           <div className="mb-6 p-4 rounded-2xl animate-pulse" style={{ background: '#dcfce7', border: '1px solid #10b981' }}>
@@ -123,7 +123,7 @@ export default function WonderBoxPage() {
         <div
           className="relative overflow-hidden rounded-3xl mb-6 px-6 py-10 flex flex-col items-center"
           style={{
-            background: 'linear-gradient(160deg, #3D2A39 0%, #4c1d95 45%, #7C5773 100%)',
+            background: 'linear-gradient(160deg, var(--text-heading) 0%, #4c1d95 45%, #7C5773 100%)',
             boxShadow: '0 14px 40px rgba(76, 29, 149, 0.45)',
             border: '1px solid #B98FAE',
           }}
@@ -153,7 +153,7 @@ export default function WonderBoxPage() {
                     }}
                   >
                     <span className="text-5xl" style={{ color: '#CBA9BE' }}>＋</span>
-                    <span className="text-xs font-semibold px-3 text-center" style={{ color: '#D9CAB3' }}>{t('wb.chooseBook')}</span>
+                    <span className="text-xs font-semibold px-3 text-center" style={{ color: 'var(--border)' }}>{t('wb.chooseBook')}</span>
                   </button>
                 );
               }
@@ -210,7 +210,7 @@ export default function WonderBoxPage() {
           <span className="mt-4 rounded-full" style={{ width: 120, height: 12, background: 'radial-gradient(ellipse, rgba(0,0,0,0.45), transparent 70%)' }} aria-hidden />
 
           {/* Status line under the slot */}
-          <p className="relative mt-3 text-sm font-semibold text-center" style={{ color: '#D9CAB3' }}>
+          <p className="relative mt-3 text-sm font-semibold text-center" style={{ color: 'var(--border)' }}>
             {!deposits[0]
               ? t('wb.empty')
               : deposits[0].status === 'matched'
@@ -257,17 +257,17 @@ export default function WonderBoxPage() {
           >
             <div
               className="w-full max-w-lg p-5 rounded-2xl shadow-2xl bt-pop-in"
-              style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-3">
-                <p className="text-base font-bold text-[#3D2A39]">{t('wb.chooseBook')}</p>
-                <button onClick={() => setPickerOpen(false)} className="text-[#6b7280] hover:text-[#3D2A39] text-xl">✕</button>
+                <p className="text-base font-bold text-[var(--text-heading)]">{t('wb.chooseBook')}</p>
+                <button onClick={() => setPickerOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-heading)] text-xl">✕</button>
               </div>
               {picking ? (
-                <p className="text-sm text-[#9ca3af] py-6 text-center">{t('profile.loading')}</p>
+                <p className="text-sm text-[var(--text-muted)] py-6 text-center">{t('profile.loading')}</p>
               ) : pickable.length === 0 ? (
-                <p className="text-sm text-[#6b7280]">{t('hub.noFreeBooks')}</p>
+                <p className="text-sm text-[var(--text-secondary)]">{t('hub.noFreeBooks')}</p>
               ) : (
                 <BookShelf
                   books={pickable}
@@ -289,13 +289,13 @@ export default function WonderBoxPage() {
           >
             <div
               className="w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center bt-pop-in"
-              style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
               onClick={e => e.stopPropagation()}
             >
               <p className="font-bold text-lg mb-4" style={{ color: '#059669' }}>{t('wb.opened')}</p>
               <div className="flex justify-center mb-4">
                 <div className="relative rounded-r-md rounded-l-sm overflow-hidden"
-                  style={{ width: 130, aspectRatio: '2 / 3', background: revealed.received_color ?? '#D9CAB3', boxShadow: '0 8px 20px rgba(0,0,0,0.35)' }}>
+                  style={{ width: 130, aspectRatio: '2 / 3', background: revealed.received_color ?? 'var(--border)', boxShadow: '0 8px 20px rgba(0,0,0,0.35)' }}>
                   {revealed.received_cover_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={revealed.received_cover_url} alt={bookTitle(revealed.received_title ?? '', revealed.received_title_en)} className="absolute inset-0 w-full h-full object-cover"
@@ -309,8 +309,8 @@ export default function WonderBoxPage() {
                   <span className="absolute left-0 top-0 bottom-0 w-2" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0))' }} />
                 </div>
               </div>
-              <p className="text-base font-bold text-[#3D2A39]">{bookTitle(revealed.received_title ?? '', revealed.received_title_en)}</p>
-              {revealed.received_from && <p className="text-sm text-[#6b7280] mt-1">{t('wb.from', { name: revealed.received_from })}</p>}
+              <p className="text-base font-bold text-[var(--text-heading)]">{bookTitle(revealed.received_title ?? '', revealed.received_title_en)}</p>
+              {revealed.received_from && <p className="text-sm text-[var(--text-secondary)] mt-1">{t('wb.from', { name: revealed.received_from })}</p>}
               <p className="text-xs mt-3" style={{ color: '#059669' }}>{t('wb.meetHint')}</p>
               <button onClick={() => setRevealed(null)} className="mt-5 w-full py-2.5 rounded-xl font-semibold text-sm text-white"
                 style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>

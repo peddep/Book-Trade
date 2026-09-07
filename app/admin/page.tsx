@@ -183,7 +183,7 @@ export default function AdminPage() {
     <>
       <main className="max-w-4xl mx-auto px-4 py-16 text-center">
         <div className="text-5xl mb-4">🔒</div>
-        <p className="text-[#6b7280]">Admin only</p>
+        <p className="text-[var(--text-secondary)]">Admin only</p>
       </main>
     </>
   );
@@ -264,11 +264,11 @@ export default function AdminPage() {
   return (
     <>
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <Link href="/room" className="text-sm text-[#6b7280] hover:text-[#3D2A39]">{t('hub.back')}</Link>
+        <Link href="/room" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-heading)]">{t('hub.back')}</Link>
         <div className="flex items-center justify-between gap-3 mt-2 mb-5">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#3D2A39]">🛠️ {t('adm.title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-heading)]">🛠️ {t('adm.title')}</h1>
           <a href="/api/admin?export=1" className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex-shrink-0"
-            style={{ background: '#EFE3D0', color: '#986D8E', border: '1px solid #D9CAB3' }}>
+            style={{ background: 'var(--tint)', color: '#986D8E', border: '1px solid var(--border)' }}>
             {t('adm.export')}
           </a>
         </div>
@@ -276,19 +276,19 @@ export default function AdminPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {stats.map(s => (
-            <div key={s.label} className="p-4 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
-              <p className="text-2xl font-bold text-[#3D2A39]">{String(s.value)}</p>
-              <p className="text-xs text-[#6b7280] mt-1">{s.label}</p>
+            <div key={s.label} className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <p className="text-2xl font-bold text-[var(--text-heading)]">{String(s.value)}</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* Table tabs */}
-        <div className="flex gap-1 p-1 rounded-xl mb-4 overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+        <div className="flex gap-1 p-1 rounded-xl mb-4 overflow-x-auto" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           {TABS.map(k => (
             <button key={k} onClick={() => setTab(k)}
               className="px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors"
-              style={tab === k ? { background: '#986D8E', color: 'white' } : { color: '#6b7280' }}>
+              style={tab === k ? { background: '#986D8E', color: 'white' } : { color: 'var(--text-secondary)' }}>
               {t(`adm.${k}`)} ({(data[k] ?? []).length})
             </button>
           ))}
@@ -298,17 +298,17 @@ export default function AdminPage() {
         <AdminHarvestCard />
 
         {/* Add titles to the suggestion catalog (e.g. school textbooks) */}
-        <details className="mb-6 rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
-          <summary className="px-4 py-3 cursor-pointer text-sm font-bold text-[#3D2A39]">📚 {t('adm.catalogTitle')}</summary>
+        <details className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <summary className="px-4 py-3 cursor-pointer text-sm font-bold text-[var(--text-heading)]">📚 {t('adm.catalogTitle')}</summary>
           <div className="px-4 pb-4">
-            <p className="text-xs text-[#6b7280] mb-2">{t('adm.catalogHint')}</p>
+            <p className="text-xs text-[var(--text-secondary)] mb-2">{t('adm.catalogHint')}</p>
             <textarea
               value={catalogLines}
               onChange={e => setCatalogLines(e.target.value)}
               rows={6}
               placeholder={'คณิตศาสตร์พื้นฐาน ม.4 เล่ม 1 | สสวท.\nภาษาไทย วรรณคดีวิจักษ์ ม.5\nAccess M.3 Student Book | Aksorn'}
               className="w-full p-3 rounded-xl text-sm font-mono"
-              style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+              style={{ background: 'var(--tint)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
             />
             <div className="flex items-center gap-3 mt-2">
               <button onClick={addToCatalog} disabled={catalogBusy || !catalogLines.trim()}
@@ -325,7 +325,7 @@ export default function AdminPage() {
         {tempPw && (
           <div className="mb-4 p-4 rounded-2xl flex items-center justify-between gap-3" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
             <p className="text-sm font-semibold" style={{ color: '#b45309' }}>
-              {t('adm.tempPw', { name: tempPw.name })} <code className="px-2 py-0.5 rounded font-mono" style={{ background: '#ffffff' }}>{tempPw.password}</code>
+              {t('adm.tempPw', { name: tempPw.name })} <code className="px-2 py-0.5 rounded font-mono" style={{ background: 'var(--card)' }}>{tempPw.password}</code>
             </p>
             <button onClick={() => setTempPw(null)} className="text-lg" style={{ color: '#b45309' }}>✕</button>
           </div>
@@ -338,7 +338,7 @@ export default function AdminPage() {
             onChange={e => setCatalogQ(e.target.value)}
             placeholder={t('adm.catalogSearch')}
             className="w-full mb-3 px-3 py-2 rounded-xl text-sm"
-            style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
           />
         )}
 
@@ -351,7 +351,7 @@ export default function AdminPage() {
               className="px-3 py-1.5 rounded-full text-xs font-bold"
               style={missingCover
                 ? { background: '#986D8E', color: '#ffffff' }
-                : { background: '#D9CAB3', color: '#3D2A39' }}
+                : { background: 'var(--border)', color: 'var(--text-heading)' }}
             >
               {missingCover ? `✓ ${t('adm.missingCover')}` : t('adm.missingCover')}
             </button>
@@ -381,14 +381,14 @@ export default function AdminPage() {
         {/* The times in the "when" column are the ordinary period times; the
             same note appears on the students' own cards. */}
         {tab === 'meetups' && meetupRows.length > 0 && (
-          <p className="text-xs text-[#6b7280] mb-2">🕐 {t('irl.normalSchedule')}</p>
+          <p className="text-xs text-[var(--text-secondary)] mb-2">🕐 {t('irl.normalSchedule')}</p>
         )}
 
         {/* Data table */}
-        <div className="rounded-2xl overflow-x-auto" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+        <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <table className="w-full text-left text-xs">
             <thead>
-              <tr style={{ background: '#EFE3D0' }}>
+              <tr style={{ background: 'var(--tint)' }}>
                 {cols.map(c => (
                   <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap" style={{ color: '#986D8E' }}>{c}</th>
                 ))}
@@ -398,9 +398,9 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} style={{ borderTop: '1px solid #EFE3D0' }}>
+                <tr key={i} style={{ borderTop: '1px solid var(--tint)' }}>
                   {cols.map(c => (
-                    <td key={c} className="px-3 py-2 text-[#3D2A39] align-top" style={{ maxWidth: 260 }}>
+                    <td key={c} className="px-3 py-2 text-[var(--text-heading)] align-top" style={{ maxWidth: 260 }}>
                       <span className="line-clamp-2 break-words">{r[c] == null ? '—' : String(r[c])}</span>
                     </td>
                   ))}
@@ -411,17 +411,17 @@ export default function AdminPage() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.cover_url} alt="" className="rounded object-cover" style={{ width: 28, height: 42 }} />
                         ) : (
-                          <span className="text-[#d1d5db]">—</span>
+                          <span className="text-[var(--toggle-off)]">—</span>
                         )}
                         <label className="px-2 py-1 rounded-lg font-semibold cursor-pointer"
-                          style={{ background: '#EFE3D0', color: '#986D8E' }}>
+                          style={{ background: 'var(--tint)', color: '#986D8E' }}>
                           🖼 {r.cover_url ? t('adm.changeCover') : t('adm.addCover')}
                           <input type="file" accept="image/*" className="hidden"
                             onChange={e => uploadCover(r.id, e.target.files?.[0])} />
                         </label>
                         <button onClick={() => setEditBook({ ...r })}
                           className="px-2 py-1 rounded-lg font-semibold"
-                          style={{ background: '#EFE3D0', color: '#986D8E' }}>
+                          style={{ background: 'var(--tint)', color: '#986D8E' }}>
                           ✏️ {t('adm.editBook')}
                         </button>
                         <button onClick={() => adminAction({ action: 'delete_book', book_id: r.id }, `${t('adm.deleteBook')}: ${String(r.title)}?`)}
@@ -489,7 +489,7 @@ export default function AdminPage() {
                       <div className="flex items-center gap-2">
                         {r.status === 'verified' ? (
                           <button onClick={() => adminAction({ action: 'unverify_donation', donation_id: r.id })}
-                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#f3f4f6', color: 'var(--text-secondary)' }}>
                             ↩ {t('adm.unverify')}
                           </button>
                         ) : (
@@ -510,7 +510,7 @@ export default function AdminPage() {
                       <div className="flex items-center gap-2">
                         {r.status === 'done' ? (
                           <button onClick={() => adminAction({ action: 'reopen_feedback', feedback_id: r.id })}
-                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                            className="px-2 py-1 rounded-lg font-semibold" style={{ background: '#f3f4f6', color: 'var(--text-secondary)' }}>
                             ↩ {t('adm.reopen')}
                           </button>
                         ) : (
@@ -529,7 +529,7 @@ export default function AdminPage() {
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={cols.length + (tab === 'users' || tab === 'books' || tab === 'reports' || tab === 'donations' || tab === 'feedback' ? 1 : 0)} className="px-3 py-6 text-center text-[#9ca3af]">—</td></tr>
+                <tr><td colSpan={cols.length + (tab === 'users' || tab === 'books' || tab === 'reports' || tab === 'donations' || tab === 'feedback' ? 1 : 0)} className="px-3 py-6 text-center text-[var(--text-muted)]">—</td></tr>
               )}
             </tbody>
           </table>
@@ -538,10 +538,10 @@ export default function AdminPage() {
         {/* Full book editor (admin can change any field) */}
         {editBook && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(46,16,101,0.4)' }} onClick={() => setEditBook(null)}>
-            <div className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden" style={{ background: '#ffffff', border: '1px solid #D9CAB3', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid #EFE3D0' }}>
-                <p className="font-bold text-[#3D2A39]">✏️ {t('adm.editBook')} #{String(editBook.id)}</p>
-                <button onClick={() => setEditBook(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b7280] text-xl" style={{ background: '#f3f4f6' }}>✕</button>
+            <div className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--tint)' }}>
+                <p className="font-bold text-[var(--text-heading)]">✏️ {t('adm.editBook')} #{String(editBook.id)}</p>
+                <button onClick={() => setEditBook(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-secondary)] text-xl" style={{ background: '#f3f4f6' }}>✕</button>
               </div>
               <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto">
                 {[
@@ -554,33 +554,33 @@ export default function AdminPage() {
                   { k: 'price', label: t('profile.fPrice'), type: 'number' },
                 ].map(f => (
                   <div key={f.k}>
-                    <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{f.label}</label>
+                    <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1 block">{f.label}</label>
                     <input
                       type={f.type ?? 'text'}
                       value={String(editBook[f.k] ?? '')}
                       onChange={e => setEditBook(b => b && ({ ...b, [f.k]: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', outline: 'none' }} />
+                      className="w-full px-3 py-2 rounded-xl text-sm text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)', outline: 'none' }} />
                   </div>
                 ))}
                 <div>
-                  <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fCondition')}</label>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1 block">{t('profile.fCondition')}</label>
                   <select value={String(editBook.condition ?? 'Good')} onChange={e => setEditBook(b => b && ({ ...b, condition: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39]" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
                     {['Like New', 'Good', 'Fair', 'Poor'].map(c => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#6b7280] mb-1 block">{t('profile.fDescription')}</label>
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1 block">{t('profile.fDescription')}</label>
                   <textarea rows={2} value={String(editBook.description ?? '')} onChange={e => setEditBook(b => b && ({ ...b, description: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm text-[#3D2A39] resize-none" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3', outline: 'none' }} />
+                    className="w-full px-3 py-2 rounded-xl text-sm text-[var(--text-heading)] resize-none" style={{ background: 'var(--tint)', border: '1px solid var(--border)', outline: 'none' }} />
                 </div>
-                <label className="flex items-center gap-2 text-sm text-[#3D2A39]">
+                <label className="flex items-center gap-2 text-sm text-[var(--text-heading)]">
                   <input type="checkbox" checked={!!Number(editBook.available)} onChange={e => setEditBook(b => b && ({ ...b, available: e.target.checked ? 1 : 0 }))} />
                   {t('adm.bookAvailable')}
                 </label>
               </div>
-              <div className="flex gap-2 px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid #EFE3D0' }}>
-                <button onClick={() => setEditBook(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: '#6b7280' }}>{t('profile2.cancel')}</button>
+              <div className="flex gap-2 px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid var(--tint)' }}>
+                <button onClick={() => setEditBook(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: 'var(--text-secondary)' }}>{t('profile2.cancel')}</button>
                 <button onClick={saveBookEdit} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>{t('profile2.save')}</button>
               </div>
             </div>

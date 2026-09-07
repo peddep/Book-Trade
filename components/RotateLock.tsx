@@ -29,10 +29,10 @@ export default function RotateLock() {
   return (
     <div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center text-center px-8"
-      style={{ background: '#ffffff' }}
+      style={{ background: 'var(--card)' }}
     >
       <div className="text-6xl mb-4 animate-pulse">📱</div>
-      <p className="text-lg font-semibold text-[#3D2A39]">{t('rotate.msg')}</p>
+      <p className="text-lg font-semibold text-[var(--text-heading)]">{t('rotate.msg')}</p>
     </div>
   );
 }

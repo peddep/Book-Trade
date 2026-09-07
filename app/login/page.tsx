@@ -80,31 +80,31 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">📚</div>
-            <h1 className="text-2xl font-bold text-[#3D2A39]">{t('login.welcome')}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">{t('login.subtitle')}</p>
+            <h1 className="text-2xl font-bold text-[var(--text-heading)]">{t('login.welcome')}</h1>
+            <p className="text-[var(--text-secondary)] text-sm mt-1">{t('login.subtitle')}</p>
           </div>
-          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+          <form onSubmit={submit} className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.email')}</label>
+              <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('auth.email')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
                 placeholder="XXXXX.somchai@student.nssc.ac.th"
               />
             </div>
             <div>
-              <label className="text-sm text-[#4b5563] mb-1.5 block">{t('auth.password')}</label>
+              <label className="text-sm text-[var(--text-mid)] mb-1.5 block">{t('auth.password')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
                 className="w-full p-2.5 rounded-xl text-sm"
-                style={{ background: '#ffffff', border: '1px solid #D9CAB3', color: '#3D2A39', outline: 'none' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-heading)', outline: 'none' }}
                 placeholder="••••••••"
               />
             </div>
@@ -117,18 +117,18 @@ export default function LoginPage() {
             >
               {loading ? t('login.signingIn') : t('login.signIn')}
             </button>
-            <p className="text-center text-sm text-[#6b7280]">
+            <p className="text-center text-sm text-[var(--text-secondary)]">
               {t('login.noAccount')}{' '}
               <Link href="/register" className="text-purple-400 hover:text-purple-300 font-semibold">
                 {t('login.joinLink')}
               </Link>
             </p>
-            <p className="text-center text-xs text-[#9ca3af]">{t('login.forgot')}</p>
+            <p className="text-center text-xs text-[var(--text-muted)]">{t('login.forgot')}</p>
 
             <div className="flex items-center gap-3 my-1">
-              <div className="flex-1 h-px" style={{ background: '#D9CAB3' }} />
-              <span className="text-xs text-[#9ca3af]">{t('auth.orDivider')}</span>
-              <div className="flex-1 h-px" style={{ background: '#D9CAB3' }} />
+              <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+              <span className="text-xs text-[var(--text-muted)]">{t('auth.orDivider')}</span>
+              <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
             </div>
             <GoogleSignInButton label={t('auth.googleSignIn')} />
           </form>

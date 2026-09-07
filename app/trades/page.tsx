@@ -57,11 +57,11 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: strin
   pending:   { bg: '#fef9c3', color: '#b45309', labelKey: 'trades.pending' },
   accepted:  { bg: '#dcfce7', color: '#10b981', labelKey: 'trades.accepted' },
   rejected:  { bg: '#fee2e2', color: '#ef4444', labelKey: 'trades.rejected' },
-  cancelled: { bg: '#f3f4f6', color: '#9ca3af', labelKey: 'trades.cancelled' },
+  cancelled: { bg: '#f3f4f6', color: 'var(--text-muted)', labelKey: 'trades.cancelled' },
   // A finished swap had no entry here, and the fallback below called everything
   // it did not recognise "cancelled" — so every trade a student actually
   // completed told them it had been called off.
-  completed: { bg: '#EFE3D0', color: '#986D8E', labelKey: 'trades.completed' },
+  completed: { bg: 'var(--tint)', color: '#986D8E', labelKey: 'trades.completed' },
   // Both sides showed up but disagreed on what happened — held for an admin
   // to look at rather than resolved automatically either way.
   disputed:  { bg: '#fef3c7', color: '#b45309', labelKey: 'trades.disputed' },
@@ -70,7 +70,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; labelKey: strin
 // Anything not listed above is shown plainly rather than dressed up as one of
 // these: a status this page has not been taught yet should look unfamiliar,
 // not wrong.
-const UNKNOWN_STATUS = { bg: '#f3f4f6', color: '#6b7280', labelKey: '' };
+const UNKNOWN_STATUS = { bg: '#f3f4f6', color: 'var(--text-secondary)', labelKey: '' };
 
 export default function TradesPage() {
   const { t, bookTitle } = useI18n();
@@ -149,18 +149,18 @@ export default function TradesPage() {
   return (
     <>
       <main className="max-w-4xl xl:max-w-6xl mx-auto px-4 lg:px-8 py-8">
-        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#3D2A39]">{t('hub.back')}</Link>
+        <Link href="/trade" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-heading)]">{t('hub.back')}</Link>
         <div className="mt-2 mb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#3D2A39]">{t('trades.title')}</h1>
-          <p className="text-[#6b7280] text-sm mt-1">{t('trades.subtitle')}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-heading)]">{t('trades.title')}</h1>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">{t('trades.subtitle')}</p>
         </div>
-        <div className="flex gap-1 p-1 rounded-xl mb-6 w-full sm:w-fit" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+        <div className="flex gap-1 p-1 rounded-xl mb-6 w-full sm:w-fit" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           {(['all', 'incoming', 'outgoing'] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
-              style={filter === f ? { background: '#87A8A4', color: 'white' } : { color: '#6b7280' }}
+              style={filter === f ? { background: '#87A8A4', color: 'white' } : { color: 'var(--text-secondary)' }}
             >
               {t(`trades.${f}`)}
             </button>
@@ -168,12 +168,12 @@ export default function TradesPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-[#6b7280]">{t('trades.loading')}</div>
+          <div className="text-center py-20 text-[var(--text-secondary)]">{t('trades.loading')}</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">🤝</div>
-            <p className="text-[#6b7280] text-lg">{t('trades.none')}</p>
-            <p className="text-[#9ca3af] text-sm mt-1">{t('trades.noneHint')}</p>
+            <p className="text-[var(--text-secondary)] text-lg">{t('trades.none')}</p>
+            <p className="text-[var(--text-muted)] text-sm mt-1">{t('trades.noneHint')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
@@ -184,13 +184,13 @@ export default function TradesPage() {
                 <div
                   key={trade.id}
                   className="p-5 rounded-2xl"
-                  style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                 >
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
                       <span
                         className="text-xs font-bold px-2 py-0.5 rounded-full mr-2"
-                        style={{ background: isIncoming ? '#EFE3D0' : '#dcfce7', color: isIncoming ? '#986D8E' : '#10b981' }}
+                        style={{ background: isIncoming ? 'var(--tint)' : '#dcfce7', color: isIncoming ? '#986D8E' : '#10b981' }}
                       >
                         {isIncoming ? t('trades.incomingTag') : t('trades.outgoingTag')}
                       </span>
@@ -198,7 +198,7 @@ export default function TradesPage() {
                         {style.labelKey ? t(style.labelKey) : trade.status}
                       </span>
                     </div>
-                    <span className="text-xs text-[#9ca3af] flex-shrink-0">
+                    <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
                       {parseDbTime(trade.created_at)?.toLocaleDateString() ?? ''}
                     </span>
                   </div>
@@ -209,11 +209,11 @@ export default function TradesPage() {
                     const otherName = isIncoming ? trade.requester_name : trade.owner_name;
                     const otherAvatar = isIncoming ? trade.requester_avatar : trade.owner_avatar;
                     return (
-                      <Link href={`/u/${otherId}`} className="inline-flex items-center gap-2 mb-4 px-2 py-1 rounded-full hover:opacity-80" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+                      <Link href={`/u/${otherId}`} className="inline-flex items-center gap-2 mb-4 px-2 py-1 rounded-full hover:opacity-80" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
                         <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: otherAvatar }}>
                           {otherName[0].toUpperCase()}
                         </span>
-                        <span className="text-sm font-semibold text-[#3D2A39]">{otherName}</span>
+                        <span className="text-sm font-semibold text-[var(--text-heading)]">{otherName}</span>
                         <span className="text-xs" style={{ color: '#986D8E' }}>{t('user.viewProfile')} ›</span>
                       </Link>
                     );
@@ -221,33 +221,33 @@ export default function TradesPage() {
 
                   {/* Trade visualization */}
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="flex-1 p-3 rounded-xl" style={{ background: '#ffffff' }}>
-                      <p className="text-xs text-[#6b7280] mb-1">{isIncoming ? t('trades.userOffers', { name: trade.requester_name }) : t('trades.youOffer')}</p>
+                    <div className="flex-1 p-3 rounded-xl" style={{ background: 'var(--card)' }}>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">{isIncoming ? t('trades.userOffers', { name: trade.requester_name }) : t('trades.youOffer')}</p>
                       <div className="flex items-center gap-2">
                         <MiniCover url={coverFor(trade.offered_book_id, trade.offered_cover_len)} color={trade.offered_color} title={bookTitle(trade.offered_title, trade.offered_title_en)} />
                         <div>
-                          <p className="text-sm font-semibold text-[#3D2A39] leading-tight">{bookTitle(trade.offered_title, trade.offered_title_en)}</p>
-                          <p className="text-xs text-[#6b7280]">{trade.offered_author}</p>
+                          <p className="text-sm font-semibold text-[var(--text-heading)] leading-tight">{bookTitle(trade.offered_title, trade.offered_title_en)}</p>
+                          <p className="text-xs text-[var(--text-secondary)]">{trade.offered_author}</p>
                         </div>
                       </div>
                     </div>
 
                     <div className="text-2xl flex-shrink-0">⇄</div>
 
-                    <div className="flex-1 p-3 rounded-xl" style={{ background: '#ffffff' }}>
-                      <p className="text-xs text-[#6b7280] mb-1">{isIncoming ? t('trades.wantsYour') : t('trades.usersBook', { name: trade.owner_name })}</p>
+                    <div className="flex-1 p-3 rounded-xl" style={{ background: 'var(--card)' }}>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">{isIncoming ? t('trades.wantsYour') : t('trades.usersBook', { name: trade.owner_name })}</p>
                       <div className="flex items-center gap-2">
                         <MiniCover url={coverFor(trade.wanted_book_id, trade.wanted_cover_len)} color={trade.wanted_color} title={bookTitle(trade.wanted_title, trade.wanted_title_en)} />
                         <div>
-                          <p className="text-sm font-semibold text-[#3D2A39] leading-tight">{bookTitle(trade.wanted_title, trade.wanted_title_en)}</p>
-                          <p className="text-xs text-[#6b7280]">{trade.wanted_author}</p>
+                          <p className="text-sm font-semibold text-[var(--text-heading)] leading-tight">{bookTitle(trade.wanted_title, trade.wanted_title_en)}</p>
+                          <p className="text-xs text-[var(--text-secondary)]">{trade.wanted_author}</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {trade.message && (
-                    <div className="p-3 rounded-xl mb-4 text-sm text-[#4b5563]" style={{ background: '#ffffff', borderLeft: '3px solid #87A8A4' }}>
+                    <div className="p-3 rounded-xl mb-4 text-sm text-[var(--text-mid)]" style={{ background: 'var(--card)', borderLeft: '3px solid #87A8A4' }}>
                       &ldquo;{trade.message}&rdquo;
                     </div>
                   )}
@@ -276,7 +276,7 @@ export default function TradesPage() {
                         <button
                           onClick={() => updateStatus(trade.id, 'cancelled')}
                           className="px-4 py-2 rounded-xl text-sm font-semibold"
-                          style={{ background: '#D9CAB3', color: '#6b7280' }}
+                          style={{ background: 'var(--border)', color: 'var(--text-secondary)' }}
                         >
                           {t('trades.cancelOffer')}
                         </button>

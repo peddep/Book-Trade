@@ -218,29 +218,29 @@ export default function IrlTradePage() {
   return (
     <>
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <Link href="/trade" className="text-sm text-[#6b7280] hover:text-[#3D2A39]">{t('hub.back')}</Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#3D2A39] mt-2">🤝 {t('irl.title')}</h1>
-        <p className="text-sm text-[#6b7280] mb-5">{t('irl.subtitle')}</p>
+        <Link href="/trade" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-heading)]">{t('hub.back')}</Link>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-heading)] mt-2">🤝 {t('irl.title')}</h1>
+        <p className="text-sm text-[var(--text-secondary)] mb-5">{t('irl.subtitle')}</p>
 
         <IrlGuide />
 
         {/* Stage tabs */}
-        <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+        <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           {TABS.map(tb => (
             <button key={tb.key} onClick={() => setTab(tb.key)}
               className="flex-1 px-2 py-2 rounded-lg text-sm font-semibold transition-colors"
-              style={tab === tb.key ? { background: '#986D8E', color: 'white' } : { color: '#6b7280' }}>
+              style={tab === tb.key ? { background: '#986D8E', color: 'white' } : { color: 'var(--text-secondary)' }}>
               {tb.icon} {t(tb.label)}{tb.n > 0 ? ` (${tb.n})` : ''}
             </button>
           ))}
         </div>
 
         {loading || (tab === 'history' && history === null) ? (
-          <div className="text-center py-16 text-[#6b7280]">…</div>
+          <div className="text-center py-16 text-[var(--text-secondary)]">…</div>
         ) : shown.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-3">{tab === 'history' ? '📜' : '📅'}</div>
-            <p className="text-[#6b7280]">
+            <p className="text-[var(--text-secondary)]">
               {tab === 'history' ? t('irl.noneHistory') : tab === 'confirm' ? t('irl.noneConfirm') : t('irl.noneUpcoming')}
             </p>
           </div>
@@ -300,18 +300,18 @@ export default function IrlTradePage() {
               const canPostpone = myPostponesUsed < 3 && !tooSoonToPostpone;
 
               return (
-                <div key={trade.id} className="p-5 rounded-2xl" style={{ background: '#ffffff', border: '1px solid #D9CAB3' }}>
+                <div key={trade.id} className="p-5 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                   {/* Who + how to reach them */}
                   <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <Link href={`/u/${otherId}`} className="inline-flex items-center gap-2 px-2 py-1 rounded-full hover:opacity-80" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+                    <Link href={`/u/${otherId}`} className="inline-flex items-center gap-2 px-2 py-1 rounded-full hover:opacity-80" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
                       <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: otherAvatar }}>
                         {otherName[0].toUpperCase()}
                       </span>
-                      <span className="text-sm text-[#6b7280]">{t('irl.with')}</span>
-                      <span className="text-sm font-semibold text-[#3D2A39]">{otherName}</span>
+                      <span className="text-sm text-[var(--text-secondary)]">{t('irl.with')}</span>
+                      <span className="text-sm font-semibold text-[var(--text-heading)]">{otherName}</span>
                     </Link>
                     {otherContact && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: '#EFE3D0', color: '#986D8E', border: '1px solid #D9CAB3' }}>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--tint)', color: '#986D8E', border: '1px solid var(--border)' }}>
                         📱 {otherContact}
                       </span>
                     )}
@@ -320,25 +320,25 @@ export default function IrlTradePage() {
                   {/* Books: give / get */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex-1">
-                      <p className="text-xs text-[#6b7280] mb-1">{t('irl.give')}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">{t('irl.give')}</p>
                       <div className="flex items-center gap-2">
                         <MiniCover url={give.url} color={give.color} title={bookTitle(give.title, give.title_en)} />
-                        <p className="text-sm font-semibold text-[#3D2A39] leading-tight">{bookTitle(give.title, give.title_en)}</p>
+                        <p className="text-sm font-semibold text-[var(--text-heading)] leading-tight">{bookTitle(give.title, give.title_en)}</p>
                       </div>
                     </div>
                     <div className="text-xl flex-shrink-0">⇄</div>
                     <div className="flex-1">
-                      <p className="text-xs text-[#6b7280] mb-1">{t('irl.get')}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">{t('irl.get')}</p>
                       <div className="flex items-center gap-2">
                         <MiniCover url={get.url} color={get.color} title={bookTitle(get.title, get.title_en)} />
-                        <p className="text-sm font-semibold text-[#3D2A39] leading-tight">{bookTitle(get.title, get.title_en)}</p>
+                        <p className="text-sm font-semibold text-[var(--text-heading)] leading-tight">{bookTitle(get.title, get.title_en)}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Stage-specific body */}
                   {tab === 'upcoming' && (
-                    <div className="p-3 rounded-xl" style={{ background: '#EFE3D0', border: '1px solid #D9CAB3' }}>
+                    <div className="p-3 rounded-xl" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }}>
                       {/* Decided meeting date & time (from both users' registered availability) */}
                       {sameClass ? (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: '#dcfce7', border: '1px solid #86efac' }}>
@@ -390,11 +390,11 @@ export default function IrlTradePage() {
                           </p>
                         </div>
                       )}
-                      <p className="text-sm font-semibold text-[#3D2A39] mb-3">{t('irl.meetAt')}</p>
-                      <p className="text-xs font-semibold text-[#6b7280] mb-1">{t('irl.bring')}</p>
+                      <p className="text-sm font-semibold text-[var(--text-heading)] mb-3">{t('irl.meetAt')}</p>
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('irl.bring')}</p>
                       <div className="flex items-center gap-2">
                         <MiniCover url={give.url} color={give.color} title={bookTitle(give.title, give.title_en)} />
-                        <p className="text-sm text-[#3D2A39]">{bookTitle(give.title, give.title_en)}</p>
+                        <p className="text-sm text-[var(--text-heading)]">{bookTitle(give.title, give.title_en)}</p>
                       </div>
                       <p className="text-xs mt-3" style={{ color: '#986D8E' }}>{t('irl.goToConfirm')}</p>
                     </div>
@@ -406,13 +406,13 @@ export default function IrlTradePage() {
                         <p className="text-xs font-semibold mb-0.5" style={{ color: '#986D8E' }}>📅 {meetingText}</p>
                       )}
                       {meetingText && (
-                        <p className="text-[11px] text-[#9ca3af] mb-2">{t('irl.normalSchedule')}</p>
+                        <p className="text-[11px] text-[var(--text-muted)] mb-2">{t('irl.normalSchedule')}</p>
                       )}
                       {myConfirm ? (
-                        <div className="p-3 rounded-xl text-sm font-semibold" style={{ background: '#EFE3D0', color: '#986D8E' }}>
+                        <div className="p-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--tint)', color: '#986D8E' }}>
                           {myConfirm === 'happened' ? t('irl.youConfirmed') : t('irl.notHappened')}
                           {myConfirm !== 'no_show' && !otherConfirm && (
-                            <p className="text-xs font-normal mt-1 text-[#6b7280]">{t('irl.waitingOther', { name: otherName })}</p>
+                            <p className="text-xs font-normal mt-1 text-[var(--text-secondary)]">{t('irl.waitingOther', { name: otherName })}</p>
                           )}
                         </div>
                       ) : !camePicked.has(trade.id) ? (
@@ -422,7 +422,7 @@ export default function IrlTradePage() {
                         // rather than the three outcomes below, which only make
                         // sense once both people were actually there.
                         <div className="flex flex-col gap-2">
-                          <p className="text-sm font-semibold text-[#3D2A39] mb-1">{t('irl.didYouCome')}</p>
+                          <p className="text-sm font-semibold text-[var(--text-heading)] mb-1">{t('irl.didYouCome')}</p>
                           <button onClick={() => setCamePicked(prev => new Set(prev).add(trade.id))}
                             className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
                             style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
@@ -432,15 +432,15 @@ export default function IrlTradePage() {
                             <>
                               <button onClick={() => skipMeeting(trade, isRequester)}
                                 className="w-full py-2.5 rounded-xl text-xs font-bold"
-                                style={{ background: '#EFE3D0', color: '#986D8E' }}>
+                                style={{ background: 'var(--tint)', color: '#986D8E' }}>
                                 {t('irl.iCouldntCome')}
                               </button>
-                              <p className="text-[10px] text-center" style={{ color: '#9ca3af' }}>
+                              <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
                                 {t('irl.postponesLeft', { count: String(3 - myPostponesUsed) })}
                               </p>
                             </>
                           ) : hasMeeting && (
-                            <p className="text-[11px] text-center" style={{ color: '#9ca3af' }}>
+                            <p className="text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
                               {tooSoonToPostpone ? t('irl.tooSoonToPostpone') : t('irl.noPostponesLeft')}
                             </p>
                           )}
@@ -448,8 +448,8 @@ export default function IrlTradePage() {
                       ) : (
                         // Level 2: you were there — what happened?
                         <div className="flex flex-col gap-2">
-                          <p className="text-sm font-semibold text-[#3D2A39] mb-1">{t('irl.didItHappen')}</p>
-                          <p className="text-xs text-[#9ca3af] mb-1">{t('irl.bothConfirm')}</p>
+                          <p className="text-sm font-semibold text-[var(--text-heading)] mb-1">{t('irl.didItHappen')}</p>
+                          <p className="text-xs text-[var(--text-muted)] mb-1">{t('irl.bothConfirm')}</p>
                           <button onClick={() => confirm(trade.id, 'happened')}
                             className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
                             style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
@@ -458,7 +458,7 @@ export default function IrlTradePage() {
                           <div className="flex gap-2">
                             <button onClick={() => notHappened(trade)}
                               className="flex-1 py-2.5 rounded-xl text-xs font-bold"
-                              style={{ background: '#f3f4f6', color: '#6b7280' }}>
+                              style={{ background: '#f3f4f6', color: 'var(--text-secondary)' }}>
                               {t('irl.notHappened')}
                             </button>
                             <button onClick={() => noShow(trade, otherName)}
@@ -478,7 +478,7 @@ export default function IrlTradePage() {
                         ? { background: '#dcfce7', color: '#10b981' }
                         : trade.status === 'disputed'
                           ? { background: '#fef3c7', color: '#b45309' }
-                          : { background: '#f3f4f6', color: '#9ca3af' }}>
+                          : { background: '#f3f4f6', color: 'var(--text-muted)' }}>
                       {trade.status === 'completed' ? t('irl.completed')
                         : trade.status === 'disputed' ? t('trades.disputed')
                         : t('irl.cancelled')}
