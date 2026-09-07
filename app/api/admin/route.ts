@@ -60,8 +60,12 @@ export async function GET(req: NextRequest) {
          b.cover_url, u.name AS owner_name
        FROM books b JOIN users u ON b.owner_id = u.id WHERE b.deleted_at IS NULL ORDER BY b.id DESC LIMIT 200`;
   const [users, books, trades, meetups, wonderbox, messages, reports, catalog, donations, feedback] = await Promise.all([
+    // books_count matches what the student themselves sees on "My Books" — a
+    // book hidden after a finished trade still referenced it (removeBook's
+    // 'hidden' outcome) is still a row in the table, but isn't shown to them
+    // as one of their books any more, so it shouldn't count as one here either.
     db.execute(`SELECT id, name, real_name, email, grade, class_no, contact, availability, banned, created_at,
-                  (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id) AS books_count,
+                  (SELECT COUNT(*) FROM books b WHERE b.owner_id = users.id AND b.deleted_at IS NULL) AS books_count,
                   (SELECT COUNT(*) FROM trades t WHERE (t.requester_id = users.id OR t.owner_id = users.id) AND t.status = 'completed') AS trades_completed
                 FROM users ORDER BY id`),
     db.execute(booksSql),
