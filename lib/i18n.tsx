@@ -159,6 +159,8 @@ const STRINGS: Dict = {
   'irl.noPostponesLeft': { th: 'เลื่อนนัดนี้ครบ 3 ครั้งแล้ว', en: 'You have used all 3 postpones for this meet-up.' },
   'irl.postponesLeft': { th: 'เลื่อนได้อีก {count} ครั้ง', en: 'You can postpone this {count} more time(s)' },
   'irl.tooSoonToPostpone': { th: 'อีกไม่ถึง 3 ชั่วโมงจะถึงเวลานัด เลื่อนไม่ได้แล้ว ไปตามเวลาที่นัดไว้ หรือทักคุยกับอีกฝ่ายโดยตรง', en: 'Less than 3 hours until this meet-up — it can no longer be postponed. Go at the time already set, or reach out to the other student directly.' },
+  'irl.overdue': { th: 'เวลานัดนี้ผ่านไปแล้ว ไปที่แท็บ "ยืนยัน" เพื่อบอกว่าเกิดอะไรขึ้น', en: 'This meet-up time has already passed — go to the Confirm tab to say what happened.' },
+  'irl.overdueGoConfirm': { th: 'ไปยืนยัน →', en: 'Go confirm →' },
   'irl.theyDidntCome': { th: '✕ อีกฝ่ายไม่มา', en: '✕ They did not come' },
   'irl.noShowConfirm': { th: 'แจ้งว่า {name} ไม่มาตามนัด? การแลกเปลี่ยนจะถูกยกเลิก และหนังสือจะกลับไปอยู่ชั้นของทั้งคู่', en: 'Report that {name} did not turn up? The trade is called off and both books go back on the shelves.' },
   'irl.didYouCome': { th: 'คุณไปตามนัดไหม?', en: 'Did you make it to the meet-up?' },

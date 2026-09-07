@@ -272,9 +272,15 @@ export default function IrlTradePage() {
               const meetingText = hasMeeting
                 ? meetingWindowText(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0, lang)
                 : null;
-              const meetingStart = hasMeeting
-                ? meetingWindow(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0).start
+              const meetingWin = hasMeeting
+                ? meetingWindow(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0)
                 : null;
+              const meetingStart = meetingWin?.start ?? null;
+              // Nothing here ever moves a meet-up on its own once its window has
+              // passed — the student has to notice and say what happened, so at
+              // least make that impossible to miss instead of leaving the same
+              // "come at 11:55" line sitting there quietly going stale.
+              const isOverdue = Boolean(meetingWin && meetingWin.end.getTime() < Date.now());
               // The slot's own start, not its end — a range on screen reads as
               // "any time in this window", but the other student is only there
               // for the ten minutes booked, so arriving late eats into it.
@@ -356,11 +362,22 @@ export default function IrlTradePage() {
                               school shortens periods they move, and only the two
                               students know that. */}
                           <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{t('irl.normalSchedule')}</p>
-                          {/* A range on its own reads as "any time within it" —
-                              say the moment that actually matters: the start. */}
-                          <p className="text-[11px] font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                            ⏰ {t('irl.arriveByTime', { time: arriveByText ?? '' })}
-                          </p>
+                          {isOverdue ? (
+                            <div className="mt-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.18)' }}>
+                              <p className="text-[11px] font-bold" style={{ color: '#ffffff' }}>⚠️ {t('irl.overdue')}</p>
+                              <button onClick={() => setTab('confirm')}
+                                className="mt-1.5 w-full py-1.5 rounded-lg text-xs font-bold"
+                                style={{ background: '#ffffff', color: '#63425C' }}>
+                                {t('irl.overdueGoConfirm')}
+                              </button>
+                            </div>
+                          ) : (
+                            // A range on its own reads as "any time within it" —
+                            // say the moment that actually matters: the start.
+                            <p className="text-[11px] font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                              ⏰ {t('irl.arriveByTime', { time: arriveByText ?? '' })}
+                            </p>
+                          )}
                           {canPostpone ? (
                             <>
                               <button onClick={() => skipMeeting(trade, isRequester)}
@@ -372,11 +389,11 @@ export default function IrlTradePage() {
                                 {t('irl.postponesLeft', { count: String(3 - myPostponesUsed) })}
                               </p>
                             </>
-                          ) : (
+                          ) : !isOverdue ? (
                             <p className="mt-2 text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.75)' }}>
                               {tooSoonToPostpone ? t('irl.tooSoonToPostpone') : t('irl.noPostponesLeft')}
                             </p>
-                          )}
+                          ) : null}
                         </div>
                       ) : sharesAnyPeriod ? (
                         <div className="mb-3 p-3 rounded-xl" style={{ background: '#fef9c3', border: '1px solid #fde68a' }}>
@@ -407,6 +424,9 @@ export default function IrlTradePage() {
                       )}
                       {meetingText && (
                         <p className="text-[11px] text-[var(--text-muted)] mb-2">{t('irl.normalSchedule')}</p>
+                      )}
+                      {isOverdue && !myConfirm && (
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#b45309' }}>⚠️ {t('irl.overdue')}</p>
                       )}
                       {myConfirm ? (
                         <div className="p-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--tint)', color: '#986D8E' }}>
@@ -439,7 +459,7 @@ export default function IrlTradePage() {
                                 {t('irl.postponesLeft', { count: String(3 - myPostponesUsed) })}
                               </p>
                             </>
-                          ) : hasMeeting && (
+                          ) : hasMeeting && !isOverdue && (
                             <p className="text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
                               {tooSoonToPostpone ? t('irl.tooSoonToPostpone') : t('irl.noPostponesLeft')}
                             </p>
