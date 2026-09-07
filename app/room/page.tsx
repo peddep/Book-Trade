@@ -42,7 +42,7 @@ export default function RoomPage() {
   const [pendingOffers, setPendingOffers] = useState(0);
   const [editing, setEditing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [form, setForm] = useState({ name: '', grade: '', class_no: '', contact: '', avatar_color: '#87A8A4', new_password: '' });
+  const [form, setForm] = useState({ name: '', grade: '', class_no: '', contact: '', avatar_color: '#87A8A4' });
   const [availability, setAvailability] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -70,7 +70,7 @@ export default function RoomPage() {
 
   function openEdit() {
     if (!user) return;
-    setForm({ name: user.name, grade: user.grade ?? '', class_no: user.class_no ?? '', contact: user.contact ?? '', avatar_color: user.avatar_color, new_password: '' });
+    setForm({ name: user.name, grade: user.grade ?? '', class_no: user.class_no ?? '', contact: user.contact ?? '', avatar_color: user.avatar_color });
     setAvailability(Array.isArray(user.availability) ? user.availability : []);
     setFormError('');
     setEditing(true);
@@ -80,7 +80,6 @@ export default function RoomPage() {
     if (!form.name.trim()) { setFormError(t('profile2.nameRequired')); return; }
     if (!form.grade || !form.class_no || !form.contact.trim()) { setFormError(t('reg.missingFields')); return; }
     if (availability.length === 0) { setFormError(t('reg.availabilityRequired')); return; }
-    if (form.new_password && form.new_password.length < 6) { setFormError(t('reg.passwordHint')); return; }
     setSaving(true);
     const res = await fetch('/api/auth/me', {
       method: 'PATCH',
@@ -399,11 +398,6 @@ export default function RoomPage() {
               <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('reg.contact')}</label>
               <input value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))}
                 maxLength={100} placeholder={t('reg.contactHint')}
-                className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }} />
-
-              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">{t('profile2.newPassword')}</label>
-              <input type="password" value={form.new_password} minLength={6} autoComplete="new-password"
-                onChange={e => setForm(f => ({ ...f, new_password: e.target.value }))}
                 className="w-full px-3 py-2 rounded-xl text-sm mb-3 text-[var(--text-heading)]" style={{ background: 'var(--tint)', border: '1px solid var(--border)' }} />
 
               <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">{t('reg.availabilityTitle')}</label>

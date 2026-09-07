@@ -419,7 +419,6 @@ const STRINGS: Dict = {
   'reg.nameTaken': { th: 'ชื่อผู้ใช้นี้มีคนใช้แล้ว ลองชื่ออื่น', en: 'That username is taken. Try another one.' },
   'reg.emailDomain': { th: 'ต้องใช้อีเมลโรงเรียน (@{domain}) ในการสมัคร', en: 'Please sign up with your school email (@{domain}).' },
   'login.forgot': { th: 'ลืมรหัสผ่าน? แจ้งแอดมินเพื่อขอรหัสผ่านชั่วคราว', en: 'Forgot your password? Ask the admin for a temporary one.' },
-  'profile2.newPassword': { th: 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)', en: 'New password (leave blank to keep)' },
   'adm.reset': { th: 'รีเซ็ตรหัสผ่าน', en: 'Reset password' },
   'adm.tempPw': { th: 'รหัสผ่านชั่วคราวของ {name}:', en: 'Temporary password for {name}:' },
   'adm.addCover': { th: 'เพิ่มปก', en: 'Add cover' },
