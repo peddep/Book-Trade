@@ -13,7 +13,7 @@ export default function NotFound() {
         <Link
           href="/trade"
           className="inline-block py-2.5 px-6 rounded-xl font-bold text-white"
-          style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
+          style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}
         >
           กลับหน้าแรก · Go home
         </Link>

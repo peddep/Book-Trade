@@ -86,7 +86,7 @@ export default function FeedbackCard() {
               onClick={send}
               disabled={body.trim().length < 5 || state === 'sending'}
               className="px-5 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
+              style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}
             >
               {state === 'sending' ? t('fb.sending') : t('fb.send')}
             </button>

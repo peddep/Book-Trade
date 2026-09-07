@@ -331,7 +331,7 @@ export default function RegisterPage() {
               type="submit"
               disabled={loading || !acceptTerms}
               className="w-full py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
+              style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}
             >
               {loading ? t('reg.creating') : t('reg.createAccount')}
             </button>

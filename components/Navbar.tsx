@@ -164,7 +164,7 @@ export default function Navbar() {
               <Link
                 href="/register"
                 className="text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-lg text-white whitespace-nowrap"
-                style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
+                style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}
               >
                 <span className="sm:hidden">{t('nav.joinShort')}</span>
                 <span className="hidden sm:inline">{t('nav.join')}</span>

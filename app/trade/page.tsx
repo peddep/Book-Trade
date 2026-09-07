@@ -122,7 +122,7 @@ export default function TradePage() {
               <Badge n={gifts} />
               <Link href="/trade/wonderbox"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full text-white bt-press"
-                style={{ background: 'linear-gradient(135deg, #87A8A4, #4f46e5)' }}>
+                style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}>
                 ✨ {t('hub.wonderbox')}
               </Link>
             </span>
@@ -130,7 +130,7 @@ export default function TradePage() {
               <Badge n={awaitingConfirm} />
               <Link href="/trade/irl"
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-3 py-2 rounded-full text-white bt-press"
-                style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+                style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                 🤝 {t('hub.irl')}
               </Link>
             </span>

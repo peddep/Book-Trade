@@ -339,7 +339,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         {!editingId && (
           <button type="button" onClick={() => { setScanMsg(''); setScanStatus('idle'); setScanTitle(null); setScanning(true); }}
             className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+            style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
             📷 {t('scan.button')}
           </button>
         )}
@@ -457,7 +457,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
         <button type="button" onClick={closeForm} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: 'var(--border)', color: 'var(--text-secondary)' }}>
           {t('profile.cancel')}
         </button>
-        <button type="submit" disabled={submitting || (!editingId && !form.cover_url)} className="px-6 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
+        <button type="submit" disabled={submitting || (!editingId && !form.cover_url)} className="px-6 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}>
           {editingId ? (submitting ? t('profile.saving') : t('profile.saveBtn')) : (submitting ? t('profile.adding') : t('profile.addBtn'))}
         </button>
       </div>
@@ -466,7 +466,7 @@ export default function MyBooksManager({ compact = false, onChange }: { compact?
 
   const addButton = (
     <button onClick={startAdd} className="px-4 py-2 rounded-xl font-semibold text-sm text-white"
-      style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
+      style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}>
       {t('profile.addBook')}
     </button>
   );

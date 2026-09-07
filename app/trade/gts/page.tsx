@@ -138,7 +138,7 @@ export default function GtsPage() {
             <h2 className="font-bold text-[var(--text-heading)]">{t('gts.myDeposits', { used: mine.length, total: slots })}</h2>
             {mine.length < slots && (
               <button onClick={() => setShowDeposit(!showDeposit)} className="px-3 py-1.5 rounded-xl font-semibold text-xs text-white"
-                style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
+                style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}>
                 {t('gts.deposit')}
               </button>
             )}
@@ -183,7 +183,7 @@ export default function GtsPage() {
                 </select>
               </div>
               <button onClick={deposit} disabled={!picked || busy} className="mt-3 w-full py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-                style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
+                style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}>
                 {t('gts.submit')}
               </button>
             </div>

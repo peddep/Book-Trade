@@ -89,7 +89,7 @@ export default function AdminHarvestCard() {
             onClick={() => run(state.done)}
             disabled={running}
             className="px-4 py-2 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
+            style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}
           >
             {running ? t('admin.running', { pct }) : state.done ? t('admin.runAgain') : state.nextIndex > 0 ? t('admin.continue') : t('admin.start')}
           </button>
@@ -108,7 +108,7 @@ export default function AdminHarvestCard() {
       {(running || (state.nextIndex > 0 && !state.done)) && (
         <div className="mt-4">
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--card)' }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #87A8A4, #A67C9C)' }} />
+            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #5E7673, #87A8A4)' }} />
           </div>
           <p className="text-xs text-[var(--text-secondary)] mt-1.5">
             {t('admin.progress', { current: Math.min(state.nextIndex, state.totalQueries), total: state.totalQueries, count: state.catalogCount })}

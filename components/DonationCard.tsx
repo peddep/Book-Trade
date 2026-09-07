@@ -83,7 +83,7 @@ export default function DonationCard({ userName }: { userName: string }) {
         )}
         <button onClick={() => setStage('form')}
           className="w-full py-2.5 rounded-xl font-semibold text-sm text-white"
-          style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+          style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
           {t('don.button')}
         </button>
       </div>
@@ -113,7 +113,7 @@ export default function DonationCard({ userName }: { userName: string }) {
                 </p>
                 <button onClick={confirm} disabled={busy || !bankName.trim() || !(Number(amount) > 0)}
                   className="w-full py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-                  style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+                  style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                   {t('don.confirm')}
                 </button>
               </>
@@ -138,7 +138,7 @@ export default function DonationCard({ userName }: { userName: string }) {
                 <div className="text-5xl mb-3">💜</div>
                 <p className="text-lg font-bold text-[var(--text-heading)] mb-2">{t('don.thanksTitle')}</p>
                 <p className="text-sm text-[var(--text-secondary)] mb-4">{t('don.thanksBody', { name: userName, amount })}</p>
-                <button onClick={closeAll} className="w-full py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+                <button onClick={closeAll} className="w-full py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                   {t('don.close')}
                 </button>
               </div>

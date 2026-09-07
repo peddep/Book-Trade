@@ -105,7 +105,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
                   {/* In the Wonder Box: purple ✨ ribbon */}
                   {!!b.in_wonderbox && (
                     <span className="absolute top-1 left-1 z-10 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
-                      style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)', color: '#ffffff', boxShadow: '0 1px 5px rgba(76,29,149,0.5)' }}>
+                      style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)', color: '#ffffff', boxShadow: '0 1px 5px rgba(76,29,149,0.5)' }}>
                       ✨ {t('shelf.inWonderbox')}
                     </span>
                   )}
@@ -145,7 +145,7 @@ export default function BookShelf({ books, onEdit, onDelete, onToggleAvailable, 
               {!selectMode && open && (
                 <div className="absolute left-0 right-0 top-1 z-30 flex flex-col gap-1.5 rounded-xl p-2 shadow-xl" style={{ background: 'var(--card)', border: '1px solid #A67C9C' }}>
                   <p className="text-[11px] text-[var(--text-secondary)] text-center truncate">{b.author}</p>
-                  <button onClick={() => onEdit?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}>
+                  <button onClick={() => onEdit?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}>
                     ✏️ {t('shelf.edit')}
                   </button>
                   <button onClick={() => onChangeCover?.(b.id)} className="w-full py-1 rounded-lg text-[11px] font-semibold" style={{ background: 'var(--border)', color: 'var(--text-heading)' }}>

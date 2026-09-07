@@ -181,7 +181,7 @@ export default function RoomsPage() {
                 {room.is_owner ? (
                   <button onClick={() => act('shuffle', { code: room.code })} disabled={busy || room.members.length < 2}
                     className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #A67C9C, #ec4899)' }}>
+                    style={{ background: 'linear-gradient(135deg, #986D8E, #A67C9C)' }}>
                     {t('room.shuffle')}
                   </button>
                 ) : (

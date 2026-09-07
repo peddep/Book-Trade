@@ -431,7 +431,7 @@ export default function RoomPage() {
                     {t('profile2.cancel')}
                   </button>
                   <button onClick={saveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-50"
-                    style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+                    style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                     {t('profile2.save')}
                   </button>
                 </div>

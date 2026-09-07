@@ -169,7 +169,7 @@ export default function TradeModal({ targetBook, onClose, onSuccess }: Props) {
             onClick={submit}
             disabled={!selectedBook || loading}
             className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
+            style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}
           >
             {loading ? t('modal.sending') : t('modal.send')}
           </button>

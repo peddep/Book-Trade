@@ -313,7 +313,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-3 mt-2">
               <button onClick={addToCatalog} disabled={catalogBusy || !catalogLines.trim()}
                 className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
-                style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+                style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                 {t('adm.catalogAdd')}
               </button>
               {catalogResult && <p className="text-sm font-semibold" style={{ color: '#10b981' }}>{catalogResult}</p>}
@@ -581,7 +581,7 @@ export default function AdminPage() {
               </div>
               <div className="flex gap-2 px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid var(--tint)' }}>
                 <button onClick={() => setEditBook(null)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: '#f3f4f6', color: 'var(--text-secondary)' }}>{t('profile2.cancel')}</button>
-                <button onClick={saveBookEdit} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>{t('profile2.save')}</button>
+                <button onClick={saveBookEdit} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>{t('profile2.save')}</button>
               </div>
             </div>
           </div>

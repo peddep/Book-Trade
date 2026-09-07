@@ -193,7 +193,7 @@ export default function BookCard({ book, onTrade, onDelete, onToggleAvailable, o
                 <button
                   onClick={onTrade}
                   className="flex-1 py-2 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #87A8A4, #A67C9C)' }}
+                  style={{ background: 'linear-gradient(135deg, #5E7673, #87A8A4)' }}
                 >
                   {t('card.offerTrade')}
                 </button>

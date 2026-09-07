@@ -349,7 +349,7 @@ export default function IrlTradePage() {
                         </div>
                       ) : meetingText ? (
                         <div className={`mb-3 p-3 rounded-xl${movedId === trade.id ? ' bt-time-flash' : ''}`}
-                          style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+                          style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                           <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>📅 {t('irl.meetOn')}</p>
                           <p key={meetingText} className={`text-base font-bold text-white leading-tight mt-0.5${movedId === trade.id ? ' bt-time-moved' : ''}`}>{meetingText}</p>
                           {/* The period times are the ordinary ones; on a day the
@@ -425,7 +425,7 @@ export default function IrlTradePage() {
                           <p className="text-sm font-semibold text-[var(--text-heading)] mb-1">{t('irl.didYouCome')}</p>
                           <button onClick={() => setCamePicked(prev => new Set(prev).add(trade.id))}
                             className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
-                            style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+                            style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                             {t('irl.iCame')}
                           </button>
                           {hasMeeting && canPostpone ? (

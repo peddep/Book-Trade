@@ -425,7 +425,7 @@ export default function BarcodeScanner({ onDetected, onClose, onCapture, status 
         )}
         {coverPhase && (
           <button onClick={capture} className="px-6 py-2.5 rounded-xl font-bold text-sm text-white"
-            style={{ background: 'linear-gradient(135deg, #986D8E, #87A8A4)' }}>
+            style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
             📸 {t('scan.shutter')}
           </button>
         )}

@@ -25,7 +25,7 @@ export default function TopTabs() {
             href={tab.href}
             className="flex-1 max-w-[10rem] text-center py-2 rounded-xl text-sm font-bold transition-colors"
             style={active
-              ? { background: 'linear-gradient(135deg, #986D8E, #87A8A4)', color: '#ffffff', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' }
+              ? { background: 'linear-gradient(135deg, #63425C, #986D8E)', color: '#ffffff', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' }
               : { color: '#986D8E' }}
           >
             {t(tab.key)}

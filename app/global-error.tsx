@@ -18,7 +18,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
               onClick={reset}
               style={{
                 padding: '10px 24px', borderRadius: 12, fontWeight: 700, color: '#fff',
-                background: 'linear-gradient(135deg, #87A8A4, #A67C9C)', border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #5E7673, #87A8A4)', border: 'none', cursor: 'pointer',
               }}
             >
               ลองใหม่ · Try again
