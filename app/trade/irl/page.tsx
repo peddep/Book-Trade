@@ -307,7 +307,10 @@ export default function IrlTradePage() {
               const tooSoonToPostpone = Boolean(
                 meetingStart && !bookedForAcceptDay && meetingStart.getTime() - Date.now() < 3 * 60 * 60 * 1000
               );
-              const canPostpone = myPostponesUsed < 3 && !tooSoonToPostpone;
+              // Once the window itself has passed there is nothing left to move
+              // forward — postponing means picking a future slot, and this one
+              // no longer is one, same-day exception or not.
+              const canPostpone = myPostponesUsed < 3 && !tooSoonToPostpone && !isOverdue;
 
               return (
                 <div key={trade.id} className="p-5 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>

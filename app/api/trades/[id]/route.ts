@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { getDb, ensureTradeColumns } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { announceTrade, isBanned, priceDiffOk, assignMeetingSlot, sweepWaitingMeetings, bangkokInstantOf, bangkokDateStr } from '@/lib/hub';
-import type { Period } from '@/lib/meetingSlots';
+import { SLOT_DURATION_MIN, type Period } from '@/lib/meetingSlots';
 import { notify, notifyBoth } from '@/lib/notify';
 import type { TradeRow } from '@/lib/dbTypes';
 
@@ -66,6 +66,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // the other student to be told and still adjust their own plans around it.
     const bookedForAcceptDay = hadSlot && trade.meeting_date === trade.accepted_date;
     if (hadSlot && !bookedForAcceptDay && from.getTime() - Date.now() < 3 * 60 * 60_000) {
+      return NextResponse.json({ error: 'too_soon' }, { status: 400 });
+    }
+    // Once the window itself is over there is nothing left to move forward —
+    // postponing means picking a future slot, and this one no longer is one,
+    // same-day exception or not.
+    if (hadSlot && from.getTime() + SLOT_DURATION_MIN * 60_000 < Date.now()) {
       return NextResponse.json({ error: 'too_soon' }, { status: 400 });
     }
     const users = await db.execute({

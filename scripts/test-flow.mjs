@@ -718,14 +718,39 @@ test('a meet-up within 3 hours cannot be postponed, unless it is still on the da
   assert.equal(blocked.status, 400);
   assert.equal(blocked.json.error, 'too_soon');
 
-  // Still booked for the very day it was accepted: always postponable, no
-  // matter how close (that day was never firmly agreed on in advance).
+  // Still booked for the very day it was accepted, and not yet overdue:
+  // postponable despite being close (that day was never firmly agreed on in
+  // advance).
+  const tomorrow = day(-1);
   await db.execute({
     sql: "UPDATE trades SET meeting_date = ?, meeting_period = 'p4', meeting_sub = 0, accepted_date = ? WHERE id = ?",
-    args: [meetingDay, meetingDay, t],
+    args: [tomorrow, tomorrow, t],
   });
   const allowed = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } });
   assert.equal(allowed.status, 200);
+});
+
+test('a meet-up cannot be postponed once its own window has passed, even same-day', async () => {
+  const a = await register('PastA', `pasta${Math.random()}@s.edu`);
+  const b = await register('PastB', `pastb${Math.random()}@s.edu`, undefined, '4');
+  const ba = await addBook(a, 'PastBookA', 100);
+  const bb = await addBook(b, 'PastBookB', 100);
+  const t = (await api('/api/trades', { method: 'POST', cookie: a, body: { offered_book_id: ba, wanted_book_id: bb } })).json.trade.id;
+  await api(`/api/trades/${t}`, { method: 'PATCH', cookie: b, body: { status: 'accepted' } });
+
+  // Same day it was accepted (the exception that would otherwise always
+  // allow postponing) but a day in the past, so the ten-minute window itself
+  // is unambiguously over regardless of what time this test happens to run —
+  // the same-day exception must not override an actually-passed meet-up.
+  const db = createClient({ url: `file:${DB}` });
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  await db.execute({
+    sql: "UPDATE trades SET meeting_date = ?, meeting_period = 'p4', meeting_sub = 0, accepted_date = ? WHERE id = ?",
+    args: [yesterday, yesterday, t],
+  });
+  const blocked = await api(`/api/trades/${t}`, { method: 'PATCH', cookie: a, body: { skip_meeting: true } });
+  assert.equal(blocked.status, 400);
+  assert.equal(blocked.json.error, 'too_soon');
 });
 
 test('times the database wrote are read back as the moment they happened', async () => {
