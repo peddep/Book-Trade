@@ -349,6 +349,38 @@ test('an email or a username can only be used once', async () => {
   assert.equal(login.status, 200);
 });
 
+test('a wrong password is refused the same way as an unknown email, and guessing is rate-limited by IP', async () => {
+  const email = `guess${Math.random()}@s.edu`;
+  await register('GuessTarget', email);
+
+  const wrong = await api('/api/auth/login', { method: 'POST', ip: '10.5.1.1', body: { email, password: 'notthepassword' } });
+  assert.equal(wrong.status, 401);
+  assert.equal(wrong.json.error, 'Invalid credentials');
+
+  // A login attempt against an email that was never registered must look
+  // exactly the same as a wrong password — different status codes or bodies
+  // would let someone tell which emails exist.
+  const noSuchUser = await api('/api/auth/login', { method: 'POST', ip: '10.5.1.1', body: { email: `nobody${Math.random()}@s.edu`, password: 'whatever' } });
+  assert.equal(noSuchUser.status, 401);
+  assert.equal(noSuchUser.json.error, 'Invalid credentials');
+
+  // Guessing across many accounts from one IP is capped. (Not capped by
+  // account: that would let someone lock the real owner out of their own
+  // account just by failing its password on purpose.)
+  const oneIp = '10.5.3.1';
+  let ipLimited = false;
+  for (let i = 0; i < 22; i++) {
+    const r = await api('/api/auth/login', { method: 'POST', ip: oneIp, body: { email: `spray${i}${Math.random()}@s.edu`, password: 'guess' } });
+    if (r.status === 429) { ipLimited = true; break; }
+  }
+  assert.ok(ipLimited, 'many login attempts from one IP must eventually be rate-limited');
+
+  // The account holder can still sign in with their real password from a
+  // fresh IP.
+  const real = await api('/api/auth/login', { method: 'POST', ip: '10.5.4.1', body: { email, password: 'secret6' } });
+  assert.equal(real.status, 200);
+});
+
 test('a student cannot rename themselves into somebody else\'s name', async () => {
   const a = await register('RenA', 'rena@s.edu');
   await register('RenB', 'renb@s.edu');

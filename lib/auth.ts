@@ -13,8 +13,20 @@ export interface SessionUser {
 // Exported so other stateless-signed-cookie schemes (the short-lived "you just
 // verified this email with Google" cookie) use the same secret rather than
 // inventing a second one to keep track of.
+//
+// The dev fallback below is readable by anyone who has this source — fine on
+// a laptop, but a production deploy that silently signed sessions with it
+// would let anyone who has read this file forge a valid cookie for any
+// account, admin included. So it only applies outside production; a
+// production process missing SESSION_SECRET fails to sign or verify anything
+// at all instead.
 export function getSecret(): string {
-  return process.env.SESSION_SECRET ?? 'dev-secret-change-me-in-production';
+  const secret = process.env.SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('SESSION_SECRET is not set. Sessions cannot be signed without it in production.');
+  }
+  return 'dev-secret-change-me-in-production';
 }
 
 // Stateless signed-cookie sessions (survive serverless cold starts / multiple instances).
