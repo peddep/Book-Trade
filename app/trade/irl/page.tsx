@@ -8,7 +8,7 @@ import IrlGuide from '@/components/IrlGuide';
 import Loading from '@/components/Loading';
 import { useI18n } from '@/lib/i18n';
 import { coverFor } from '@/lib/cover';
-import { overlap } from '@/lib/meeting';
+import { overlap, SLOT_KEYS } from '@/lib/meeting';
 import { meetingWindow, meetingWindowText, type Period } from '@/lib/meetingSlots';
 
 
@@ -272,6 +272,10 @@ export default function IrlTradePage() {
               const meetingText = hasMeeting
                 ? meetingWindowText(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0, lang)
                 : null;
+              // A time on its own ("11:55-12:05") doesn't say which period that
+              // is — a student checking their own timetable needs the name
+              // (คาบ 4 / คาบ 5 / หลังเลิกเรียน), not just the clock.
+              const periodLabel = hasMeeting ? t(SLOT_KEYS[trade.meeting_period as string]) : null;
               const meetingWin = hasMeeting
                 ? meetingWindow(trade.meeting_date as string, trade.meeting_period as Period, trade.meeting_sub ?? 0)
                 : null;
@@ -358,6 +362,7 @@ export default function IrlTradePage() {
                           style={{ background: 'linear-gradient(135deg, #63425C, #986D8E)' }}>
                           <p className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>📅 {t('irl.meetOn')}</p>
                           <p key={meetingText} className={`text-base font-bold text-white leading-tight mt-0.5${movedId === trade.id ? ' bt-time-moved' : ''}`}>{meetingText}</p>
+                          <p className="text-[11px] font-semibold mt-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>{periodLabel}</p>
                           {/* The period times are the ordinary ones; on a day the
                               school shortens periods they move, and only the two
                               students know that. */}
@@ -420,7 +425,7 @@ export default function IrlTradePage() {
                   {tab === 'confirm' && (
                     <div>
                       {meetingText && (
-                        <p className="text-xs font-semibold mb-0.5" style={{ color: '#986D8E' }}>📅 {meetingText}</p>
+                        <p className="text-xs font-semibold mb-0.5" style={{ color: '#986D8E' }}>📅 {meetingText} · {periodLabel}</p>
                       )}
                       {meetingText && (
                         <p className="text-[11px] text-[var(--text-muted)] mb-2">{t('irl.normalSchedule')}</p>
